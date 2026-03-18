@@ -1,23 +1,88 @@
+{% load static %}
 <!DOCTYPE html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title></title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="">
-    </head>
-    <body>
-        <!--[if lt IE 7]>
-            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
-        <![endif]-->
-        <h1>Hello Custommers!!</h1>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDC Books - Tri Thức Kết Nối | Sách mới & Hiếm</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{% static 'app/css/style.css' %}">
+    
+    <link rel="shortcut icon" href="{% static 'app/images/favicon.ico' %}" type="image/x-icon">
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            
+            <h1 class="logo">DDC <span>BOOKS</span></h1>
+            <nav>
+                <ul>
+                    <li><a href="#" class="active">Trang chủ</a></li>
+                    <li><a href="#">Danh mục</a></li>
+                    <li><a href="#">Sách mới</a></li>
+                    <li><a href="#">Tin tức</a></li>
+                    <li><a href="#">Liên hệ</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container hero-content">
+            <img src="{% static 'app/images/logo.png' %}" alt="DDC Books Logo" class="hero-logo-img">
+            
+            <h2>Gói ghém ký ức, Kết nối tri thức</h2>
+            <p>Khám phá kho tàng sách cũ quý hiếm và những tựa sách mới nhất.</p>
+            <a href="#new-arrivals" class="btn-primary">KHÁM PHÁ NGAY</a>
+        </div>
+    </section>
+
+    <main class="container" id="new-arrivals">
+        <h3 class="section-title">Sách mới về</h3>
         
-        <script src="" async defer></script>
-    </body>
+        <div class="book-grid">
+            <div class="book-card">
+                <div class="book-img">
+                    <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=400&auto=format&fit=crop" alt="Bìa sách Mẫu">
+                </div>
+                <div class="book-info">
+                    <h4>Kỹ thuật Đồ họa: Nguyên lý và Thực hành</h4>
+                    <p class="author">Tác giả: Cường, Đông, Đăng</p>
+                    <p class="price">250.000đ</p>
+                </div>
+                <a href="#" class="btn-secondary">Thêm vào giỏ</a>
+            </div>
+
+            <div class="book-card">
+                <div class="book-img">
+                    <img src="https://images.unsplash.com/photo-1589998059171-988d887df646?q=80&w=400&auto=format&fit=crop" alt="Bìa sách Mẫu 2">
+                </div>
+                <div class="book-info">
+                    <h4>Hành Trình Vạn Dặm Bắt Đầu Từ Một Bước Chân</h4>
+                    <p class="author">Tác giả: Nhiều người</p>
+                    <p class="price">180.000đ</p>
+                </div>
+                <a href="#" class="btn-secondary">Thêm vào giỏ</a>
+            </div>
+
+            {% comment %} 
+             {% for book in books %}
+             <div class="book-card">...</div>
+             {% endfor %}
+             {% endcomment %}
+             
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 DDC Books. Giữ gìn văn hóa đọc.</p>
+            <p>Developed by <a href="#" class="footer-link">Cododa Studio</a></p>
+        </div>
+    </footer>
+
+</body>
 </html>
