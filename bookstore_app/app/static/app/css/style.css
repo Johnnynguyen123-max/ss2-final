@@ -283,4 +283,103 @@ footer {
 footer p {
     margin-bottom: 10px;
 }
+/* --- CSS cho trang Đăng nhập & Đăng ký --- */
+
+/* Căn giữa toàn bộ vùng chứa form */
+.auth-section {
+    min-height: 80vh; /* Chiều cao tối thiểu để form nằm giữa trang */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #FCF8F2; /* Nền kem đồng bộ */
+    padding: 40px 20px;
+}
+
+/* Cái hộp trắng chứa form (Card) */
+.auth-card {
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 450px; /* Độ rộng vừa phải cho form */
+    padding: 40px;
+    border-radius: 12px;
+    border: 1px solid #F0EAE0;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05); /* Đổ bóng cho sang */
+    text-align: center;
+}
+
+/* Logo bên trong form */
+.auth-logo img {
+    max-width: 150px;
+    margin-bottom: 20px;
+}
+
+/* Tiêu đề "Đăng nhập" */
+.auth-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: #4E342E;
+    margin-bottom: 30px;
+}
+
+/* Tùy chỉnh các ô nhập liệu */
+.input-group {
+    position: relative;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #A98F7C;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 15px 12px 40px; /* Chừa chỗ bên trái cho icon */
+    border: 1px solid #E0D7C6;
+    border-radius: 6px;
+    font-size: 1rem;
+    outline: none;
+    transition: 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #E98A61;
+}
+
+/* Nút bấm Đăng nhập trong form */
+.auth-submit {
+    width: 100%;
+    background-color: #E98A61;
+    color: white;
+    padding: 14px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.auth-submit:hover {
+    background-color: #D37550;
+}
+
+/* Các link phụ */
+.auth-links {
+    margin-top: 20px;
+    font-size: 0.9rem;
+}
+
+.auth-links a {
+    color: #4E342E;
+    text-decoration: none;
+}
+
+.auth-links a:hover {
+    color: #E98A61;
+}
 

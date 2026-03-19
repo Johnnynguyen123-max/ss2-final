@@ -1,0 +1,44 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDC Books - {% block title %}Tri Thức Kết Nối{% endblock %}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'app/css/style.css' %}" />
+    <link rel="shortcut icon" href="{% static 'app/images/favicon.ico' %}" type="image/x-icon" />
+</head>
+<body>
+    <header>
+      <div class="container">
+        <h1 class="logo">DDC <span>BOOKS</span></h1>
+        <nav>
+          <ul>
+            <li><a href="{% url 'home' %}" class="active">Trang chủ</a></li>
+            <li><a href="#">Danh mục</a></li>
+            <li><a href="#">Sách mới</a></li>
+            <li><a href="#">Tin tức</a></li>
+            <li><a href="#">Liên hệ</a></li>
+          </ul>
+          <div class="auth-box">
+            <a href="{% url 'signup' %}" class="link-register">Đăng ký</a>
+            <a href="{% url 'login' %}" class="btn-login-special">Đăng nhập</a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    {% block content %}
+    {% endblock %}
+
+    <footer>
+      <div class="container">
+        <p>© 2026 DDC Books. Giữ gìn văn hóa đọc.</p>
+        <p>Developed by <a href="#" class="footer-link">Cododa Studio</a></p>
+      </div>
+    </footer>
+</body>
+</html>
