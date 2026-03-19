@@ -36,6 +36,8 @@ header .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    max-width: 1200px; /* Có thể tăng nhẹ để rộng rãi hơn */
+    margin: auto;
 }
 
 /* Logo: Dùng phông Serif cho cổ điển nhưng màu sáng */
@@ -49,9 +51,54 @@ header .container {
     color: #A98F7C; /* Màu đồng nhẹ từ logo DDC */
 }
 
+/* Container chứa cả Menu và Auth-box */
+nav {
+    display: flex;
+    align-items: center;
+    flex-grow: 1; /* Để nav chiếm hết khoảng trống giữa logo và lề phải */
+}
+
+/* Danh sách menu chính (Trang chủ, Danh mục...) */
 nav ul {
     display: flex;
     list-style: none;
+    margin-left: auto; /* Đẩy cụm menu này sang phải */
+    margin-right: 40px; /* Khoảng cách giữa menu và box Đăng nhập */
+}
+
+/* Box chứa Đăng ký & Đăng nhập nằm sát góc phải */
+.auth-box {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background-color: rgba(78, 52, 46, 0.05); /* Nền mờ sang trọng */
+    padding: 5px 5px 5px 15px;
+    border-radius: 30px;
+    border: 1px solid #E0D7C6;
+}
+
+/* Link Đăng ký */
+.link-register {
+    text-decoration: none;
+    color: #4E342E;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Nút Đăng nhập đặc biệt */
+.btn-login-special {
+    text-decoration: none;
+    background-color: #4E342E;
+    color: #F5F0E6 !important;
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.btn-login-special:hover {
+    background-color: #E98A61;
 }
 
 nav ul li a {
@@ -62,6 +109,7 @@ nav ul li a {
     font-weight: 400;
     transition: 0.3s;
 }
+
 
 nav ul li a:hover,
 nav ul li a.active {
@@ -236,4 +284,3 @@ footer p {
     margin-bottom: 10px;
 }
 
-footer .footer
