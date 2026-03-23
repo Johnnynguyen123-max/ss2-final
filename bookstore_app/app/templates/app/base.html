@@ -2,43 +2,218 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DDC Books - {% block title %}Tri Thức Kết Nối{% endblock %}</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="{% static 'app/css/style.css' %}" />
     <link rel="shortcut icon" href="{% static 'app/images/favicon.ico' %}" type="image/x-icon" />
+
+    <style>
+        /* --- CSS CHO NGĂN KÉO (RIGHT DRAWER) --- */
+        
+        /* 1. Khu vực trigger (Avatar) */
+        .user-drawer-trigger {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 10px;
+            transition: 0.3s;
+        }
+
+        /* 2. Cấu trúc Ngăn kéo */
+        .side-drawer {
+            position: fixed;
+            top: 0;
+            right: -320px; /* Ban đầu nằm ngoài màn hình bên phải */
+            width: 300px;
+            height: 100vh;
+            background: #1a1a1a; /* Màu tối đặc trưng */
+            color: #fff;
+            z-index: 9999;
+            box-shadow: -5px 0 30px rgba(0,0,0,0.5);
+            transition: all 0.5s cubic-bezier(0.77, 0, 0.175, 1); /* Hiệu ứng trượt cực mượt */
+            display: flex;
+            flex-direction: column;
+            padding: 40px 25px;
+        }
+
+        /* Khi di chuột vào vùng Header chứa Avatar hoặc chính ngăn kéo thì mở */
+        .auth-box:hover .side-drawer,
+        .side-drawer:hover {
+            right: 0;
+        }
+
+        /* 3. Nội dung bên trong ngăn kéo */
+        .drawer-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+        }
+
+        .drawer-avatar {
+            width: 80px;
+            height: 80px;
+            background: #E98A61;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            border: 3px solid #333;
+        }
+
+        .drawer-name { font-size: 1.2rem; font-weight: 600; margin-bottom: 5px; }
+        .drawer-rank { color: #888; font-size: 0.85rem; }
+
+        .drawer-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex-grow: 1;
+        }
+
+        .drawer-menu a {
+            color: #bbb;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.3s;
+        }
+
+        .drawer-menu a:hover {
+            background: #2d2d2d;
+            color: #E98A61;
+            padding-left: 20px;
+        }
+
+        /* Dark Mode Row trong ngăn kéo */
+        .drawer-footer {
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+
+        .dark-mode-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #bbb;
+            margin-bottom: 20px;
+        }
+
+        /* Lớp phủ mờ nền khi mở ngăn kéo (Optional) */
+        .drawer-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s;
+            z-index: 9998;
+        }
+        .auth-box:hover ~ .drawer-overlay {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
 </head>
 <body>
     <header>
-      <div class="container">
-        <h1 class="logo">DDC <span>BOOKS</span></h1>
-        <nav>
-          <ul>
-            <li><a href="{% url 'home' %}" class="active">Trang chủ</a></li>
-            <li><a href="#">Danh mục</a></li>
-            <li><a href="#">Sách mới</a></li>
-            <li><a href="#">Tin tức</a></li>
-            <li><a href="#">Liên hệ</a></li>
-          </ul>
-          <div class="auth-box">
-            <a href="{% url 'signup' %}" class="link-register">Đăng ký</a>
-            <a href="{% url 'login' %}" class="btn-login-special">Đăng nhập</a>
-          </div>
-        </nav>
-      </div>
+        <div class="container">
+            <h1 class="logo">DDC <span>BOOKS</span></h1>
+            <nav>
+                <ul>
+                    <li><a href="{% url 'home' %}" class="active">Trang chủ</a></li>
+                    <li><a href="#">Danh mục</a></li>
+                    <li><a href="#">Sách mới</a></li>
+                    <li><a href="#">Tin tức</a></li>
+                    <li><a href="#">Liên hệ</a></li>
+                </ul>
+                <div class="auth-box">
+                    {% if user.is_authenticated %}
+                        <div class="user-drawer-trigger">
+                            <div class="user-avatar-small"><i class="fas fa-user"></i></div>
+                            <span class="user-name-text">Chào, {{ user.first_name }}</span>
+                        </div>
+
+                        <div class="side-drawer">
+                            <div class="drawer-header">
+                                <div class="drawer-avatar"><i class="fas fa-user"></i></div>
+                                <p class="drawer-name">{{ user.first_name }} {{ user.last_name }}</p>
+                                <p class="drawer-rank">Thành viên thân thiết</p>
+                            </div>
+
+                            <div class="drawer-menu">
+                                <a href="#"><i class="far fa-user"></i> Hồ sơ cá nhân</a>
+                                <a href="#"><i class="fas fa-shopping-bag"></i> Lịch sử mua hàng</a>
+                                <a href="#"><i class="fas fa-heart"></i> Sách yêu thích</a>
+                                <a href="#"><i class="fas fa-cog"></i> Cài đặt</a>
+                            </div>
+
+                            <div class="drawer-footer">
+                                <div class="dark-mode-row">
+                                    <span><i class="far fa-moon"></i> Chế độ tối</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="darkModeToggle">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <a href="{% url 'logout' %}" class="logout-link" style="color: #ff6b6b; text-decoration: none; display: flex; align-items: center; gap: 10px; padding: 15px;">
+                                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'signup' %}" class="link-register">Đăng ký</a>
+                        <a href="{% url 'login' %}" class="btn-login-special">Đăng nhập</a>
+                    {% endif %}
+                </div>
+            </nav>
+        </div>
     </header>
 
-    {% block content %}
-    {% endblock %}
+    <main>
+        {% block content %}{% endblock %}
+    </main>
 
     <footer>
-      <div class="container">
-        <p>© 2026 DDC Books. Giữ gìn văn hóa đọc.</p>
-        <p>Developed by <a href="#" class="footer-link">Cododa Studio</a></p>
-      </div>
+        <div class="container">
+            <p>© 2026 DDC Books. Giữ gìn văn hóa đọc.</p>
+            <p>Developed by <a href="#" class="footer-link">Cododa Studio</a></p>
+        </div>
     </footer>
+
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+                if(darkModeToggle) darkModeToggle.checked = true;
+            } else {
+                document.body.classList.remove('dark-theme');
+                if(darkModeToggle) darkModeToggle.checked = false;
+            }
+        };
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(savedTheme);
+
+        if(darkModeToggle) {
+            darkModeToggle.addEventListener('change', function() {
+                const newTheme = this.checked ? 'dark' : 'light';
+                applyTheme(newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+        }
+    </script>
 </body>
 </html>

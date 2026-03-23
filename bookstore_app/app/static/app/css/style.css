@@ -67,15 +67,7 @@ nav ul {
 }
 
 /* Box chứa Đăng ký & Đăng nhập nằm sát góc phải */
-.auth-box {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    background-color: rgba(78, 52, 46, 0.05); /* Nền mờ sang trọng */
-    padding: 5px 5px 5px 15px;
-    border-radius: 30px;
-    border: 1px solid #E0D7C6;
-}
+
 
 /* Link Đăng ký */
 .link-register {
@@ -382,4 +374,423 @@ footer p {
 .auth-links a:hover {
     color: #E98A61;
 }
+/* Style cho lời chào người dùng */
+/* Container bọc ngoài cho Profile */
 
+
+/* Vòng tròn Avatar */
+
+
+/* Chữ chào hỏi */
+.user-welcome {
+    font-size: 0.9rem;
+    color: #4E342E;
+}
+
+.user-welcome strong {
+    color: #3C332D;
+    font-weight: 700;
+}
+
+/* Nút Đăng xuất kiểu Elegant */
+.btn-logout-elegant {
+    text-decoration: none;
+    font-size: 0.8rem;
+    color: #4E342E;
+    border: 1.5px solid #4E342E; /* Viền nâu đậm sang trọng */
+    padding: 6px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.3s;
+}
+
+.btn-logout-elegant i {
+    font-size: 0.75rem;
+}
+
+.btn-logout-elegant:hover {
+    background-color: #4E342E;
+    color: #F5F0E6; /* Màu be sữa của header */
+    box-shadow: 0 4px 10px rgba(78, 52, 46, 0.15);
+}
+
+/* Đảm bảo auth-box không bị thô khi có profile */
+/* --- Tối ưu lại Box chứa Profile (Xóa bỏ khung xám thô) --- */
+.auth-box {
+    display: flex;
+    align-items: center;
+    background: none !important; /* Xóa bỏ nền xám */
+    border: none !important;     /* Xóa bỏ viền khung */
+    padding: 0 !important;
+    margin-left: 20px;
+}
+
+/* Sắp xếp Avatar - Tên - Nút trên một hàng ngang */
+.user-profile-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Khoảng cách đều giữa các thành phần */
+}
+
+/* Vòng tròn Avatar (Nhỏ gọn, tinh tế) */
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: #E98A61; /* Màu cam san hô từ Logo */
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0; /* Không cho icon bị bóp méo */
+}
+
+/* Chữ chào hỏi (Giữ trên 1 dòng) */
+.user-welcome {
+    font-size: 0.9rem;
+    color: #4E342E;
+    white-space: nowrap; /* Quan trọng: Không cho phép xuống dòng */
+}
+
+.user-welcome strong {
+    color: #3C332D;
+    font-weight: 600;
+}
+
+/* Nút Đăng xuất (Dạng Outline thanh lịch) */
+.btn-logout-elegant {
+    text-decoration: none;
+    font-size: 0.75rem;
+    color: #4E342E;
+    border: 1px solid #4E342E; /* Viền mảnh */
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: 0.3s all ease;
+    background: white;
+}
+
+.btn-logout-elegant:hover {
+    background-color: #4E342E;
+    color: #F5F0E6;
+}
+/* --- Dropdown Container --- */
+
+.dropdown-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: 0.3s;
+}
+
+/* Icon nhỏ gọn như bạn muốn */
+.user-avatar-small {
+    width: 28px;
+    height: 28px;
+    background: #E98A61;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+.user-name-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #4E342E;
+}
+
+.arrow-icon {
+    font-size: 0.7rem;
+    color: #A98F7C;
+}
+
+/* --- Dropdown Content (Dark Mode) --- */
+
+
+.dropdown-header {
+    text-align: center;
+    padding: 10px 20px;
+}
+
+.user-avatar-large {
+    width: 50px;
+    height: 50px;
+    background: #333;
+    color: white;
+    border-radius: 50%;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border: 2px solid #E98A61;
+}
+
+.user-full-name {
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+.user-subtext {
+    color: #888;
+    font-size: 0.75rem;
+}
+
+.dropdown-divider {
+    border: 0;
+    border-top: 1px solid #333;
+    margin: 10px 0;
+}
+
+
+
+
+
+
+.logout-link {
+    color: #ff5e5e !important;
+}
+
+/* Switch Dark Mode (Trang trí thêm cho giống mẫu) */
+.dark-mode-switch {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 20px;
+    color: #ccc;
+    font-size: 0.9rem;
+}
+/* Tắt các style mặc định gây lỗi */
+
+
+.dropdown-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    background: rgba(78, 52, 46, 0.05);
+    padding: 6px 15px;
+    border-radius: 25px;
+}
+
+.user-avatar-small {
+    width: 28px;
+    height: 28px;
+    background: #E98A61;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+/* Menu thả xuống - Ép màu tối */
+
+
+.dropdown-header {
+    text-align: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #333;
+}
+
+.user-avatar-large {
+    width: 50px;
+    height: 50px;
+    background: #333;
+    border-radius: 50%;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #E98A61;
+    font-size: 1.4rem;
+}
+
+.user-full-name { color: white !important; font-weight: 600; margin: 0; }
+.user-subtext { color: #888; font-size: 0.8rem; margin: 5px 0 0 0; }
+
+.dropdown-body { padding: 10px 0; }
+
+.dropdown-body a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    color: #bbb !important;
+    font-size: 0.9rem;
+    transition: 0.3s;
+}
+
+.dropdown-body a:hover {
+    background: #2d2d2d;
+    color: #E98A61 !important;
+}
+
+.dark-mode-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 20px;
+    color: #bbb;
+    font-size: 0.9rem;
+}
+
+.logout-link {
+    color: #ff6b6b !important;
+    font-weight: 600;
+}
+
+.dropdown-body hr { border: 0; border-top: 1px solid #333; margin: 10px 0; }
+
+/* --- Custom Switch Button cho DDC Books --- */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 18px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #444; /* Nền tối khi chưa bật */
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 12px;
+    width: 12px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+/* Màu cam san hô khi bật Switch */
+input:checked + .slider {
+    background-color: #E98A61;
+}
+
+input:checked + .slider:before {
+    transform: translateX(16px);
+}
+/* Đảm bảo khoảng cách an toàn */
+nav ul {
+    margin-right: 20px; /* Giảm nhẹ để nhường chỗ cho auth-box */
+}
+
+.dropdown-trigger {
+    background: rgba(78, 52, 46, 0.08); /* Làm đậm nền trigger một chút cho rõ ràng */
+    border: 1px solid rgba(78, 52, 46, 0.1);
+}
+
+.dropdown-trigger:hover {
+    background: rgba(233, 138, 97, 0.1); /* Hover hiện màu cam nhẹ */
+}
+/* --- Logic chuyển đổi màu cho Dark Theme --- */
+body.dark-theme {
+    background-color: #121212; /* Nền tối hẳn */
+    color: #e0e0e0;
+}
+
+body.dark-theme header {
+    background-color: #1a1a1a;
+    border-bottom: 1px solid #333;
+}
+
+body.dark-theme .logo, 
+body.dark-theme nav ul li a,
+body.dark-theme .user-name-text {
+    color: #f5f0e6;
+}
+
+body.dark-theme .book-card {
+    background-color: #1e1e1e;
+    border: 1px solid #333;
+}
+
+body.dark-theme .book-info h4 {
+    color: #fff;
+}
+
+body.dark-theme footer {
+    background-color: #000;
+}
+/* Container bọc ngoài */
+
+
+/* --- Dropdown Drawer Effect --- */
+.user-dropdown {
+    position: relative;
+    /* Tạo khoảng đệm để chuột di chuyển từ trigger xuống menu không bị mất hover */
+    padding: 10px 0; 
+}
+
+.dropdown-content {
+    display: block !important; 
+    position: absolute;
+    right: 0;
+    top: 55px; /* Điều chỉnh khoảng cách khớp với header */
+    background: #232323 !important;
+    width: 280px;
+    border-radius: 12px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+    z-index: 1000;
+    border: 1px solid #333;
+    
+    /* Trạng thái ẩn của ngăn kéo */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-15px); 
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none; /* Tránh click nhầm khi đang ẩn */
+}
+
+/* Hiệu ứng trượt xuống khi hover */
+.user-dropdown:hover .dropdown-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Mũi tên trỏ lên phía trên menu */
+.dropdown-content::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    right: 20px;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid #232323;
+}
+
+/* Fix lỗi hiển thị text trong Dark Mode Drawer */
+.user-full-name { color: #fff !important; }
+.user-subtext { color: #aaa !important; }
+.dropdown-body a { color: #ccc !important; }
+.dropdown-body a:hover { color: #E98A61 !important; background: #2d2d2d; }
