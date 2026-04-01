@@ -2,29 +2,64 @@
 {% load static %}
 
 {% block content %}
-    <section class="hero">
-      <div class="container hero-content">
-        <img src="{% static 'app/images/logo.png' %}" alt="DDC Books Logo" class="hero-logo-img" />
-        <h2>Gói ghém ký ức, Kết nối tri thức</h2>
-        <p>Khám phá kho tàng sách cũ quý hiếm và những tựa sách mới nhất.</p>
-        <a href="#new-arrivals" class="btn-primary">KHÁM PHÁ NGAY</a>
-      </div>
-    </section>
+  <section class="hero">
+    <div class="container">
+      <img src="{% static 'app/images/logo.png' %}" alt="DDC Books Logo" class="hero-logo-img" />
+      <h1 style="font-family: 'Playfair Display'; font-size: 2.8rem; color: var(--dark-brown);">Gói ghém ký ức, Kết nối tri thức</h1>
+      <p style="margin-top: 15px; font-size: 1.1rem;">Chào mừng bạn đến với cộng đồng yêu sách DDC Books</p>
+    </div>
+  </section>
 
-    <main class="container" id="new-arrivals">
-      <h3 class="section-title">Sách mới về</h3>
-      <div class="book-grid">
-        <div class="book-card">
-          <div class="book-img">
-            <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?q=80&w=400&auto=format&fit=crop" alt="Bìa sách Mẫu" />
+  <div class="container">
+    <h2 style="text-align: center; margin-bottom: 40px; font-family: 'Playfair Display';">Sách mới cập nhật</h2>
+
+    <div class="book-grid">
+      {% for book in books %}
+        <a href="{% url 'book_detail' book.id %}" class="book-card-link" style="text-decoration: none; color: inherit; display: block;">
+          <div class="book-card" style="position: relative;">
+            
+            {% if book.is_new %}
+              <span class="badge-new">MỚI</span>
+            {% endif %}
+
+            <button class="wishlist-btn {% if book.id in favorite_book_ids %}active{% endif %}" 
+                    onclick="event.preventDefault(); event.stopPropagation(); toggleWishlist(this, '{{ book.id }}')">
+              <i class="{% if book.id in favorite_book_ids %}fas{% else %}far{% endif %} fa-heart"></i>
+            </button>
+
+            <div class="book-thumb" style="background: {% if not book.image %}#eee{% endif %}; padding: 0; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+              {% if book.image %}
+                <img src="{{ book.image.url }}" alt="{{ book.title }}" style="width: 100%; height: 100%; object-fit: cover;" />
+              {% else %}
+                <div style="font-size: 3rem;">
+                  {% if 'Java' in book.title %}
+                    <i class="fab fa-java" style="color: #f89820;"></i>
+                  {% elif 'Python' in book.title or 'Django' in book.title %}
+                    <i class="fab fa-python" style="color: #3776ab;"></i>
+                  {% elif 'Blender' in book.title %}
+                    <i class="fas fa-cube" style="color: #e87d0d;"></i>
+                  {% elif 'Database' in book.title or 'MySQL' in book.title %}
+                    <i class="fas fa-database" style="color: #4479a1;"></i>
+                  {% elif 'Bảo mật' in book.title %}
+                    <i class="fas fa-shield-alt" style="color: #4E342E;"></i>
+                  {% elif 'Game' in book.title %}
+                    <i class="fas fa-gamepad" style="color: #7b1fa2;"></i>
+                  {% else %}
+                    <i class="fas fa-paint-brush" style="color: #607d8b;"></i>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+
+            <h4 style="margin-top: 15px;">{{ book.title }}</h4>
+            <p style="color: #7A6D5D; font-size: 0.9rem;">Tác giả: {{ book.author }}</p>
+            <p style="color: var(--primary); font-weight: 700; font-size: 1.2rem; margin-top: 10px;">{{ book.price }}đ</p>
           </div>
-          <div class="book-info">
-            <h4>Kỹ thuật Đồ họa: Nguyên lý và Thực hành</h4>
-            <p class="author">Tác giả: Cường, Đông, Đăng</p>
-            <p class="price">250.000đ</p>
-          </div>
-          <a href="#" class="btn-secondary">Thêm vào giỏ</a>
-        </div>
-        </div>
-    </main>
-{% endblock %}
+        </a>
+      {% empty %}
+        <p style="text-align: center; grid-column: 1/-1;">Hiện chưa có sách nào trong cửa hàng.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% endblock %}

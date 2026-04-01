@@ -1,62 +1,165 @@
-from django.shortcuts import render, redirect
+import json
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth import login as auth_login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.http import JsonResponse
+from .models import Profile, Book 
 
+try:
+    from .forms import UserUpdateForm, ProfileUpdateForm
+except ImportError:
+    pass 
+
+# --- TRANG CHỦ ---
+# views.py
 def home(request):
-    return render(request, 'app/home.html')
+    books = Book.objects.all() # Chỉ lấy từ Database
+    
+    favorite_book_ids = []
+    if request.user.is_authenticated:
+        favorite_book_ids = request.user.favorite_books.values_list('id', flat=True)
+    
+    context = {
+        'books': books,
+        'favorite_book_ids': favorite_book_ids
+    }
+    return render(request, 'app/home.html', context)
 
-# ĐĂNG KÝ: Lưu mật khẩu thô
+# --- ĐĂNG KÝ ---
 def signup(request):
     if request.method == 'POST':
-        # 1. In toàn bộ dữ liệu nhận từ Form ra màn hình đen (Terminal)
-        print("--- Dữ liệu nhận từ Form ---")
-        print(request.POST) 
-
-        full_name = request.POST.get('full_name')
+        full_name = request.POST.get('full_name', '')
         email = request.POST.get('email')
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
 
         if password == confirm_password:
             if User.objects.filter(username=email).exists():
-                print("LỖI: Email đã tồn tại trong DB")
-                return render(request, 'app/signup.html', {'error': 'Email này đã tồn tại'})
+                return render(request, 'app/signup.html', {'error': 'Email này đã được đăng ký rồi!'})
             
-            user = User(username=email, email=email, first_name=full_name)
-            user.password = password
-            user.save()
+            user = User.objects.create_user(
+                username=email, 
+                email=email, 
+                password=password,
+                first_name=full_name
+            )
             
-            print(f"THÀNH CÔNG: Đã lưu User {email} với mật khẩu thô là {password}")
+            Profile.objects.get_or_create(user=user)
+            messages.success(request, 'Đăng ký thành công! Mời bạn đăng nhập.')
             return redirect('login')
         else:
-            print(f"LỖI: Mật khẩu không khớp! ({password} vs {confirm_password})")
-            return render(request, 'app/signup.html', {'error': 'Mật khẩu không khớp'})
+            return render(request, 'app/signup.html', {'error': 'Mật khẩu xác nhận không khớp'})
             
     return render(request, 'app/signup.html')
 
-# ĐĂNG NHẬP: Kiểm tra mật khẩu thô
+# --- ĐĂNG NHẬP ---
 def login_view(request): 
     if request.method == 'POST':
         email_input = request.POST.get('username') 
         password_input = request.POST.get('password')
-
+        
         try:
             user = User.objects.get(username=email_input)
-            
-            # So sánh mật khẩu thô
-            if user.password == password_input:
-                # Gán backend thủ công để Django chấp nhận login mà không cần băm (hashing)
+            if user.check_password(password_input):
                 user.backend = 'django.contrib.auth.backends.ModelBackend'
                 auth_login(request, user)
-                
-                return redirect('home') # Bây giờ nó sẽ nhảy vào trang chủ
+                return redirect('home')
             else:
-                return render(request, 'app/login.html', {'error': 'Sai mật khẩu'})
+                return render(request, 'app/login.html', {'error': 'Mật khẩu không chính xác'})
         except User.DoesNotExist:
-            return render(request, 'app/login.html', {'error': 'Tài khoản không tồn tại'})
+            return render(request, 'app/login.html', {'error': 'Tài khoản Email này không tồn tại'})
             
     return render(request, 'app/login.html')
 
+# --- ĐĂNG XUẤT ---
 def logout_view(request):
     logout(request)
+    return redirect('home')
+
+# --- HỒ SƠ CÁ NHÂN ---
+@login_required
+def profile(request):
+    user_profile, created = Profile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=user_profile)
+        
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            messages.success(request, 'Hồ sơ đã được cập nhật!')
+            return redirect('profile')
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=user_profile)
+
+    context = {'u_form': u_form, 'p_form': p_form}
+    return render(request, 'app/profile.html', context)
+
+# --- XỬ LÝ YÊU THÍCH (API) ---
+@login_required
+def toggle_wishlist(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            book_id = data.get('book_id')
+            
+            # Sửa lỗi: dùng get_object_or_404 thay vì get_object_or_create
+            book = get_object_or_404(Book, id=book_id)
+            user = request.user
+            
+            if book.wishlist.filter(id=user.id).exists():
+                book.wishlist.remove(user)
+                action = 'removed'
+            else:
+                book.wishlist.add(user)
+                action = 'added'
+                
+            return JsonResponse({'status': 'success', 'action': action})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import Book
+
+# views.py
+# views.py
+def book_detail(request, book_id):
+    # 1. Lấy thông tin sách từ Database
+    book = get_object_or_404(Book, id=book_id)
+    
+    # 2. Lấy danh sách bình luận (hiển thị từ mới đến cũ)
+    comments = book.comments.all().order_by('-created_at')
+    
+    # 3. Logic lấy danh sách ID yêu thích (nếu cần hiển thị nút tim ở trang detail)
+    is_favorite = False
+    if request.user.is_authenticated:
+        is_favorite = book.wishlist.filter(id=request.user.id).exists()
+    
+    context = {
+        'book': book,
+        'comments': comments,
+        'is_favorite': is_favorite,
+    }
+    # Trả về template HTML thay vì JsonResponse
+    return render(request, 'app/book_detail.html', context)
+
+# app/views.py
+def add_to_cart(request, book_id):
+    if request.method == 'POST':
+        cart = request.session.get('cart', {})
+        quantity = int(request.POST.get('quantity', 1))
+        
+        # Thêm hoặc cập nhật số lượng trong giỏ hàng (session)
+        cart[str(book_id)] = cart.get(str(book_id), 0) + quantity
+        request.session['cart'] = cart
+        
+        messages.success(request, 'Đã thêm sách vào giỏ hàng!')
+        return redirect('book_detail', book_id=book_id)
+    
     return redirect('home')

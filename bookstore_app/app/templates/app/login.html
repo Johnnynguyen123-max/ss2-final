@@ -1,34 +1,23 @@
 {% extends 'app/base.html' %}
-{% load static %}
-
-{% block title %}
-  Đăng nhập - DDC Books
-{% endblock %}
-
+{% block title %}Đăng nhập - DDC Books{% endblock %}
 {% block content %}
-  <section class="auth-section">
+<section class="auth-section">
     <div class="auth-card">
-      <div class="auth-logo">
-        <img src="{% static 'app/images/logo.png' %}" alt="DDC Books Logo" style="max-width: 200px;" />
-      </div>
-      <h2 class="auth-title">Đăng nhập</h2>
-      <form method="post" class="auth-form">
-        {% csrf_token %}
-
-        {% if error %}
-          <p style="color: #E98A61; text-align: center; margin-bottom: 15px;">{{ error }}</p>
-        {% endif %}
-
-        <div class="input-group">
-          <i class="fas fa-user"></i>
-          <input type="text" name="username" placeholder="Tên đăng nhập" required />
-        </div>
-        <div class="input-group">
-          <i class="fas fa-lock"></i>
-          <input type="password" name="password" placeholder="Mật khẩu" required />
-        </div>
-        <button type="submit" class="auth-submit">ĐĂNG NHẬP</button>
-      </form>
+        <h2 class="auth-title">Đăng nhập</h2>
+        <form method="post">
+            {% csrf_token %}
+            {% if error %}<p style="color: var(--primary); margin-bottom: 15px;">{{ error }}</p>{% endif %}
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" name="username" placeholder="Tên đăng nhập" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" name="password" placeholder="Mật khẩu" required>
+            </div>
+            <button type="submit" class="btn-submit">ĐĂNG NHẬP</button>
+            <p style="margin-top: 20px; font-size: 0.9rem;">Chưa có tài khoản? <a href="{% url 'signup' %}" style="color: var(--primary); text-decoration: none; font-weight: 600;">Đăng ký ngay</a></p>
+        </form>
     </div>
-  </section>
+</section>
 {% endblock %}

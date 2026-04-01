@@ -1,54 +1,18 @@
 {% extends 'app/base.html' %}
-{% load static %}
-
-{% block title %}Đăng ký tài khoản - Tri Thức Kết Nối{% endblock %}
-
+{% block title %}Đăng ký - DDC Books{% endblock %}
 {% block content %}
-<section class="auth-section signup-section">
-    <div class="container">
-        <div class="auth-card signup-card">
-            <div class="auth-logo">
-                <img src="{% static 'app/images/logo.png' %}" alt="DDC Books Logo" class="hero-logo-img">
-            </div>
-            
-            <h2 class="auth-title">Đăng ký tài khoản</h2>
-            
-            <form method="post" class="auth-form">
-                {% csrf_token %}
-                
-                <div class="input-group">
-                    <i class="fas fa-user"></i>
-                    <input type="text" name="full_name" placeholder="Họ và tên" required>
-                </div>
-
-                <div class="input-group">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" name="email" placeholder="Email" required>
-                </div>
-
-                <div class="input-group">
-                    <i class="fas fa-phone"></i>
-                    <input type="tel" name="phone_number" placeholder="Số điện thoại" required>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-key"></i>
-                    <input type="password" name="password" placeholder="Mật khẩu" required>
-                </div>
-
-                <div class="input-group">
-                    <i class="fas fa-key"></i>
-                    <input type="password" name="confirm_password" placeholder="Xác nhận mật khẩu" required>
-                </div>
-                
-                <button type="submit" class="btn-primary auth-submit">ĐĂNG KÝ</button>
-                
-                <div class="auth-links">
-                    <p>Tôi đồng ý với <a href="#" class="auth-link-register">Điều khoản dịch vụ</a> và <a href="#" class="auth-link-register">Chính sách bảo mật</a></p>
-                    <p>Đã có tài khoản? <a href="{% url 'login' %}" class="auth-link-register">Đăng nhập ngay</a></p>
-                </div>
-            </form>
-        </div>
+<section class="auth-section">
+    <div class="auth-card">
+        <h2 class="auth-title">Đăng ký tài khoản</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="input-group"><i class="fas fa-user"></i><input type="text" name="full_name" placeholder="Tên người dùng" required></div>
+            <div class="input-group"><i class="fas fa-envelope"></i><input type="email" name="email" placeholder="Email (sử dụng để đăng nhập)" required></div>
+            <div class="input-group"><i class="fas fa-key"></i><input type="password" name="password" placeholder="Mật khẩu" required></div>
+            <div class="input-group"><i class="fas fa-check-double"></i><input type="password" name="confirm_password" placeholder="Xác nhận mật khẩu" required></div>
+            <button type="submit" class="btn-submit">TẠO TÀI KHOẢN</button>
+            <p style="margin-top: 20px; font-size: 0.9rem;">Đã có tài khoản? <a href="{% url 'login' %}" style="color: var(--primary); text-decoration: none; font-weight: 600;">Đăng nhập</a></p>
+        </form>
     </div>
 </section>
 {% endblock %}

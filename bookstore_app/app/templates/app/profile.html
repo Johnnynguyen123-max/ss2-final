@@ -1,0 +1,87 @@
+{% extends "app/base.html" %}
+{% load static %}
+
+{% block title %}Hồ sơ cá nhân - DDC Books{% endblock %}
+
+{% block content %}
+<div class="auth-section">
+    <div class="auth-card" style="max-width: 550px;">
+        <h2 class="auth-title">Cài đặt hồ sơ</h2>
+
+        <div style="text-align: center; margin-bottom: 30px; position: relative;">
+            <div style="width: 120px; height: 120px; margin: 0 auto; position: relative;">
+                <img src="{{ user.profile.avatar.url }}" 
+                     alt="Avatar" 
+                     style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--beige); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                
+                <label for="id_avatar" style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white;">
+                    <i class="fas fa-camera" style="font-size: 0.9rem;"></i>
+                </label>
+            </div>
+            <p style="margin-top: 15px; font-weight: 700; color: var(--dark-brown); font-size: 1.1rem;">
+                {{ user.first_name|default:user.username }}
+            </p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div style="text-align: left; margin-bottom: 20px;">
+                <label style="font-weight: 600; font-size: 0.9rem; color: #7A6D5D; display: block; margin-bottom: 8px;">Thông tin cá nhân</label>
+                
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    {{ u_form.first_name }}
+                </div>
+                
+                <div class="input-group" style="margin-top: 15px;">
+                    <i class="fas fa-envelope"></i>
+                    {{ u_form.email }}
+                </div>
+            </div>
+
+            <div style="text-align: left; margin-bottom: 25px;">
+                <label style="font-weight: 600; font-size: 0.9rem; color: #7A6D5D; display: block; margin-bottom: 8px;">Liên hệ & Hình ảnh</label>
+                
+                <div class="input-group">
+                    <i class="fas fa-phone"></i>
+                    {{ p_form.phone }}
+                </div>
+
+                <div style="margin-top: 15px; padding: 10px; background: var(--white-warm); border-radius: 8px; border: 1px dashed #E0D7C6;">
+                    <p style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">Chọn ảnh đại diện mới:</p>
+                    <div style="font-size: 0.85rem;">
+                        {{ p_form.avatar }}
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save" style="margin-right: 8px;"></i> Lưu thay đổi
+            </button>
+            
+            <a href="{% url 'home' %}" style="display: block; margin-top: 15px; text-decoration: none; color: #A98F7C; font-size: 0.9rem;">
+                Quay lại trang chủ
+            </a>
+        </form>
+    </div>
+</div>
+
+<style>
+    .input-group input {
+        width: 100%;
+        padding: 12px 15px 12px 42px;
+        border: 1px solid #E0D7C6;
+        border-radius: 8px;
+        outline: none;
+        font-family: 'Roboto', sans-serif;
+    }
+    .input-group input:focus {
+        border-color: var(--primary);
+    }
+    /* Ẩn input file thô kệch của Django để dùng label camera đẹp hơn */
+    #id_avatar {
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}

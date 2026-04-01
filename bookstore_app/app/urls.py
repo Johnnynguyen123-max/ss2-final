@@ -1,9 +1,21 @@
 from django.urls import path
 from . import views
+from django.conf import settings  # Thêm dòng này
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.home, name='home'),
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup, name='signup'),
     path('logout/', views.logout_view, name='logout'),
+    
+    # ĐƯỜNG DẪN MỚI: Trang hồ sơ cá nhân
+    path('profile/', views.profile, name='profile'),
+    # urls.py
+
+    path('book/<int:book_id>/', views.book_detail, name='book_detail'),
+    path('add-to-cart/<int:book_id>/', views.add_to_cart, name='add_to_cart'),
+
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

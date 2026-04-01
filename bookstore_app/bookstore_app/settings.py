@@ -118,3 +118,11 @@ USE_TZ = True
 STATIC_URL = 'static/'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
+
+import os
+
+# Đường dẫn URL để truy cập ảnh qua trình duyệt
+MEDIA_URL = '/media/'
+
+# Thư mục thực tế trên máy tính để lưu trữ ảnh
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
