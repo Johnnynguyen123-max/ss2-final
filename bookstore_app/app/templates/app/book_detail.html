@@ -49,9 +49,13 @@
                         <label style="font-size: 0.8rem; color: #999; font-weight: bold; text-transform: uppercase;">Số lượng</label>
                         <input type="number" name="quantity" value="1" min="1" style="width: 80px; padding: 15px; border-radius: 12px; border: 2px solid #eee; text-align: center; font-size: 1.1rem; font-weight: bold;">
                     </div>
-                    <button type="submit" class="btn-submit" style="flex: 1; margin-top: 22px; border-radius: 12px; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s; cursor: pointer;">
-                        <i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng
-                    </button>
+                    <button type="button" 
+        onclick="addToCartFromModal(event, '{{ book.id }}')" 
+        class="btn-submit" 
+        style=""flex: 1; margin-top: 22px; border-radius: 12px; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s; cursor: pointer;"">
+    <i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng
+</button>
+                    
                 </form>
             </div>
 

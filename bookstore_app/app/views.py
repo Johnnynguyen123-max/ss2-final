@@ -151,27 +151,23 @@ def book_detail(request, book_id):
 
 # app/views.py
 # views.py
+from django.http import JsonResponse
+
+from django.http import JsonResponse
+
 def add_to_cart(request, book_id):
     if request.method == 'POST':
         cart = request.session.get('cart', {})
+        quantity = int(request.POST.get('quantity', 1))
         
-        # Lấy quantity từ FormData gửi lên
-        try:
-            quantity = int(request.POST.get('quantity', 1))
-        except (ValueError, TypeError):
-            quantity = 1
-            
         str_id = str(book_id)
+        # Cộng dồn số lượng
+        cart[str_id] = cart.get(str_id, 0) + quantity
         
-        # Cộng dồn số lượng vào Session
-        if str_id in cart:
-            cart[str_id] += quantity
-        else:
-            cart[str_id] = quantity
-            
         request.session['cart'] = cart
+        request.session.modified = True # Bắt buộc có dòng này để Django lưu Session
         
-        # Tính tổng số lượng tất cả sản phẩm để hiển thị cạnh logo
+        # Tính tổng tất cả món hàng để trả về cho Frontend
         total_items = sum(cart.values())
         
         return JsonResponse({
@@ -179,6 +175,83 @@ def add_to_cart(request, book_id):
             'total_items': total_items
         })
     return JsonResponse({'status': 'error'}, status=400)
+    if request.method == 'POST':
+        cart = request.session.get('cart', {})
+        quantity = int(request.POST.get('quantity', 1))
+        
+        str_id = str(book_id)
+        cart[str_id] = cart.get(str_id, 0) + quantity
+        
+        request.session['cart'] = cart
+        request.session.modified = True
+        
+        # Chỉ trả về bấy nhiêu đây là đủ để JS chạy tích xanh
+        return JsonResponse({
+            'status': 'success',
+            'total_items': sum(cart.values())
+        })
+    return JsonResponse({'status': 'error'}, status=400)
+    if request.method == 'POST':
+        cart = request.session.get('cart', {})
+        
+        # Lấy số lượng
+        try:
+            quantity = int(request.POST.get('quantity', 1))
+        except (ValueError, TypeError):
+            quantity = 1
+            
+        str_id = str(book_id)
+        
+        # Cập nhật session
+        if str_id in cart:
+            cart[str_id] += quantity
+        else:
+            cart[str_id] = quantity
+            
+        request.session['cart'] = cart
+        # Đánh dấu session đã thay đổi
+        request.session.modified = True
+        
+        total_items = sum(cart.values())
+        
+        # Trả về JSON để JavaScript xử lý
+        return JsonResponse({
+    'status': 'success',
+    'total_items': sum(request.session.get('cart', {}).values())
+})
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+    if request.method == 'POST':
+        cart = request.session.get('cart', {})
+        
+        # Lấy số lượng từ request
+        try:
+            quantity = int(request.POST.get('quantity', 1))
+        except (ValueError, TypeError):
+            quantity = 1
+            
+        str_id = str(book_id)
+        
+        # Cập nhật session
+        if str_id in cart:
+            cart[str_id] += quantity
+        else:
+            cart[str_id] = quantity
+            
+        request.session['cart'] = cart
+        # Đánh dấu session đã thay đổi để Django lưu lại
+        request.session.modified = True
+        
+        total_items = sum(cart.values())
+        
+        # TRẢ VỀ JSON thay vì alert
+        return JsonResponse({
+            'status': 'success',
+            'total_items': total_items,
+            'message': 'Thêm vào giỏ hàng thành công!'
+        })
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
     
 # views.py
 def cart_detail(request):

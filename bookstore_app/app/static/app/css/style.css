@@ -368,3 +368,11 @@ nav { display: flex; align-items: center; gap: 40px; }
     background: #E0D7C6;
     border-radius: 10px;
 }
+@keyframes badgePop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}
+.badge-animate {
+    animation: badgePop 0.4s ease-out;
+}

@@ -1,11 +1,10 @@
-// Biến toàn cục để lưu ID sách đang hiển thị trong Modal
 let currentBookId = null;
 
+// Mở chi tiết sách
 function openBookDetail(bookId) {
     currentBookId = bookId;
     const modal = document.getElementById('bookModal');
     
-    // Hiện modal ngay lập tức với trạng thái đang tải
     modal.style.display = "block";
     document.getElementById('imageLoader').style.display = "flex";
     document.getElementById('modalImage').style.display = "none";
@@ -13,13 +12,11 @@ function openBookDetail(bookId) {
     fetch(`/book-detail/${bookId}/`)
     .then(response => response.json())
     .then(data => {
-        // Đổ dữ liệu vào các ID đã có trong HTML của bạn
         document.getElementById('modalTitle').innerText = data.title;
         document.getElementById('modalAuthor').innerText = data.author;
         document.getElementById('modalPrice').innerText = data.price + "đ";
         document.getElementById('modalDescription').innerText = data.description;
         
-        // Hiển thị ảnh
         const modalImg = document.getElementById('modalImage');
         modalImg.src = data.image_url;
         modalImg.onload = function() {
@@ -27,56 +24,83 @@ function openBookDetail(bookId) {
             modalImg.style.display = "block";
         };
     })
-    .catch(err => console.error("Lỗi fetch dữ liệu:", err));
+    .catch(err => {
+        console.error("Lỗi tải chi tiết:", err);
+        closeModal();
+    });
 }
 
-// ĐỔI TÊN HÀM để khớp với HTML (onclick="addToCartFromModal()")
-function addToCartFromModal() {
-    if (!currentBookId) return;
+// Thêm vào giỏ hàng (Truyền thêm tham số e để xử lý event)
+// Thêm tham số bookId vào hàm
+function addToCartFromModal(e, bookId) {
+    // Nếu có bookId truyền vào thì dùng, không thì mới dùng biến toàn cục
+    const idToSubmit = bookId || currentBookId;
 
-    const qtyInput = document.getElementById('buy-qty');
-    const qty = qtyInput ? qtyInput.value : 1;
+    if (!idToSubmit) {
+        console.error("Không tìm thấy ID sách!");
+        return;
+    }
 
-    // Hiệu ứng nút
-    const btn = event.currentTarget;
+    const btn = e.currentTarget;
     const originalText = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
-    // Dùng FormData để Django nhận được request.POST
+    // Lấy số lượng: Ở trang detail dùng name="quantity", ở Modal dùng id="buy-qty"
+    const qtyInput = document.querySelector('input[name="quantity"]') || document.getElementById('buy-qty');
+    const qty = qtyInput ? qtyInput.value : 1;
+
     const formData = new FormData();
     formData.append('quantity', qty);
 
-    fetch(`/add-to-cart/${currentBookId}/`, {
+    fetch(`/add-to-cart/${idToSubmit}/`, {
         method: 'POST',
         headers: {
             'X-CSRFToken': getCookie('csrftoken'),
-            'X-Requested-With': 'XMLHttpRequest' // Để Django biết đây là Ajax
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json();
+    })
     .then(data => {
-        // Cập nhật con số trên Badge (Sử dụng ID để chính xác hơn)
-        const cartBadge = document.getElementById('cart-count'); // Đã sửa id ở bước trước
-        if (cartBadge) {
-            cartBadge.innerText = data.total_items;
-            cartBadge.style.transform = 'scale(1.4)';
-            setTimeout(() => cartBadge.style.transform = 'scale(1)', 200);
+        if (data.status === 'success') {
+            // Cập nhật Badge logo
+            const cartBadge = document.getElementById('cart-count');
+            if (cartBadge) {
+                cartBadge.innerText = data.total_items;
+                cartBadge.style.display = 'inline-block';
+            }
+
+            if (typeof closeModal === "function") closeModal();
+
+            // HIỆN THÔNG BÁO TÍCH XANH + NỀN XÁM
+            Swal.fire({
+                title: 'Thành công!',
+                text: 'Sách đã được thêm vào giỏ hàng',
+                icon: 'success',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                backdrop: `rgba(0,0,0,0.6)`, // LÀM XÁM NỀN XUNG QUANH
+                showClass: { popup: 'animate__animated animate__zoomIn' },
+                hideClass: { popup: 'animate__animated animate__zoomOut' }
+            });
         }
-        
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-        alert("Đã thêm vào giỏ hàng thành công!");
     })
     .catch(err => {
-        console.error("Lỗi giỏ hàng:", err);
+        console.error("Lỗi:", err);
+        Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Vui lòng thử lại!' });
+    })
+    .finally(() => {
         btn.disabled = false;
         btn.innerHTML = originalText;
     });
 }
 
-// Hàm lấy CSRF Token
+// Hàm bổ trợ
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -93,13 +117,11 @@ function getCookie(name) {
 }
 
 function closeModal() {
-    document.getElementById('bookModal').style.display = "none";
+    const modal = document.getElementById('bookModal');
+    if(modal) modal.style.display = "none";
 }
 
-// Đóng modal khi click ra ngoài
 window.onclick = function(event) {
     const modal = document.getElementById('bookModal');
-    if (event.target == modal) {
-        closeModal();
-    }
+    if (event.target == modal) closeModal();
 }
