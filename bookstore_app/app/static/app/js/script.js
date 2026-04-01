@@ -37,34 +37,36 @@ function addToCartFromModal() {
     const qtyInput = document.getElementById('buy-qty');
     const qty = qtyInput ? qtyInput.value : 1;
 
-    // Hiệu ứng đổi màu nút để người dùng biết đã bấm
+    // Hiệu ứng nút
     const btn = event.currentTarget;
     const originalText = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
 
+    // Dùng FormData để Django nhận được request.POST
+    const formData = new FormData();
+    formData.append('quantity', qty);
+
     fetch(`/add-to-cart/${currentBookId}/`, {
         method: 'POST',
         headers: {
             'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
+            'X-Requested-With': 'XMLHttpRequest' // Để Django biết đây là Ajax
         },
-        body: JSON.stringify({ quantity: qty })
+        body: formData
     })
     .then(res => res.json())
     .then(data => {
-        // Cập nhật số lượng trên logo Cart
-        const cartBadge = document.querySelector('.cart-badge');
+        // Cập nhật con số trên Badge (Sử dụng ID để chính xác hơn)
+        const cartBadge = document.getElementById('cart-count'); // Đã sửa id ở bước trước
         if (cartBadge) {
             cartBadge.innerText = data.total_items;
             cartBadge.style.transform = 'scale(1.4)';
             setTimeout(() => cartBadge.style.transform = 'scale(1)', 200);
         }
         
-        // Trả lại trạng thái nút
         btn.disabled = false;
         btn.innerHTML = originalText;
-        
         alert("Đã thêm vào giỏ hàng thành công!");
     })
     .catch(err => {

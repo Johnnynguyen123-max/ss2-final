@@ -150,16 +150,82 @@ def book_detail(request, book_id):
     return render(request, 'app/book_detail.html', context)
 
 # app/views.py
+# views.py
 def add_to_cart(request, book_id):
     if request.method == 'POST':
         cart = request.session.get('cart', {})
-        quantity = int(request.POST.get('quantity', 1))
         
-        # Thêm hoặc cập nhật số lượng trong giỏ hàng (session)
-        cart[str(book_id)] = cart.get(str(book_id), 0) + quantity
+        # Lấy quantity từ FormData gửi lên
+        try:
+            quantity = int(request.POST.get('quantity', 1))
+        except (ValueError, TypeError):
+            quantity = 1
+            
+        str_id = str(book_id)
+        
+        # Cộng dồn số lượng vào Session
+        if str_id in cart:
+            cart[str_id] += quantity
+        else:
+            cart[str_id] = quantity
+            
         request.session['cart'] = cart
         
-        messages.success(request, 'Đã thêm sách vào giỏ hàng!')
-        return redirect('book_detail', book_id=book_id)
+        # Tính tổng số lượng tất cả sản phẩm để hiển thị cạnh logo
+        total_items = sum(cart.values())
+        
+        return JsonResponse({
+            'status': 'success',
+            'total_items': total_items
+        })
+    return JsonResponse({'status': 'error'}, status=400)
     
-    return redirect('home')
+# views.py
+def cart_detail(request):
+    cart = request.session.get('cart', {})
+    cart_items = []
+    total_price = 0
+    
+    # Duyệt qua giỏ hàng trong session để lấy thông tin sách từ DB
+    for book_id, quantity in cart.items():
+        book = get_object_or_404(Book, id=book_id)
+        subtotal = book.price * quantity
+        total_price += subtotal
+        cart_items.append({
+            'book': book,
+            'quantity': quantity,
+            'subtotal': subtotal
+        })
+        
+    context = {
+        'cart_items': cart_items,
+        'total_price': total_price,
+    }
+    return render(request, 'app/cart.html', context)
+def update_cart(request, book_id):
+    if request.method == 'POST':
+        cart = request.session.get('cart', {})
+        action = request.POST.get('action') # 'increase' hoặc 'decrease'
+        str_id = str(book_id)
+
+        if str_id in cart:
+            if action == 'increase':
+                cart[str_id] += 1
+            elif action == 'decrease':
+                cart[str_id] -= 1
+                if cart[str_id] < 1: cart[str_id] = 1
+            
+            request.session['cart'] = cart
+            return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)
+
+def remove_from_cart(request, book_id):
+    if request.method == 'POST':
+        cart = request.session.get('cart', {})
+        str_id = str(book_id)
+        
+        if str_id in cart:
+            del cart[str_id]
+            request.session['cart'] = cart
+            return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'}, status=400)

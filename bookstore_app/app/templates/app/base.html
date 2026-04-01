@@ -15,6 +15,41 @@
 
     <link rel="stylesheet" href="{% static 'app/css/style.css' %}?v={% now 'U' %}" />
   </head>
+  <script>
+  // Hàm này chạy ngay khi load trang để tính lại tổng số lượng từ Session
+  document.addEventListener('DOMContentLoaded', function () {
+    const cartData = {{ request.session.cart|default:"{}"|safe }};
+    const cartCountElement = document.getElementById('cart-count');
+    
+    let totalItems = 0;
+    for (let id in cartData) {
+      totalItems += parseInt(cartData[id]);
+    }
+
+    if (totalItems > 0) {
+      cartCountElement.innerText = totalItems;
+      cartCountElement.style.display = 'inline-block';
+    } else {
+      cartCountElement.style.display = 'none';
+    }
+  });
+
+  // Hàm lấy CSRF Token dùng cho các request POST sau này
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+</script>
   <body>
     <header>
       <div class="container header-flex">
@@ -81,21 +116,24 @@
               </div>
             {% endif %}
           </div>
-          <a href="#" class="cart-link" style="position: relative; color: var(--dark-brown); text-decoration: none; top:4px; left: -25px;">
-        <i class="fa-solid fa-cart-arrow-down" style="font-size: 1.4rem;"></i>
-        <span class="cart-badge" style="
-            position: absolute;
-            top: -12px;
-            right: -16px;
-            background: var(--primary);
-            color: white;
-            font-size: 0.7rem;
-            padding: 2px 7px;
-            border-radius: 50%;
-            font-weight: bold;">
-            0
-        </span>
-    </a>
+          <a href="{% url 'cart_detail' %}" class="cart-link" style="position: relative; color: var(--dark-brown); text-decoration: none; top:4px; left: -25px;">
+    <i class="fa-solid fa-cart-arrow-down" style="font-size: 1.4rem;"></i>
+    <span id="cart-count" class="cart-badge" style="
+        position: absolute;
+        top: -12px;
+        right: -16px;
+        background: var(--primary);
+        color: white;
+        font-size: 0.7rem;
+        padding: 2px 7px;
+        border-radius: 50%;
+        font-weight: bold;
+        /* Nếu không có hàng thì ẩn nhẹ đi, khi có hàng JS sẽ cho hiện lại */
+        display: {% if not request.session.cart %} none {% else %} inline-block {% endif %};">
+        
+        0
+    </span>
+</a>
         </nav>
       </div>
     </header>
