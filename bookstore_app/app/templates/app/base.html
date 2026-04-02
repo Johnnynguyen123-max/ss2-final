@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
     <link rel="stylesheet" href="{% static 'app/css/style.css' %}?v={% now 'U' %}" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
   </head>
   <script>
   // Hàm này chạy ngay khi load trang để tính lại tổng số lượng từ Session
@@ -66,27 +66,18 @@
               <a href="#">Danh mục <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 4px;"></i></a>
               <ul class="submenu">
                 <li>
-                  <a href="#">Văn học trong nước</a>
+                  <a href="{% url 'home' %}">Tất cả sách</a>
                 </li>
-                <li>
-                  <a href="#">Kinh tế - Kỹ năng</a>
-                </li>
-                <li>
-                  <a href="#">Ngoại văn</a>
-                </li>
-                <li>
-                  <a href="#">Thiếu nhi</a>
-                </li>
-                <li>
-                  <a href="#">Công nghệ</a>
-                </li>
-                <li>
-                  <a href="#">Truyện tranh - manga</a>
-                </li>
+
+                {% for cat in categories %}
+                  <li>
+                    <a href="{% url 'home' %}?category={{ cat.id }}">{{ cat.name }}</a>
+                  </li>
+                {% endfor %}
               </ul>
             </li>
             <li>
-              <a href="#">Sách mới</a>
+              <a href="{% url 'home' %}?filter=new" style="{% if request.GET.filter == 'new' %}color: var(--primary); font-weight: bold;{% endif %}">Sách mới</a>
             </li>
             <li>
               <a href="#">Liên hệ</a>
@@ -97,18 +88,15 @@
             {% if user.is_authenticated %}
               <div class="user-dropdown">
                 <div class="avatar-small">
-                  <img src="{{ user.profile.avatar.url }}" 
-                     alt="Avatar" 
-                     style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--beige); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                  <img src="{{ user.profile.avatar.url }}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--beige); box-shadow: 0 4px 10px rgba(0,0,0,0.1);" />
                 </div>
-                <span>Chào, {{ user.first_name}}</span>
+                <span>Chào, {{ user.first_name }}</span>
                 <div class="dropdown-menu">
                   <a href="{% url 'profile' %}"><i class="far fa-user"></i> Hồ sơ cá nhân</a>
                   <a href="#"><i class="fa-regular fa-calendar"></i> Lịch sử mua hàng</a>
                   <a href="#"><i class="fa-regular fa-heart"></i> Sách yêu thích</a>
                   <a href="{% url 'logout' %}" style="color: #ff6b6b;"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
                 </div>
-                
               </div>
             {% else %}
               <div class="log_sign-group">
@@ -119,8 +107,10 @@
             {% endif %}
           </div>
           <a href="{% url 'cart_detail' %}" class="cart-link" style="position: relative; color: var(--dark-brown); text-decoration: none; top:4px; left: -25px;">
-    <i class="fa-solid fa-cart-arrow-down" style="font-size: 1.4rem;"></i>
-    <span id="cart-count" class="cart-badge" style="
+            <i class="fa-solid fa-cart-arrow-down" style="font-size: 1.4rem;"></i>
+            <span id="cart-count"
+              class="cart-badge"
+              style="
         position: absolute;
         top: -12px;
         right: -16px;
@@ -131,17 +121,21 @@
         border-radius: 50%;
         font-weight: bold;
         /* Nếu không có hàng thì ẩn nhẹ đi, khi có hàng JS sẽ cho hiện lại */
-        display: {% if not request.session.cart %} none {% else %} inline-block {% endif %};">
-        
-        0
-    </span>
-</a>
+        display: {% if not request.session.cart %}
+                 none
+              {% else %}
+                 inline-block
+              {% endif %};">
+              0
+            </span>
+          </a>
         </nav>
       </div>
     </header>
 
     <main>
       {% block content %}
+
       {% endblock %}
     </main>
 
@@ -167,6 +161,6 @@
       })
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="{% static 'app/js/script.js' %}"></script>
+    <script src="{% static 'app/js/script.js' %}"></script>
   </body>
 </html>

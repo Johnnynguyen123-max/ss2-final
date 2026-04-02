@@ -36,6 +36,10 @@
 
             <h1 style="font-family: 'Playfair Display'; font-size: 3.2rem; color: var(--dark-brown); margin: 15px 0 10px 0; line-height: 1.2;">{{ book.title }}</h1>
             <p style="font-size: 1.2rem; color: #7A6D5D;">Tác giả: <span style="font-weight: 600; color: var(--dark-brown);">{{ book.author }}</span></p>
+            <div class="book-info-item" style="margin-top: 10px; color: #666; display: flex; align-items: center; gap: 8px;">
+    <i class="far fa-calendar-alt" style="color: var(--primary);"></i>
+    <span>Ngày ra mắt: <strong>{{ book.release_date|date:"d/m/Y" }}</strong></span>
+</div>
             
             <div style="margin: 30px 0; display: flex; align-items: center; gap: 20px;">
                 <h2 style="color: var(--primary); font-size: 2.8rem; font-weight: 800; margin: 0;">{{ book.price }}đ</h2>
@@ -52,7 +56,7 @@
                     <button type="button" 
         onclick="addToCartFromModal(event, '{{ book.id }}')" 
         class="btn-submit" 
-        style=""flex: 1; margin-top: 22px; border-radius: 12px; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s; cursor: pointer;"">
+        style="flex: 1; margin-top: 22px; border-radius: 12px; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s; cursor: pointer;">
     <i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng
 </button>
                     

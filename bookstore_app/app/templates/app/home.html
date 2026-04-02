@@ -3,15 +3,28 @@
 
 {% block content %}
   <section class="hero">
-    <div class="container">
+    <div class="container" style="position: relative;">
+      <form action="{% url 'home' %}" method="GET" class="hero-search-box">
+        <div class="search-wrapper">
+          <input type="text" name="q" placeholder="Tìm tên sách, tác giả..." value="{{ request.GET.q|default:'' }}">
+          <button type="submit"><i class="fas fa-search"></i></button>
+        </div>
+      </form>
+
       <img src="{% static 'app/images/logo.png' %}" alt="DDC Books Logo" class="hero-logo-img" />
       <h1 style="font-family: 'Playfair Display'; font-size: 2.8rem; color: var(--dark-brown);">Gói ghém ký ức, Kết nối tri thức</h1>
       <p style="margin-top: 15px; font-size: 1.1rem;">Chào mừng bạn đến với cộng đồng yêu sách DDC Books</p>
     </div>
   </section>
 
-  <div class="container">
-    <h2 style="text-align: center; margin-bottom: 40px; font-family: 'Playfair Display';">Sách mới cập nhật</h2>
+  <div class="container" style="margin-bottom: 50px;">
+    <h2 style="text-align: center; margin-top: 50px; margin-bottom: 40px; font-family: 'Playfair Display'; color: var(--dark-brown);">
+      {% if request.GET.q %}
+        🔍 Kết quả tìm kiếm cho: "{{ request.GET.q }}"
+      {% else %}
+        Sách mới cập nhật
+      {% endif %}
+    </h2>
 
     <div class="book-grid">
       {% for book in books %}
@@ -32,34 +45,34 @@
                 <img src="{{ book.image.url }}" alt="{{ book.title }}" style="width: 100%; height: 100%; object-fit: cover;" />
               {% else %}
                 <div style="font-size: 3rem;">
-                  {% if 'Java' in book.title %}
-                    <i class="fab fa-java" style="color: #f89820;"></i>
-                  {% elif 'Python' in book.title or 'Django' in book.title %}
-                    <i class="fab fa-python" style="color: #3776ab;"></i>
-                  {% elif 'Blender' in book.title %}
-                    <i class="fas fa-cube" style="color: #e87d0d;"></i>
-                  {% elif 'Database' in book.title or 'MySQL' in book.title %}
-                    <i class="fas fa-database" style="color: #4479a1;"></i>
-                  {% elif 'Bảo mật' in book.title %}
-                    <i class="fas fa-shield-alt" style="color: #4E342E;"></i>
-                  {% elif 'Game' in book.title %}
-                    <i class="fas fa-gamepad" style="color: #7b1fa2;"></i>
-                  {% else %}
-                    <i class="fas fa-paint-brush" style="color: #607d8b;"></i>
-                  {% endif %}
+                  {% if 'Java' in book.title %}<i class="fab fa-java" style="color: #f89820;"></i>
+                  {% elif 'Python' in book.title or 'Django' in book.title %}<i class="fab fa-python" style="color: #3776ab;"></i>
+                  {% elif 'Blender' in book.title %}<i class="fas fa-cube" style="color: #e87d0d;"></i>
+                  {% elif 'Database' in book.title or 'MySQL' in book.title %}<i class="fas fa-database" style="color: #4479a1;"></i>
+                  {% elif 'Bảo mật' in book.title %}<i class="fas fa-shield-alt" style="color: #4E342E;"></i>
+                  {% elif 'Game' in book.title %}<i class="fas fa-gamepad" style="color: #7b1fa2;"></i>
+                  {% else %}<i class="fas fa-paint-brush" style="color: #607d8b;"></i>{% endif %}
                 </div>
               {% endif %}
             </div>
 
-            <h4 style="margin-top: 15px;">{{ book.title }}</h4>
-            <p style="color: #7A6D5D; font-size: 0.9rem;">Tác giả: {{ book.author }}</p>
+            <h4 style="margin-top: 15px; height: 2.8rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+              {{ book.title }}
+            </h4>
+            <p style="color: #7A6D5D; font-size: 0.9rem; margin-top: 5px;">Tác giả: {{ book.author }}</p>
             <p style="color: var(--primary); font-weight: 700; font-size: 1.2rem; margin-top: 10px;">{{ book.price }}đ</p>
           </div>
         </a>
       {% empty %}
-        <p style="text-align: center; grid-column: 1/-1;">Hiện chưa có sách nào trong cửa hàng.</p>
+        <div style="text-align: center; grid-column: 1/-1; padding: 60px 0;">
+            <i class="fas fa-search" style="font-size: 3rem; color: #ddd; margin-bottom: 20px;"></i>
+            <p style="color: #888; font-size: 1.1rem;">Rất tiếc, chúng mình không tìm thấy cuốn sách hoặc tác giả phù hợp.</p>
+            <a href="{% url 'home' %}" style="display: inline-block; margin-top: 15px; color: var(--primary); font-weight: bold; text-decoration: none;">
+               <i class="fas fa-arrow-left"></i> Quay lại xem tất cả sách
+            </a>
+        </div>
       {% endfor %}
     </div>
   </div>
 
-  {% endblock %}
+{% endblock %}

@@ -21,10 +21,17 @@ class Profile(models.Model):
             output_size = (300, 300)
             img.thumbnail(output_size)
             img.save(self.avatar.path)
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+    
+
+    def __str__(self):
+        return self.name
 class Book(models.Model):
     title = models.CharField(max_length=200)
     author = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=0)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='books')
     
     # Thêm trường ngày ra mắt
     release_date = models.DateField(default=timezone.now) 
@@ -50,3 +57,4 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.book.title}"
+    

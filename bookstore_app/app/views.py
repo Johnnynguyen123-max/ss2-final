@@ -5,8 +5,10 @@ from django.contrib.auth import login as auth_login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from .models import Profile, Book 
-
+from .models import Profile, Book ,Category
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Q
 try:
     from .forms import UserUpdateForm, ProfileUpdateForm
 except ImportError:
@@ -15,15 +17,37 @@ except ImportError:
 # --- TRANG CHỦ ---
 # views.py
 def home(request):
-    books = Book.objects.all() # Chỉ lấy từ Database
+    # Lấy tham số từ URL
+    query = request.GET.get('q')
+    category_id = request.GET.get('category')
+    filter_type = request.GET.get('filter')
     
-    favorite_book_ids = []
-    if request.user.is_authenticated:
-        favorite_book_ids = request.user.favorite_books.values_list('id', flat=True)
+    # Khởi tạo QuerySet gốc
+    books = Book.objects.all()
+
+    # ĐIỀU KIỆN 1: Nếu có từ khóa tìm kiếm -> Chỉ giữ lại sách có tên hoặc tác giả khớp
+    if query:
+        books = books.filter(
+            Q(title__icontains=query) | Q(author__icontains=query)
+        )
+
+    # ĐIỀU KIỆN 2: Nếu có chọn danh mục -> Lọc tiếp trên danh sách đã có
+    if category_id:
+        books = books.filter(category_id=category_id)
+
+    # ĐIỀU KIỆN 3: Nếu lọc sách mới
+    if filter_type == 'new':
+        last_30_days = timezone.now() - timedelta(days=30)
+        books = books.filter(release_date__gte=last_30_days)
+    
+    # Sắp xếp kết quả cuối cùng (Sách mới nhất lên đầu)
+    books = books.order_by('-release_date')
+
+    categories = Category.objects.all()
     
     context = {
         'books': books,
-        'favorite_book_ids': favorite_book_ids
+        'categories': categories,
     }
     return render(request, 'app/home.html', context)
 
