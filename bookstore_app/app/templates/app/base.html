@@ -93,8 +93,12 @@
                 <span>Chào, {{ user.first_name }}</span>
                 <div class="dropdown-menu">
                   <a href="{% url 'profile' %}"><i class="far fa-user"></i> Hồ sơ cá nhân</a>
-                  <a href="#"><i class="fa-regular fa-calendar"></i> Lịch sử mua hàng</a>
-                  <a href="#"><i class="fa-regular fa-heart"></i> Sách yêu thích</a>
+                  <a href="{% url 'order_history' %}"><i class="fa-regular fa-calendar"></i> Lịch sử mua hàng</a>
+                  <li>
+    <a href="{% url 'wishlist_list' %}">
+        <i class="far fa-heart"></i> Sách yêu thích
+    </a>
+</li>
                   <a href="{% url 'logout' %}" style="color: #ff6b6b;"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
                 </div>
               </div>
@@ -162,5 +166,6 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{% static 'app/js/script.js' %}"></script>
+    <script src="{% static 'app/js/wishlist.js' %}"></script>
   </body>
 </html>

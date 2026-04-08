@@ -7,7 +7,15 @@
         <form method="post">
             {% csrf_token %}
             <div class="input-group"><i class="fas fa-user"></i><input type="text" name="full_name" placeholder="Tên người dùng" required></div>
-            <div class="input-group"><i class="fas fa-envelope"></i><input type="email" name="email" placeholder="Email (sử dụng để đăng nhập)" required></div>
+            <div class="input-group">
+    <i class="fas fa-envelope"></i>
+    <input type="email" 
+           name="email" 
+           placeholder="Email (sử dụng để đăng nhập)" 
+           pattern=".{4,}@.*" 
+           title="Email phải có ít nhất 4 ký tự trước ký hiệu @"
+           required>
+</div>
             <div class="input-group"><i class="fas fa-key"></i><input type="password" name="password" placeholder="Mật khẩu" required></div>
             <div class="input-group"><i class="fas fa-check-double"></i><input type="password" name="confirm_password" placeholder="Xác nhận mật khẩu" required></div>
             <button type="submit" class="btn-submit">TẠO TÀI KHOẢN</button>

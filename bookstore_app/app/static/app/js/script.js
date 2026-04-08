@@ -1,34 +1,7 @@
 let currentBookId = null;
 
 // Mở chi tiết sách
-function openBookDetail(bookId) {
-    currentBookId = bookId;
-    const modal = document.getElementById('bookModal');
-    
-    modal.style.display = "block";
-    document.getElementById('imageLoader').style.display = "flex";
-    document.getElementById('modalImage').style.display = "none";
 
-    fetch(`/book-detail/${bookId}/`)
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('modalTitle').innerText = data.title;
-        document.getElementById('modalAuthor').innerText = data.author;
-        document.getElementById('modalPrice').innerText = data.price + "đ";
-        document.getElementById('modalDescription').innerText = data.description;
-        
-        const modalImg = document.getElementById('modalImage');
-        modalImg.src = data.image_url;
-        modalImg.onload = function() {
-            document.getElementById('imageLoader').style.display = "none";
-            modalImg.style.display = "block";
-        };
-    })
-    .catch(err => {
-        console.error("Lỗi tải chi tiết:", err);
-        closeModal();
-    });
-}
 
 // Thêm vào giỏ hàng (Truyền thêm tham số e để xử lý event)
 // Thêm tham số bookId vào hàm

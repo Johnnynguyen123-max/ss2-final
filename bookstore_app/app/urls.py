@@ -18,6 +18,12 @@ urlpatterns = [
     path('cart/', views.cart_detail, name='cart_detail'),
     path('update-cart/<int:book_id>/', views.update_cart, name='update_cart'),
     path('remove-from-cart/<int:book_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('toggle-wishlist/', views.toggle_wishlist, name='toggle_wishlist'),
+    path('my-wishlist/', views.wishlist_list, name='wishlist_list'),
+    path('order-history/', views.order_history, name='order_history'),
+    path('order/delete/<int:order_id>/', views.delete_order, name='delete_order'),
+path('order/update/<int:order_id>/', views.update_order_info, name='update_order_info'),
+path('checkout/', views.checkout, name='checkout'),
 
 ]
 if settings.DEBUG:

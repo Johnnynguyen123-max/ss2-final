@@ -6,21 +6,23 @@ from django.utils import timezone  # THÊM DÒNG NÀY
 from datetime import timedelta
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     avatar = models.ImageField(default='default.jpg', upload_to='profile_pics')
     phone = models.CharField(max_length=15, blank=True)
+    address = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f'Hồ sơ của {self.user.username}'
 
-    # Hàm resize ảnh để tránh làm nặng server
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        img = Image.open(self.avatar.path)
-        if img.height > 300 or img.width > 300:
-            output_size = (300, 300)
-            img.thumbnail(output_size)
-            img.save(self.avatar.path)
+        # Tối ưu ảnh sau khi save
+        if self.avatar and os.path.exists(self.avatar.path):
+            img = Image.open(self.avatar.path)
+            if img.height > 300 or img.width > 300:
+                output_size = (300, 300)
+                img.thumbnail(output_size)
+                img.save(self.avatar.path)
 class Category(models.Model):
     name = models.CharField(max_length=100)
     
@@ -57,4 +59,33 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.book.title}"
+class Order(models.Model):
+    # Trạng thái đơn hàng
+    STATUS_CHOICES = (
+        ('Pending', 'Chờ xử lý'),
+        ('Processing', 'Đang đóng gói'),
+        ('Shipped', 'Đang giao'),
+        ('Delivered', 'Đã giao'),
+        ('Cancelled', 'Đã hủy'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=255)
+    phone = models.CharField(max_length=20)
+    address = models.TextField()
+    total_price = models.DecimalField(max_digits=12, decimal_places=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+
+    def __str__(self):
+        return f"Đơn hàng {self.id} - {self.full_name}"
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=1)
+    price = models.DecimalField(max_digits=12, decimal_places=0) # Lưu giá tại thời điểm mua
+
+    def __str__(self):
+        return f"{self.quantity} x {self.book.title}"
     

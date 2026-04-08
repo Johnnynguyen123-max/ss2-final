@@ -71,9 +71,12 @@
                     <span>{{ total_price }}đ</span>
                 </div>
                 
-                <button style="width: 100%; background: #4E342E; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='#6d4c41'" onmouseout="this.style.background='#4E342E'">
-                    ĐẶT HÀNG NGAY
-                </button>
+                <a href="{% url 'checkout' %}" 
+   style="display: block; text-align: center; text-decoration: none; background: #4E342E; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s;" 
+   onmouseover="this.style.background='#6d4c41'" 
+   onmouseout="this.style.background='#4E342E'">
+    ĐẶT HÀNG NGAY
+</a>
                 
                 <a href="{% url 'home' %}" style="display: block; text-align: center; margin-top: 20px; color: #8d7a68; text-decoration: none; font-size: 0.95rem;">
                     <i class="fas fa-arrow-left"></i> Tiếp tục chọn sách
