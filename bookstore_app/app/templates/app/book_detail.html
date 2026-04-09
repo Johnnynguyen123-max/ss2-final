@@ -70,25 +70,80 @@
                 </div>
             </div>
 
-            <div class="comments-section" style="margin-top: 60px;">
-                <h3 style="font-family: 'Playfair Display'; font-size: 1.8rem; margin-bottom: 30px; display: flex; align-items: center; gap: 15px;">
-                    <i class="far fa-comments" style="color: var(--primary);"></i> Đánh giá từ độc giả ({{ comments.count }})
-                </h3>
+            <div class="comments-section" style="margin-top: 60px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <h3 style="font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 30px; display: flex; align-items: center; gap: 15px;">
+        <i class="far fa-comments" style="color: #8B4513;"></i> Đánh giá từ độc giả ({{ book.comments.count }})
+    </h3>
 
-                {% for comment in comments %}
-                    <div class="comment-card" style="padding: 25px; background: #fff; border-radius: 15px; margin-bottom: 15px; border: 1px solid #f0f0f0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <strong style="color: var(--dark-brown); font-size: 1.1rem;">{{ comment.user.first_name|default:comment.user.username }}</strong>
-                            <small style="color: #bbb;">{{ comment.created_at|date:"d/m/Y" }}</small>
-                        </div>
-                        <p style="color: #555; margin: 0; line-height: 1.6;">{{ comment.content }}</p>
-                    </div>
-                {% empty %}
-                    <div style="text-align: center; padding: 40px; background: #f9f9f9; border-radius: 15px; color: #999; font-style: italic;">
-                        Chưa có bình luận nào. Hãy là người đầu tiên đánh giá cuốn sách này!
-                    </div>
-                {% endfor %}
+    {% if user.is_authenticated %}
+    <div style="background: #fff; padding: 25px; border-radius: 15px; border: 1px solid #f0f0f0; margin-bottom: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+        <form action="{% url 'post_comment' book.id %}" method="POST">
+            {% csrf_token %}
+            
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: 600; color: #5d4037; display: block; margin-bottom: 8px;">Đánh giá của bạn:</label>
+                <div class="star-rating">
+                    <input type="radio" id="5-stars" name="rating" value="5" checked />
+                    <label for="5-stars" class="star">&#9733;</label>
+                    <input type="radio" id="4-stars" name="rating" value="4" />
+                    <label for="4-stars" class="star">&#9733;</label>
+                    <input type="radio" id="3-stars" name="rating" value="3" />
+                    <label for="3-stars" class="star">&#9733;</label>
+                    <input type="radio" id="2-stars" name="rating" value="2" />
+                    <label for="2-stars" class="star">&#9733;</label>
+                    <input type="radio" id="1-star" name="rating" value="1" />
+                    <label for="1-star" class="star">&#9733;</label>
+                </div>
             </div>
+
+            <textarea name="content" rows="3" required placeholder="Chia sẻ cảm nhận chân thực về cuốn sách..." 
+                      style="width: 100%; padding: 15px; border: 1px solid #eee; border-radius: 10px; font-size: 14px; outline: none; background: #fcfcfc;"></textarea>
+            
+            <button type="submit" style="margin-top: 15px; background: #5d4037; color: white; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                Gửi đánh giá ngay
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+    {% for comment in book.comments.all reversed %}
+        <div class="comment-card" style="padding: 25px; background: #fff; border-radius: 15px; margin-bottom: 15px; border: 1px solid #f0f0f0; transition: transform 0.2s;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <strong style="color: #5d4037; font-size: 1.1rem;">
+                        {{ comment.user.first_name|default:comment.user.username }}
+                    </strong>
+                    <div style="color: #f39c12; font-size: 0.9rem;">
+                        {% if comment.rating == 5 %}⭐⭐⭐⭐⭐{% elif comment.rating == 4 %}⭐⭐⭐⭐{% elif comment.rating == 3 %}⭐⭐⭐{% elif comment.rating == 2 %}⭐⭐{% else %}⭐{% endif %}
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px;">
+    <small style="color: #bbb;">{{ comment.created_at|date:"H:i - d/m/Y" }}</small>
+    
+    {% if request.user == comment.user or request.user.is_superuser %}
+        <a href="{% url 'delete_comment' comment.id %}" 
+           onclick="return confirm('Đăng có chắc chắn muốn xóa bình luận này không?')"
+           style="color: #e74c3c; text-decoration: none; font-size: 0.8rem; display: flex; align-items: center; gap: 3px;">
+            <i class="fas fa-trash-alt"></i> Xóa
+        </a>
+    {% endif %}
+</div>
+            </div>
+            <p style="color: #555; margin: 0; line-height: 1.6;">{{ comment.content }}</p>
+        </div>
+    {% empty %}
+        <div style="text-align: center; padding: 40px; background: #f9f9f9; border-radius: 15px; color: #999; font-style: italic;">
+            Chưa có bình luận nào. Hãy là người đầu tiên đánh giá cuốn sách này!
+        </div>
+    {% endfor %}
+</div>
+
+
+
+            
+
+    
+
         </div>
     </div>
 </div>

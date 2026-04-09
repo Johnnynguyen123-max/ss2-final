@@ -51,14 +51,14 @@ class Book(models.Model):
         three_months_ago = timezone.now().date() - timedelta(days=90)
         return self.release_date >= three_months_ago
 class Comment(models.Model):
-    # Sửa on_relative thành on_delete
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='comments')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
+    rating = models.IntegerField(default=5) # Thêm dòng này để lưu số sao
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.book.title}"
+        return f'{self.user.username} - {self.book.title}'
 class Order(models.Model):
     # Trạng thái đơn hàng
     STATUS_CHOICES = (

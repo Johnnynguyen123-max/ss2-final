@@ -23,7 +23,7 @@ urlpatterns = [
     path('order-history/', views.order_history, name='order_history'),
     path('order/delete/<int:order_id>/', views.delete_order, name='delete_order'),
 path('order/update/<int:order_id>/', views.update_order_info, name='update_order_info'),
-path('checkout/', views.checkout, name='checkout'),
+path('checkout/', views.checkout, name='checkout'),path('post-comment/<int:book_id>/', views.post_comment, name='post_comment'),path('delete-comment/<int:comment_id>/', views.delete_comment, name='delete_comment'),
 
 ]
 if settings.DEBUG:

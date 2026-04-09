@@ -6,7 +6,7 @@ from django.contrib.auth import login as auth_login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from .models import Profile, Book ,Category,Order,OrderItem
+from .models import Profile, Book ,Category,Order,OrderItem,Comment
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Q
@@ -389,3 +389,30 @@ def checkout(request):
         'phone': initial_phone,
         'address': initial_address
     })
+@login_required
+def post_comment(request, book_id):
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        rating = request.POST.get('rating', 5) # Lấy giá trị rating từ form, mặc định là 5
+        if content:
+            book = get_object_or_404(Book, id=book_id)
+            Comment.objects.create(
+                book=book,
+                user=request.user,
+                content=content,
+                rating=int(rating) # Lưu số sao vào DB
+            )
+    return redirect('book_detail', book_id=book_id)
+@login_required
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    book_id = comment.book.id
+    
+    # Kiểm tra quyền: Chỉ chủ nhân bình luận hoặc admin mới được xóa
+    if request.user == comment.user or request.user.is_superuser:
+        comment.delete()
+        messages.success(request, "Đã xóa bình luận thành công.")
+    else:
+        messages.error(request, "Bạn không có quyền xóa bình luận này.")
+        
+    return redirect('book_detail', book_id=book_id)
