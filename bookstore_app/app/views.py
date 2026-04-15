@@ -416,3 +416,27 @@ def delete_comment(request, comment_id):
         messages.error(request, "Bạn không có quyền xóa bình luận này.")
         
     return redirect('book_detail', book_id=book_id)
+def search_suggestions(request):
+    query = request.GET.get('q', '').strip()
+    if len(query) < 2:
+        return JsonResponse({'results': []})
+    
+    # Logic Steam: Ưu tiên bắt đầu bằng từ khóa
+    starts_with = Book.objects.filter(title__istartswith=query)
+    contains = Book.objects.filter(
+        Q(title__icontains=query) | Q(author__icontains=query)
+    ).exclude(id__in=starts_with.values_list('id', flat=True))
+    
+    books = (list(starts_with) + list(contains))[:5]
+    
+    results = []
+    for book in books:
+        img_url = book.image.url if book.image else '/static/app/images/default.jpg'
+        results.append({
+            'id': book.id,
+            'title': book.title[:50] + '...' if len(book.title) > 50 else book.title,
+            'author': book.author,
+            'price': "{:,.0f}₫".format(book.price) if book.price else "Free",
+            'image': img_url,
+        })
+    return JsonResponse({'results': results})

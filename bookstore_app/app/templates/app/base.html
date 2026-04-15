@@ -218,6 +218,59 @@
         }
       })
     </script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('input[name="q"]');
+    if (!searchInput) return;
+
+    const dropbox = document.createElement('div');
+    dropbox.id = 'search-dropbox';
+    
+    // Đảm bảo input nằm trong 1 div có position relative
+    const wrapper = searchInput.parentElement;
+    wrapper.style.position = 'relative';
+    wrapper.appendChild(dropbox);
+
+    searchInput.addEventListener('input', function() {
+        const val = this.value.trim();
+        if (val.length < 2) {
+            dropbox.style.display = 'none';
+            return;
+        }
+
+        // Dùng đường dẫn tương đối để tránh lỗi 404
+        fetch(`/search-suggestions/?q=${encodeURIComponent(val)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.results && data.results.length > 0) {
+                    dropbox.innerHTML = data.results.map(book => `
+                        <div class="suggestion-item" onclick="window.location.href='/book/${book.id}/'">
+                            <div class="suggestion-img-wrapper">
+                                <img src="${book.image}" class="suggestion-img">
+                            </div>
+                            <div class="suggestion-content">
+                                <span class="suggestion-title">${book.title}</span>
+                                <span class="suggestion-author">${book.author}</span>
+                            </div>
+                            <div class="suggestion-price-tag">
+                                <span class="suggestion-price">${book.price}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                    dropbox.style.display = 'block';
+                } else {
+                    dropbox.style.display = 'none';
+                }
+            })
+            .catch(err => console.log("Gợi ý hiện không khả dụng"));
+    });
+
+    // Tắt dropbox khi click ra ngoài
+    document.addEventListener('click', (e) => {
+        if (!wrapper.contains(e.target)) dropbox.style.display = 'none';
+    });
+});
+</script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{% static 'app/js/script.js' %}"></script>
     <script src="{% static 'app/js/wishlist.js' %}"></script>
