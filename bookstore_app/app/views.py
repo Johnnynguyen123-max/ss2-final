@@ -204,53 +204,47 @@ def toggle_wishlist(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
             
     return JsonResponse({'status': 'error', 'message': 'Yêu cầu không hợp lệ'}, status=405)
-from django.http import JsonResponse
+
 from django.shortcuts import get_object_or_404
 from .models import Book
 
 # views.py
 # views.py
-def book_detail(request, book_id):
+# views.py
+def book_detail(request, book_id): # Đổi id thành book_id ở đây
     # 1. Lấy thông tin sách từ Database
     book = get_object_or_404(Book, id=book_id)
     
-    # 2. Lấy danh sách bình luận (hiển thị từ mới đến cũ)
-    comments = book.comments.all().order_by('-created_at')
+    # 2. Lấy sách cùng thể loại
+    related_books = Book.objects.filter(category=book.category).exclude(id=book_id)[:5]
+    
+    # --- LOGIC RECENTLY VIEWED (Dùng book_id) ---
     if 'recently_viewed' not in request.session:
         request.session['recently_viewed'] = []
     
     recently_viewed = request.session['recently_viewed']
     
-    # Nếu sách đã có trong danh sách thì xóa đi để đưa lên đầu (tránh trùng lặp)
     if book_id in recently_viewed:
         recently_viewed.remove(book_id)
     
-    # Thêm ID sách vào đầu danh sách
     recently_viewed.insert(0, book_id)
-    
-    # Chỉ giữ lại khoảng 5-6 cuốn gần nhất cho gọn
     request.session['recently_viewed'] = recently_viewed[:6]
-    request.session.modified = True # Thông báo cho Django là session đã thay đổi
-    # -----------------------------
-    
-    # 3. Logic lấy danh sách ID yêu thích (nếu cần hiển thị nút tim ở trang detail)
+    request.session.modified = True 
+    # --------------------------------------------
+
+    # Giữ nguyên các phần khác...
+    comments = book.comments.all().order_by('-created_at')
     is_favorite = False
     if request.user.is_authenticated:
         is_favorite = book.wishlist.filter(id=request.user.id).exists()
         
-    
     context = {
         'book': book,
         'comments': comments,
         'is_favorite': is_favorite,
+        'related_books': related_books,
     }
-    # Trả về template HTML thay vì JsonResponse
     return render(request, 'app/book_detail.html', context)
-
-# app/views.py
-# views.py
-from django.http import JsonResponse
-
 from django.http import JsonResponse
 
 def add_to_cart(request, book_id):

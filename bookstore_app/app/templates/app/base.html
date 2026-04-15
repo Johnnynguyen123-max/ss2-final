@@ -141,6 +141,7 @@
         <div class="container" style="max-width: 1300px; margin: 0 auto; padding: 20px 15px;">
             
             <div style="display: flex; gap: 30px; align-items: flex-start;">
+              {% block sidebar %}
                 
                 <aside style="width: 280px; flex-shrink: 0; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #eee; position: sticky; top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
                     <form method="GET" action="{% url 'home' %}">
@@ -195,6 +196,7 @@
                         {% endif %}
                     </form>
                 </aside>
+                {% endblock sidebar %}
 
                 <div style="flex-grow: 1;">
                     
