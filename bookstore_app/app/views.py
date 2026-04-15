@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from .models import Profile, Book ,Category,Order,OrderItem,Comment
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Q
+from django.db.models import Q,Case,When
 try:
     from .forms import UserUpdateForm, ProfileUpdateForm
 except ImportError:
@@ -17,50 +17,80 @@ except ImportError:
 
 # --- TRANG CHỦ ---
 # views.py
+from datetime import datetime
+
 def home(request):
     # 1. Lấy tham số từ URL
     query = request.GET.get('q')
     category_id = request.GET.get('category')
     filter_type = request.GET.get('filter')
+    price_range = request.GET.get('price_range')
+    year = request.GET.get('year')
     
-    # 2. Khởi tạo QuerySet gốc
+    # 2. Khởi tạo QuerySet gốc và Danh sách năm
     books = Book.objects.all()
+    current_year = datetime.now().year
+    # Tạo danh sách 6 năm gần nhất để hiển thị trên UI
+    year_choices = range(current_year, current_year - 6, -1)
 
     # 3. Áp dụng các bộ lọc (Filter)
-    # Lọc theo từ khóa tìm kiếm
     if query:
         books = books.filter(
             Q(title__icontains=query) | Q(author__icontains=query)
         )
 
-    # Lọc theo danh mục
     if category_id:
         books = books.filter(category_id=category_id)
 
-    # Lọc theo sách mới (trong 30 ngày qua)
     if filter_type == 'new':
         last_30_days = timezone.now() - timedelta(days=30)
         books = books.filter(release_date__gte=last_30_days)
 
-    # 4. SẮP XẾP: Luôn đưa sách mới nhất lên đầu
+    if price_range:
+        if price_range == "0-100000":
+            books = books.filter(price__lt=100000)
+        elif price_range == "100000-300000":
+            books = books.filter(price__gte=100000, price__lte=300000)
+        elif price_range == "300000-max":
+            books = books.filter(price__gt=300000)
+
+    # Lọc theo năm phát hành (Chỉ lọc nếu người dùng có chọn)
+    if year:
+        if year == 'older':
+            # Lọc các sách trước năm thấp nhất trong list (ví dụ trước 2021)
+            books = books.filter(release_date__year__lt=current_year - 5)
+        else:
+            books = books.filter(release_date__year=year)
+
+    # 4. SẮP XẾP
     books = books.order_by('-release_date')
 
-    # 5. XỬ LÝ WISHLIST: Lấy danh sách ID sách đã thích
+    # 5. XỬ LÝ WISHLIST
     favorite_book_ids = []
     if request.user.is_authenticated:
-        # Cách an toàn nhất nếu bạn chưa chắc chắn về related_name trong Models
         favorite_book_ids = Book.objects.filter(wishlist=request.user).values_list('id', flat=True)
 
     # 6. Lấy dữ liệu bổ trợ cho giao diện
     categories = Category.objects.all()
+    viewed_ids = request.session.get('recently_viewed', [])
+    
+    recently_viewed_books = []
+    if viewed_ids:
+        preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(viewed_ids)])
+        recently_viewed_books = Book.objects.filter(id__in=viewed_ids).order_by(preserved)
     
     context = {
         'books': books,
         'categories': categories,
+        'year_choices': year_choices,  # Bổ sung để UI render vòng lặp năm
         'favorite_book_ids': favorite_book_ids,
-        'query': query, # Trả lại để hiển thị trong ô search
+        'query': query,
         'is_new_filter': filter_type == 'new',
+        'recently_viewed_books': recently_viewed_books,
+        'selected_price': price_range,
+        'selected_year': year,
     }
+    
     return render(request, 'app/home.html', context)
 
 # --- ĐĂNG KÝ ---
@@ -186,11 +216,28 @@ def book_detail(request, book_id):
     
     # 2. Lấy danh sách bình luận (hiển thị từ mới đến cũ)
     comments = book.comments.all().order_by('-created_at')
+    if 'recently_viewed' not in request.session:
+        request.session['recently_viewed'] = []
+    
+    recently_viewed = request.session['recently_viewed']
+    
+    # Nếu sách đã có trong danh sách thì xóa đi để đưa lên đầu (tránh trùng lặp)
+    if book_id in recently_viewed:
+        recently_viewed.remove(book_id)
+    
+    # Thêm ID sách vào đầu danh sách
+    recently_viewed.insert(0, book_id)
+    
+    # Chỉ giữ lại khoảng 5-6 cuốn gần nhất cho gọn
+    request.session['recently_viewed'] = recently_viewed[:6]
+    request.session.modified = True # Thông báo cho Django là session đã thay đổi
+    # -----------------------------
     
     # 3. Logic lấy danh sách ID yêu thích (nếu cần hiển thị nút tim ở trang detail)
     is_favorite = False
     if request.user.is_authenticated:
         is_favorite = book.wishlist.filter(id=request.user.id).exists()
+        
     
     context = {
         'book': book,
