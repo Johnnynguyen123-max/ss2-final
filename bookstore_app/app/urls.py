@@ -25,6 +25,12 @@ urlpatterns = [
 path('order/update/<int:order_id>/', views.update_order_info, name='update_order_info'),
 path('checkout/', views.checkout, name='checkout'),path('post-comment/<int:book_id>/', views.post_comment, name='post_comment'),path('delete-comment/<int:comment_id>/', views.delete_comment, name='delete_comment'),
 path('search-suggestions/', views.search_suggestions, name='search_suggestions'),
+path('manage-orders/', views.manage_orders, name='manage_orders'),
+path('confirm-order/<int:order_id>/', views.confirm_order, name='confirm_order'),
+path('cancel-order/<int:order_id>/', views.cancel_order, name='cancel_order'),
+path('order-tracking/<int:order_id>/', views.order_tracking, name='order_tracking'),
+path('order/pack-and-ship/<int:order_id>/', views.pack_and_ship, name='pack_and_ship'),
+path('order/received/<int:order_id>/', views.confirm_received, name='confirm_received'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

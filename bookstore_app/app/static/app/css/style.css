@@ -15,7 +15,7 @@ body {
     color: var(--text); 
     line-height: 1.6; 
 }
-.container { max-width: 1200px; margin: auto; padding: 0 20px; }
+.container { max-width: 1400px; margin: auto; width: 95%; }
 
 /* --- HEADER & NAVIGATION --- */
 header { 
@@ -596,4 +596,35 @@ nav { display: flex; align-items: center; gap: 40px; }
 /* Vùng nội dung bên phải */
 .content-area {
     flex-grow: 1;
+}
+/* Thu nhỏ toàn bộ thanh tìm kiếm */
+.header-search-box .search-wrapper {
+    padding: 1px 10px;    /* Giảm padding bên trong */
+    border-radius: 15px;  /* Bo tròn ít hơn một chút cho cân đối */
+    max-height: 32px;     /* Giới hạn chiều cao */
+    background: #f5f5f5;
+}
+
+.header-search-box input {
+    width: 120px;         /* Thu hẹp độ rộng mặc định */
+    font-size: 0.85rem;   /* Chữ nhỏ lại */
+    padding: 4px;
+}
+
+/* Khi click vào chỉ nở ra vừa phải */
+.header-search-box input:focus {
+    width: 160px;
+}
+
+.header-search-box button i {
+    font-size: 0.8rem;    /* Thu nhỏ icon kính lúp */
+    color: #888;
+}
+header nav {
+    display: flex;
+    align-items: center;
+    gap: 30px; /* Khoảng cách lớn giữa Menu, Auth và Giỏ hàng */
+    flex-grow: 1; /* Cho phép nav chiếm không gian nếu cần */
+    justify-content: flex-end;
+    margin-right: -100px; /* Đẩy toàn bộ nội dung trong nav về phía bên phải */
 }

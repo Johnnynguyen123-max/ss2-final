@@ -1,0 +1,80 @@
+{% extends 'app/base.html' %}
+{% block content %}
+<div class="container" style="margin-top: 40px; margin-bottom: 60px; max-width: 900px;">
+    
+    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; position: relative; padding: 0 40px;">
+            
+            <div style="position: absolute; top: 25px; left: 80px; right: 80px; height: 4px; background: #eee; z-index: 1;"></div>
+            
+            {% with s=order.status %}
+            <div style="z-index: 2; text-align: center; width: 100px;">
+                <div style="width: 50px; height: 50px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; 
+                    background: {% if s != 'Cancelled' %}var(--primary){% else %}#eee{% endif %}; color: white;">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <div style="font-size: 0.85rem; font-weight: 600;">Đơn hàng đã đặt</div>
+            </div>
+
+            <div style="z-index: 2; text-align: center; width: 100px;">
+                <div style="width: 50px; height: 50px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; 
+                    background: {% if s == 'Processing' or s == 'Shipped' or s == 'Received' %}var(--primary){% else %}#eee{% endif %}; color: white;">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div style="font-size: 0.85rem; font-weight: 600;">Đang đóng gói</div>
+            </div>
+
+            <div style="z-index: 2; text-align: center; width: 100px;">
+                <div style="width: 50px; height: 50px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; 
+                    background: {% if s == 'Shipped' or s == 'Received' %}var(--primary){% else %}#eee{% endif %}; color: white;">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div style="font-size: 0.85rem; font-weight: 600;">Đang giao hàng</div>
+            </div>
+
+            <div style="z-index: 2; text-align: center; width: 100px;">
+                <div style="width: 50px; height: 50px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; 
+                    background: {% if s == 'Received' %}#2ecc71{% else %}#eee{% endif %}; color: white;">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <div style="font-size: 0.85rem; font-weight: 600;">Thành công</div>
+            </div>
+            {% endwith %}
+        </div>
+        
+        {% if order.status == 'Cancelled' %}
+        <div style="margin-top: 20px; text-align: center; color: #e74c3c; font-weight: bold;">
+            <i class="fas fa-times-circle"></i> ĐƠN HÀNG ĐÃ BỊ HỦY
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
+        <h4 style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">Địa chỉ nhận hàng</h4>
+        <div style="color: #333;">
+            <strong style="font-size: 1.1rem;">{{ order.full_name }}</strong><br>
+            <span style="color: #666;">(+84) {{ order.phone }}</span><br>
+            <span style="color: #666;">{{ order.address }}</span>
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden;">
+        {% for item in order_items %}
+        <div style="display: flex; padding: 15px; border-bottom: 1px solid #eee; align-items: center;">
+            <img src="{% if item.book.image %}{{ item.book.image.url }}{% else %}/static/images/default-book.png{% endif %}" 
+     style="width: 50px; height: 65px; object-fit: cover; border-radius: 4px;"
+     alt="{{ item.book.title }}">
+            <div style="flex: 1; padding-left: 15px;">
+                <h5 style="margin: 0; font-size: 1.1rem;">{{ item.book.title }}</h5>
+                <p style="margin: 5px 0; color: #888;">Số lượng: {{ item.quantity }}</p>
+            </div>
+            <div style="font-weight: bold; color: var(--primary);">{{ item.price }}đ</div>
+        </div>
+        {% endfor %}
+        <div style="padding: 20px; text-align: right; background: #fdfaf5;">
+            <span style="font-size: 1.1rem;">Tổng số tiền: </span>
+            <span style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">{{ order.total_price }}đ</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

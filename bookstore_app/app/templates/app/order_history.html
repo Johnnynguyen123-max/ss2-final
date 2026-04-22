@@ -18,16 +18,23 @@
                     <span style="margin-left: 8px; font-style: italic; color: #6fb98f;">({{ order.created_at|timesince }} trước)</span>
                 </p>
             </div>
+            
             <div style="display: flex; gap: 10px;">
-                <button onclick="openEditModal('{{ order.id }}', '{{ order.full_name }}', '{{ order.phone }}', '{{ order.address }}')" 
-                        style="background: #f39c12; color: white; border: none; padding: 7px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
-                    <i class="fas fa-edit"></i> Sửa
-                </button>
-                
-                <button onclick="confirmDeleteOrder('{{ order.id }}')"
-                        style="background: #e74c3c; color: white; border: none; padding: 7px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
-                    <i class="fas fa-trash-alt"></i> Xóa
-                </button>
+                {% if order.status == 'Pending' %}
+                    <button onclick="openEditModal('{{ order.id }}', '{{ order.full_name }}', '{{ order.phone }}', '{{ order.address }}')" 
+                            style="background: #f39c12; color: white; border: none; padding: 7px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                        <i class="fas fa-edit"></i> Sửa
+                    </button>
+                    
+                    <button onclick="confirmDeleteOrder('{{ order.id }}')"
+                            style="background: #e74c3c; color: white; border: none; padding: 7px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                        <i class="fas fa-trash-alt"></i> Xóa
+                    </button>
+                {% else %}
+                    <span style="color: #95a5a6; font-size: 0.85rem; padding: 7px 0;">
+                        <i class="fas fa-lock"></i> Đã khóa chỉnh sửa
+                    </span>
+                {% endif %}
             </div>
         </div>
         
@@ -35,10 +42,81 @@
             <p style="margin-bottom: 8px;"><strong><i class="fas fa-user"></i> Người nhận:</strong> {{ order.full_name }}</p>
             <p style="margin-bottom: 8px;"><strong><i class="fas fa-phone"></i> Số điện thoại:</strong> {{ order.phone }}</p>
             <p style="margin-bottom: 8px;"><strong><i class="fas fa-map-marker-alt"></i> Địa chỉ:</strong> {{ order.address }}</p>
-            <p style="margin-top: 10px; font-size: 1.1rem; border-top: 1px solid #eee; padding-top: 10px;">
-                <strong>Tổng thanh toán:</strong> 
-                <span style="color: #d35400; font-weight: bold;">{{ order.total_price }}đ</span>
-            </p>
+            
+            <p style="margin-bottom: 12px;">
+    <strong><i class="fas fa-info-circle"></i> Trạng thái:</strong> 
+    <span style="padding: 3px 12px; border-radius: 15px; font-size: 0.85rem; font-weight: 600;
+        {% if order.status == 'Pending' %} background: #fff4e6; color: #d9480f;
+        {% elif order.status == 'Confirmed' or order.status == 'Processing' %} background: #e7f5ff; color: #1971c2;
+        {% elif order.status == 'Shipped' %} background: #f3f0ff; color: #6741d9;
+        {% elif order.status == 'Received' %} background: #ebfbee; color: #087f5b;
+        {% elif order.status == 'Cancelled' %} background: #fff5f5; color: #c92a2a;
+        {% endif %}">
+        {{ order.get_status_display }}
+    </span>
+</p>
+
+{% if order.status == 'Shipped' %}
+<div style="margin-top: 15px; padding: 15px; background: #f0fff4; border: 1px dashed #27ae60; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+    <div style="color: #27ae60; font-size: 0.9rem;">
+        <i class="fas fa-truck"></i> Đơn hàng đang được giao bởi <strong>{{ order.shipping_unit }}</strong>.
+        <br><small>Bạn đã nhận được sách chưa?</small>
+    </div>
+    <button onclick="confirmReceived('{{ order.id }}')"
+            style="background: #27ae60; color: white; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);">
+        <i class="fas fa-check-double"></i> Đã nhận hàng
+    </button>
+</div>
+{% endif %}
+
+{% if order.status == 'Received' %}
+<div style="margin-top: 10px; color: #27ae60; font-size: 0.9rem; font-weight: 600;">
+    <i class="fas fa-check-circle"></i> Cảm ơn bạn đã ủng hộ DDC Books! Đơn hàng đã hoàn tất.
+</div>
+{% endif %}
+
+            <details style="margin-bottom: 15px; border: 1px solid #eee; border-radius: 8px; background: white; overflow: hidden;">
+    <summary style="padding: 12px; cursor: pointer; font-weight: 600; color: #4E342E; display: flex; justify-content: space-between; align-items: center; list-style: none;">
+        <span><i class="fas fa-shopping-basket"></i> Xem sản phẩm đã đặt ({{ order.items.all.count }})</span>
+        <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
+    </summary>
+    <div style="padding: 10px; border-top: 1px solid #eee;">
+        {% for item in order.items.all %}
+        <div style="display: flex; align-items: center; gap: 15px; padding: 10px 0; {% if not forloop.last %}border-bottom: 1px dashed #eee;{% endif %}">
+            
+            <img src="{% if item.book.image %}{{ item.book.image.url }}{% else %}/static/images/default-book.png{% endif %}" 
+     style="width: 50px; height: 65px; object-fit: cover; border-radius: 4px;"
+     alt="{{ item.book.title }}">
+            
+            <div style="flex: 1;">
+                <div style="font-weight: 600; font-size: 0.95rem;">{{ item.book.title }}</div>
+                <div style="font-size: 0.85rem; color: #777;">Số lượng: {{ item.quantity }}</div>
+            </div>
+
+            <div style="font-weight: 600; color: #d35400;">
+                {{ item.price }}đ
+            </div>
+        </div>
+        {% empty %}
+        <p style="text-align: center; color: #999; font-size: 0.8rem; padding: 10px;">Không tìm thấy dữ liệu sản phẩm.</p>
+        {% endfor %}
+    </div>
+</details>
+
+            <div style="margin-top: 10px; font-size: 1.1rem; border-top: 1px solid #eee; padding-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>Tổng thanh toán:</strong> 
+                    <span style="color: #d35400; font-weight: bold; font-size: 1.3rem;">{{ order.total_price }}đ</span>
+                </div>
+
+                <a href="{% url 'order_tracking' order.id %}" 
+                   style="display: inline-block; padding: 10px 20px; background: #4E342E; color: white; border-radius: 8px; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"
+                   onmouseover="this.style.opacity='0.85'; this.style.transform='translateY(-2px)';"
+                   onmouseout="this.style.opacity='1'; this.style.transform='translateY(0)';"
+                >
+                   <i class="fas fa-search-location"></i> Xem chi tiết
+                </a>
+            </div>
         </div>
     </div>
     {% empty %}
@@ -67,7 +145,6 @@
                 <label style="display: block; margin-bottom: 5px; font-weight: 600;">Địa chỉ giao hàng:</label>
                 <textarea name="address" id="edit_address" rows="3" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;"></textarea>
             </div>
-            
             <div style="display: flex; gap: 10px;">
                 <button type="submit" style="flex: 2; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">Lưu thay đổi</button>
                 <button type="button" onclick="closeModal()" style="flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">Hủy</button>
@@ -76,8 +153,8 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Mở Modal
     function openEditModal(id, name, phone, address) {
         document.getElementById('editModal').style.display = 'block';
         document.getElementById('edit_name').value = name;
@@ -86,12 +163,10 @@
         document.getElementById('editForm').action = "/order/update/" + id + "/";
     }
 
-    // Đóng Modal
     function closeModal() {
         document.getElementById('editModal').style.display = 'none';
     }
 
-    // Xóa đơn hàng với SweetAlert2
     function confirmDeleteOrder(orderId) {
         Swal.fire({
             title: 'Xóa đơn hàng?',
@@ -110,7 +185,6 @@
         })
     }
 
-    // Đóng modal khi bấm ra ngoài vùng trắng
     window.onclick = function(event) {
         let modal = document.getElementById('editModal');
         if (event.target == modal) {
@@ -118,4 +192,22 @@
         }
     }
 </script>
+<script>function confirmReceived(orderId) {
+    Swal.fire({
+        title: 'Xác nhận nhận hàng?',
+        text: "Đăng đã cầm trên tay cuốn sách yêu thích rồi đúng không?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#27ae60',
+        cancelButtonColor: '#95a5a6',
+        confirmButtonText: 'Đã nhận đủ hàng!',
+        cancelButtonText: 'Chưa thấy gì cả',
+        backdrop: `rgba(0,0,0,0.4)`
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Đăng nhớ đổi link này cho khớp với urls.py nhé
+            window.location.href = "/order/received/" + orderId + "/";
+        }
+    })
+}</script>
 {% endblock %}

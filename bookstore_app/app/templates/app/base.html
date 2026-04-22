@@ -59,28 +59,43 @@
 
         <nav>
           <ul class="menu-links">
+    <li>
+        <a href="{% url 'home' %}">Trang chủ</a>
+    </li>
+    <li class="dropdown">
+        <a href="#">Danh mục <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 4px;"></i></a>
+        <ul class="submenu">
+            {% for cat in categories %}
             <li>
-              <a href="{% url 'home' %}">Trang chủ</a>
+                <a href="{% url 'home' %}?category={{ cat.id }}">{{ cat.name }}</a>
             </li>
-            <li class="dropdown">
-              <a href="#">Danh mục <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 4px;"></i></a>
-              <ul class="submenu">
-                
+            {% endfor %}
+        </ul>
+    </li>
+    <li>
+        <a href="{% url 'home' %}?filter=new" style="{% if request.GET.filter == 'new' %}color: var(--primary); font-weight: bold;{% endif %}">Sách mới</a>
+    </li>
 
-                {% for cat in categories %}
-                  <li>
-                    <a href="{% url 'home' %}?category={{ cat.id }}">{{ cat.name }}</a>
-                  </li>
-                {% endfor %}
-              </ul>
-            </li>
-            <li>
-              <a href="{% url 'home' %}?filter=new" style="{% if request.GET.filter == 'new' %}color: var(--primary); font-weight: bold;{% endif %}">Sách mới</a>
-            </li>
-            <li>
-              <a href="#">Liên hệ</a>
-            </li>
-          </ul>
+    {% if user.is_staff %}
+    <li>
+        <a href="{% url 'manage_orders' %}" style="color: #d35400; font-weight: bold;">
+            <i class="fas fa-clipboard-list"></i> ĐƠN HÀNG
+        </a>
+    </li>
+    {% else %}
+    <li>
+        <a href="#">Liên hệ</a>
+    </li>
+    {% endif %}
+    <li class="header-search-item">
+        <form action="{% url 'home' %}" method="GET" class="header-search-box">
+            <div class="search-wrapper">
+                <input type="text" name="q" placeholder="Tìm kiếm..." value="{{ request.GET.q|default:'' }}">
+                <button type="submit"><i class="fas fa-search"></i></button>
+            </div>
+        </form>
+    </li>
+</ul>
 
           <div class="auth-box">
             {% if user.is_authenticated %}

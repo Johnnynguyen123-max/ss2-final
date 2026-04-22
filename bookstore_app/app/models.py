@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from PIL import Image # Cần cài đặt Pillow: pip install Pillow
 from django.utils import timezone  # THÊM DÒNG NÀY
 from datetime import timedelta
+import os
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -65,7 +66,7 @@ class Order(models.Model):
         ('Pending', 'Chờ xử lý'),
         ('Processing', 'Đang đóng gói'),
         ('Shipped', 'Đang giao'),
-        ('Delivered', 'Đã giao'),
+        ('Delivered', 'Đã nhận hàng'),
         ('Cancelled', 'Đã hủy'),
     )
 
@@ -76,6 +77,11 @@ class Order(models.Model):
     total_price = models.DecimalField(max_digits=12, decimal_places=0)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    shipping_unit = models.CharField(max_length=50, blank=True, null=True)
+    def mark_as_shipped(self, unit_name):
+        self.status = 'Shipped'
+        self.shipping_unit = unit_name
+        self.save()
 
     def __str__(self):
         return f"Đơn hàng {self.id} - {self.full_name}"
@@ -85,7 +91,20 @@ class OrderItem(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
     price = models.DecimalField(max_digits=12, decimal_places=0) # Lưu giá tại thời điểm mua
+    @property
+    def get_total_item(self):
+        return self.quantity * self.price
 
     def __str__(self):
         return f"{self.quantity} x {self.book.title}"
+# Thêm vào app/models.py (Nếu Đăng muốn dùng Tracking)
+class OrderTracking(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='trackings')
+    status = models.CharField(max_length=50)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.order.id} - {self.status}"
+    
     

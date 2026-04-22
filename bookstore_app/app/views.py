@@ -6,9 +6,10 @@ from django.contrib.auth import login as auth_login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from .models import Profile, Book ,Category,Order,OrderItem,Comment
+from .models import Profile, Book ,Category,Order,OrderItem,Comment,OrderTracking
 from django.utils import timezone
 from datetime import timedelta
+from django.contrib.auth.decorators import user_passes_test
 from django.db.models import Q,Case,When
 try:
     from .forms import UserUpdateForm, ProfileUpdateForm
@@ -43,8 +44,8 @@ def home(request):
         books = books.filter(category_id=category_id)
 
     if filter_type == 'new':
-        last_30_days = timezone.now() - timedelta(days=30)
-        books = books.filter(release_date__gte=last_30_days)
+        last_90_days = timezone.now() - timedelta(days=90)
+        books = books.filter(release_date__gte=last_90_days)
 
     if price_range:
         if price_range == "0-100000":
@@ -131,7 +132,16 @@ def login_view(request):
             if user.check_password(password_input):
                 user.backend = 'django.contrib.auth.backends.ModelBackend'
                 auth_login(request, user)
+                
+                # --- PHẦN SỬA ĐỔI Ở ĐÂY ---
+                # Kiểm tra nếu user là Staff hoặc Superuser
+                if user.groups.filter(name='Staff').exists() or user.is_superuser:
+                    return redirect('manage_orders') # Thay bằng name url quản lý đơn hàng của Đăng
+                
+                # Nếu là khách hàng bình thường
                 return redirect('home')
+                # --------------------------
+                
             else:
                 return render(request, 'app/login.html', {'error': 'Mật khẩu không chính xác'})
         except User.DoesNotExist:
@@ -481,3 +491,64 @@ def search_suggestions(request):
             'image': img_url,
         })
     return JsonResponse({'results': results})
+def is_staff(user):
+    return user.groups.filter(name='Staff').exists() or user.is_superuser
+@user_passes_test(is_staff)
+def manage_orders(request):
+    # Lấy tất cả đơn hàng, đơn mới nhất lên đầu
+    orders = Order.objects.all().order_by('-created_at')
+    return render(request, 'app/manage_orders.html', {'orders': orders})
+@user_passes_test(is_staff)
+def confirm_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    order.status = 'Confirmed'
+    order.save()
+    return redirect('manage_orders')
+@user_passes_test(is_staff)
+def cancel_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    # Chỉ cho phép hủy nếu đơn chưa hoàn thành hoặc chưa giao
+    if order.status != 'Delivered':
+        order.status = 'Cancelled'
+        order.save()
+    return redirect('manage_orders')
+@login_required
+def order_tracking(request, order_id):
+    # Lấy đơn hàng của đúng user đó, nếu không có hoặc không phải của user thì báo 404
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    # Lấy danh sách các sản phẩm trong đơn hàng (OrderItem)
+    order_items = order.items.all() 
+    
+    context = {
+        'order': order,
+        'order_items': order_items,
+    }
+    return render(request, 'app/order_tracking.html', context)
+def pack_and_ship(request, order_id):
+    if request.method == 'POST':
+        order = get_object_or_404(Order, id=order_id)
+        unit = request.POST.get('shipping_unit')
+        
+        order.status = 'Shipped'
+        order.shipping_unit = unit
+        order.save()
+        
+        # Thêm dòng này để Tracking hiển thị "Đang giao"
+        OrderTracking.objects.create(
+            order=order,
+            status='Shipped',
+            message=f'Đơn hàng đã được bàn giao cho đơn vị vận chuyển: {unit}.'
+        )
+    return redirect('manage_orders')
+def confirm_received(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    if order.status == 'Shipped':
+        order.status = 'Received'
+        order.save()
+        
+        OrderTracking.objects.create(
+            order=order,
+            status='Received',
+            message='Giao hàng thành công. Người mua đã xác nhận nhận hàng.'
+        )
+    return redirect('order_history')

@@ -4,12 +4,9 @@
 {% block content %}
   <section class="hero">
     <div class="container" style="position: relative;">
-      <form action="{% url 'home' %}" method="GET" class="hero-search-box">
-        <div class="search-wrapper">
-          <input type="text" name="q" placeholder="Tìm tên sách, tác giả..." value="{{ request.GET.q|default:'' }}">
-          <button type="submit"><i class="fas fa-search"></i></button>
-        </div>
-      </form>
+      
+      
+      
 
       <img src="{% static 'app/images/logo.png' %}" alt="DDC Books Logo" class="hero-logo-img" />
       <h1 style="font-family: 'Playfair Display'; font-size: 2.8rem; color: var(--dark-brown);">Gói ghém ký ức, Kết nối tri thức</h1>
