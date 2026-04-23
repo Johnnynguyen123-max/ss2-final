@@ -31,6 +31,12 @@ path('cancel-order/<int:order_id>/', views.cancel_order, name='cancel_order'),
 path('order-tracking/<int:order_id>/', views.order_tracking, name='order_tracking'),
 path('order/pack-and-ship/<int:order_id>/', views.pack_and_ship, name='pack_and_ship'),
 path('order/received/<int:order_id>/', views.confirm_received, name='confirm_received'),
+path('staff/order/<int:order_id>/', views.staff_order_detail, name='staff_order_detail'),
+path('staff/books/', views.staff_book_list, name='staff_book_list'),
+path('staff/books/insert/', views.staff_book_insert, name='staff_book_insert'),
+path('staff/books/update/<int:book_id>/', views.staff_book_update, name='staff_book_update'),
+path('staff/books/delete/<int:book_id>/', views.staff_book_delete, name='staff_book_delete'),
 ]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

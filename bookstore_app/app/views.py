@@ -11,6 +11,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.decorators import user_passes_test
 from django.db.models import Q,Case,When
+from django.shortcuts import render, redirect
 try:
     from .forms import UserUpdateForm, ProfileUpdateForm
 except ImportError:
@@ -552,3 +553,93 @@ def confirm_received(request, order_id):
             message='Giao hàng thành công. Người mua đã xác nhận nhận hàng.'
         )
     return redirect('order_history')
+def staff_order_detail(request, order_id):
+    # Đảm bảo chỉ staff mới được xem
+    if not request.user.is_staff:
+        return redirect('home')
+    
+    order = get_object_or_404(Order, id=order_id)
+    # Lấy tất cả các sản phẩm có trong đơn hàng này
+    items = OrderItem.objects.filter(order=order)
+    
+    context = {
+        'order': order,
+        'items': items,
+    }
+    return render(request, 'app/staff_order_detail.html', context)  
+def staff_book_list(request):
+    books = Book.objects.all()
+    return render(request, 'app/staff_book_list.html', {'books': books})
+
+
+
+def staff_book_insert(request):
+    if request.method == "POST":
+        # 1. Lấy dữ liệu từ POST
+        title = request.POST.get('title')
+        author = request.POST.get('author')
+        price = request.POST.get('price')
+        stock = request.POST.get('stock', 0)  # Bổ sung lấy số lượng
+        category_id = request.POST.get('category')
+        release_date = request.POST.get('release_date') or timezone.now().date()
+        description = request.POST.get('description')
+        
+        # 2. Lấy file ảnh
+        image = request.FILES.get('image')
+
+        # 3. Lấy category object
+        category = Category.objects.get(id=category_id) if category_id else None
+        
+        # 4. Tạo sách mới (Đã bỏ Wishlist)
+        new_book = Book.objects.create(
+            title=title,
+            author=author,
+            price=price,
+            stock=stock,  # Lưu số lượng vào DB
+            category=category,
+            release_date=release_date,
+            description=description,
+            image=image
+        )
+
+        # 5. Điều hướng
+        if "_addanother" in request.POST:
+            return redirect('staff_book_insert')
+        return redirect('staff_book_list')
+
+    # GET: Lấy danh sách thể loại để hiện vào select box
+    categories = Category.objects.all()
+    return render(request, 'app/staff_book_form.html', {'categories': categories})
+
+# app/views.py
+
+def staff_book_update(request, book_id): # Tham số là book_id
+    # Sửa id=id thành id=book_id
+    book = get_object_or_404(Book, id=book_id) 
+    
+    if request.method == "POST":
+        # Cập nhật các trường dữ liệu
+        book.title = request.POST.get('title')
+        book.author = request.POST.get('author')
+        book.price = request.POST.get('price')
+        book.stock = request.POST.get('stock')
+        
+        category_id = request.POST.get('category')
+        book.category = Category.objects.get(id=category_id) if category_id else None
+        
+        # Lưu thay đổi
+        book.save()
+        return redirect('staff_book_list')
+
+    # GET: Hiển thị form
+    categories = Category.objects.all()
+    return render(request, 'app/staff_book_form.html', {
+        'book': book, 
+        'categories': categories
+    })
+
+def staff_book_delete(request, book_id):
+    book = get_object_or_404(Book, id=book_id)
+    if request.method == 'POST':
+        book.delete()
+    return redirect('staff_book_list')

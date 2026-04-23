@@ -36,9 +36,11 @@ class Book(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=0)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='books')
     
-    # Thêm trường ngày ra mắt
-    release_date = models.DateField(default=timezone.now) 
+    # Bổ sung trường số lượng tồn kho
+    stock = models.IntegerField(default=0) 
     
+    # Giữ nguyên các trường cũ
+    release_date = models.DateField(default=timezone.now) 
     wishlist = models.ManyToManyField(User, related_name="favorite_books", blank=True)
     description = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='books/', blank=True, null=True)
