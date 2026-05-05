@@ -150,61 +150,76 @@
             
             <div style="display: flex; gap: 30px; align-items: flex-start;">
               {% block sidebar %}
-                
-                <aside style="width: 280px; flex-shrink: 0; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #eee; position: sticky; top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                    <form method="GET" action="{% url 'home' %}">
-                        <h3 style="margin-bottom: 20px; font-size: 1.2rem; color: #333;">Bộ lọc tìm kiếm</h3>
+<!-- Nút kích hoạt tròn màu cam -->
+<button type="button" class="btn-filter-floating" onclick="toggleDrawer()">
+    <i class="fas fa-filter"></i>
+</button>
 
-                        <div style="margin-bottom: 20px;">
-                            <h4 style="font-size: 0.95rem; margin-bottom: 10px; font-weight: bold; color: #333;">Thể loại</h4>
-                            <select name="category" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background-color: #fff;">
-                                <option value="">Tất cả thể loại</option>
-                                {% for cat in categories %}
-                                    <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"i" %}selected{% endif %}>
-                                        {{ cat.name }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
+<!-- Lớp phủ -->
+<div id="filterOverlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
 
-                        <div style="margin-bottom: 25px;">
-                            <h4 style="font-size: 0.95rem; margin-bottom: 12px; font-weight: bold; color: #333;">Khoảng giá</h4>
-                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                <label style="font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                                    <input type="radio" name="price_range" value="0-100000" {% if selected_price == '0-100000' %}checked{% endif %}> Dưới 100.000đ
-                                </label>
-                                <label style="font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                                    <input type="radio" name="price_range" value="100000-300000" {% if selected_price == '100000-300000' %}checked{% endif %}> 100.000đ - 300.000đ
-                                </label>
-                                <label style="font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                                    <input type="radio" name="price_range" value="300000-max" {% if selected_price == '300000-max' %}checked{% endif %}> Trên 300.000đ
-                                </label>
-                            </div>
-                        </div>
+<!-- Drawer bộ lọc[cite: 1] -->
+<aside id="filterDrawer" class="filter-drawer">
+    <div class="drawer-header">
+        <h3 style="margin:0; font-size: 1.2rem; color: #333;">Bộ lọc tìm kiếm</h3>
+        <button type="button" onclick="toggleDrawer()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#999;">&times;</button>
+    </div>
 
-                        <div style="margin-bottom: 25px;">
-                            <h4 style="font-size: 0.95rem; margin-bottom: 10px; font-weight: bold; color: #333;">Năm phát hành</h4>
-                            <select name="year" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background-color: #fff;">
-                                <option value="">Chọn năm</option>
-                                {% for y in year_choices %}
-                                    <option value="{{ y }}" {% if selected_year == y|stringformat:"i" %}selected{% endif %}>
-                                        Năm {{ y }}
-                                    </option>
-                                {% endfor %}
-                                <option value="older" {% if selected_year == 'older' %}selected{% endif %}>Trước năm {{ year_choices|last }}</option>
-                            </select>
-                        </div>
+    <div class="drawer-content">
+        <form method="GET" action="{% url 'home' %}">
+            <!-- Giữ nguyên Logic Thể loại[cite: 1] -->
+            <div style="margin-bottom: 20px;">
+                <h4 style="font-size: 0.95rem; margin-bottom: 10px; font-weight: bold; color: #333;">Thể loại</h4>
+                <select name="category" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    <option value="">Tất cả thể loại</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"i" %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
 
-                        <button type="submit" style="width: 100%; background: #007bff; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                            Áp dụng bộ lọc
-                        </button>
-                        
-                        {% if request.GET.price_range or request.GET.year or request.GET.category %}
-                            <a href="{% url 'home' %}" style="display: block; text-align: center; margin-top: 15px; color: #666; font-size: 0.85rem; text-decoration: none;">Xóa bộ lọc</a>
-                        {% endif %}
-                    </form>
-                </aside>
-                {% endblock sidebar %}
+            <!-- Giữ nguyên Logic Khoảng giá[cite: 1] -->
+            <div style="margin-bottom: 25px;">
+                <h4 style="font-size: 0.95rem; margin-bottom: 12px; font-weight: bold; color: #333;">Khoảng giá</h4>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <label style="font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <input type="radio" name="price_range" value="0-100000" {% if selected_price == '0-100000' %}checked{% endif %}> Dưới 100.000đ
+                    </label>
+                    <label style="font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <input type="radio" name="price_range" value="100000-300000" {% if selected_price == '100000-300000' %}checked{% endif %}> 100.000đ - 300.000đ
+                    </label>
+                    <label style="font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <input type="radio" name="price_range" value="300000-max" {% if selected_price == '300000-max' %}checked{% endif %}> Trên 300.000đ
+                    </label>
+                </div>
+            </div>
+
+            <!-- Giữ nguyên Logic Năm phát hành[cite: 1] -->
+            <div style="margin-bottom: 25px;">
+                <h4 style="font-size: 0.95rem; margin-bottom: 10px; font-weight: bold; color: #333;">Năm phát hành</h4>
+                <select name="year" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                    <option value="">Chọn năm</option>
+                    {% for y in year_choices %}
+                        <option value="{{ y }}" {% if selected_year == y|stringformat:"i" %}selected{% endif %}>Năm {{ y }}</option>
+                    {% endfor %}
+                    <option value="older" {% if selected_year == 'older' %}selected{% endif %}>Trước năm {{ year_choices|last }}</option>
+                </select>
+            </div>
+
+            <button type="submit" style="width: 100%; background: #007bff; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                Áp dụng bộ lọc
+            </button>
+            
+            <!-- Giữ nguyên Logic Xóa bộ lọc[cite: 1] -->
+            {% if request.GET.price_range or request.GET.year or request.GET.category %}
+                <a href="{% url 'home' %}" style="display: block; text-align: center; margin-top: 15px; color: #666; font-size: 0.85rem; text-decoration: none;">Xóa bộ lọc</a>
+            {% endif %}
+        </form>
+    </div>
+</aside>
+{% endblock sidebar %}
 
                 <div style="flex-grow: 1;">
                     
@@ -334,6 +349,17 @@
         }
       })
     </script>
+    <script>function toggleDrawer() {
+    const drawer = document.getElementById('filterDrawer');
+    const overlay = document.getElementById('filterOverlay');
+    if (!drawer || !overlay) return;
+
+    drawer.classList.toggle('active');
+    overlay.classList.toggle('active');
+    
+    // Ngăn cuộn trang web khi đang mở bộ lọc[cite: 1]
+    document.body.style.overflow = drawer.classList.contains('active') ? 'hidden' : 'auto';
+}</script>
     <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.querySelector('input[name="q"]');
