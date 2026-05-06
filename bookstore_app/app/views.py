@@ -12,6 +12,13 @@ from datetime import timedelta
 from django.contrib.auth.decorators import user_passes_test
 from django.db.models import Q,Case,When
 from django.shortcuts import render, redirect
+
+
+
+
+from django.views.decorators.http import require_POST, require_GET
+ 
+from .models import ChatSession, ChatMessage 
 try:
     from .forms import UserUpdateForm, ProfileUpdateForm
 except ImportError:
@@ -643,3 +650,152 @@ def staff_book_delete(request, book_id):
     if request.method == 'POST':
         book.delete()
     return redirect('staff_book_list')
+@login_required
+@require_POST
+def customer_send(request):
+    """Customer gửi tin nhắn lên."""
+    if request.user.is_staff:
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+ 
+    data = json.loads(request.body)
+    content = data.get('content', '').strip()
+    if not content:
+        return JsonResponse({'error': 'Tin nhắn trống'}, status=400)
+ 
+    session, _ = ChatSession.objects.get_or_create(customer=request.user)
+    session.last_message_at = timezone.now()
+    session.save(update_fields=['last_message_at'])
+ 
+    msg = ChatMessage.objects.create(session=session, sender=request.user, content=content)
+    return JsonResponse({'id': msg.id, 'created_at': msg.created_at.strftime('%H:%M')})
+ 
+ 
+@login_required
+@require_GET
+def customer_poll(request):
+    """Customer polling lấy tin nhắn.
+    - history=1 & after=0 → trả toàn bộ lịch sử (cả tin của customer lẫn staff)
+    - bình thường → chỉ trả tin mới hơn after_id
+    """
+    if request.user.is_staff:
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+ 
+    after_id = int(request.GET.get('after', 0))
+    is_history = request.GET.get('history') == '1'
+ 
+    try:
+        session = ChatSession.objects.get(customer=request.user)
+    except ChatSession.DoesNotExist:
+        return JsonResponse({'messages': []})
+ 
+    if is_history and after_id == 0:
+        # Load toàn bộ lịch sử
+        msgs = session.messages.select_related('sender').all()
+    else:
+        msgs = session.messages.filter(id__gt=after_id).select_related('sender')
+ 
+    # Đánh dấu tin của staff là đã đọc
+    session.messages.filter(is_read=False).exclude(
+        sender=request.user
+    ).update(is_read=True)
+ 
+    return JsonResponse({
+        'messages': [
+            {
+                'id': m.id,
+                'content': m.content,
+                'is_mine': m.sender_id == request.user.id,
+                'created_at': m.created_at.strftime('%H:%M'),
+            }
+            for m in msgs
+        ]
+    })
+ 
+ 
+# ──────────────────────────────────────────
+#  STAFF endpoints
+# ──────────────────────────────────────────
+ 
+@login_required
+@require_GET
+def staff_sessions(request):
+    """Staff lấy danh sách tất cả session + unread count."""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+ 
+    sessions = ChatSession.objects.select_related('customer').prefetch_related('messages')
+    result = []
+    for s in sessions:
+        last = s.last_message()
+        result.append({
+            'id': s.id,
+            'customer_name': s.customer.get_full_name() or s.customer.username,
+            'customer_id': s.customer.id,
+            'unread': s.unread_for_staff(),
+            'last_message': last.content[:60] if last else '',
+            'last_time': last.created_at.strftime('%H:%M') if last else '',
+        })
+ 
+    total_unread = sum(s['unread'] for s in result)
+    return JsonResponse({'sessions': result, 'total_unread': total_unread})
+ 
+ 
+@login_required
+@require_GET
+def staff_poll(request, session_id):
+    """Staff lấy tin nhắn của 1 session (polling)."""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+ 
+    try:
+        session = ChatSession.objects.get(id=session_id)
+    except ChatSession.DoesNotExist:
+        return JsonResponse({'messages': []})
+ 
+    after_id = int(request.GET.get('after', 0))
+ 
+    if after_id == 0:
+        # Lần đầu load: lấy toàn bộ lịch sử
+        msgs = session.messages.select_related('sender').all()
+    else:
+        msgs = session.messages.filter(id__gt=after_id).select_related('sender')
+ 
+    # Đánh dấu tin của customer là đã đọc
+    session.messages.filter(sender=session.customer, is_read=False).update(is_read=True)
+ 
+    return JsonResponse({
+        'messages': [
+            {
+                'id': m.id,
+                'content': m.content,
+                'is_mine': m.sender.is_staff,
+                'sender_name': m.sender.get_full_name() or m.sender.username,
+                'created_at': m.created_at.strftime('%H:%M'),
+            }
+            for m in msgs
+        ]
+    })
+ 
+ 
+@login_required
+@require_POST
+def staff_send(request, session_id):
+    """Staff gửi tin nhắn trả lời customer."""
+    if not request.user.is_staff:
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+ 
+    try:
+        session = ChatSession.objects.get(id=session_id)
+    except ChatSession.DoesNotExist:
+        return JsonResponse({'error': 'Session không tồn tại'}, status=404)
+ 
+    data = json.loads(request.body)
+    content = data.get('content', '').strip()
+    if not content:
+        return JsonResponse({'error': 'Tin nhắn trống'}, status=400)
+ 
+    session.last_message_at = timezone.now()
+    session.save(update_fields=['last_message_at'])
+ 
+    msg = ChatMessage.objects.create(session=session, sender=request.user, content=content)
+    return JsonResponse({'id': msg.id, 'created_at': msg.created_at.strftime('%H:%M')})

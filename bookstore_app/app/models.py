@@ -108,5 +108,40 @@ class OrderTracking(models.Model):
 
     def __str__(self):
         return f"{self.order.id} - {self.status}"
+class ChatSession(models.Model):
+    """Một phòng chat giữa 1 customer và staff"""
+    customer = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='chat_session'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_message_at = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        ordering = ['-last_message_at']
+ 
+    def __str__(self):
+        return f"Chat – {self.customer.get_full_name() or self.customer.username}"
+ 
+    def unread_for_staff(self):
+        """Số tin chưa đọc của customer gửi lên (staff chưa đọc)"""
+        return self.messages.filter(sender=self.customer, is_read=False).count()
+ 
+    def last_message(self):
+        return self.messages.order_by('-created_at').first()
+ 
+ 
+class ChatMessage(models.Model):
+    session = models.ForeignKey(
+        ChatSession, on_delete=models.CASCADE, related_name='messages'
+    )
+    sender = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='sent_chat_messages'
+    )
+    content = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        ordering = ['created_at']
     
     

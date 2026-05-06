@@ -36,6 +36,11 @@ path('staff/books/', views.staff_book_list, name='staff_book_list'),
 path('staff/books/insert/', views.staff_book_insert, name='staff_book_insert'),
 path('staff/books/update/<int:book_id>/', views.staff_book_update, name='staff_book_update'),
 path('staff/books/delete/<int:book_id>/', views.staff_book_delete, name='staff_book_delete'),
+ path('chat/customer/send/',            views.customer_send,   name='customer_send'),
+    path('chat/customer/poll/',            views.customer_poll,   name='customer_poll'),
+    path('chat/staff/sessions/',           views.staff_sessions,  name='staff_sessions'),
+    path('chat/staff/<int:session_id>/poll/', views.staff_poll,   name='staff_poll'),
+    path('chat/staff/<int:session_id>/send/', views.staff_send,   name='staff_send'),
 ]
 
 if settings.DEBUG:

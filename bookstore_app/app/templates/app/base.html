@@ -416,5 +416,575 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{% static 'app/js/script.js' %}"></script>
     <script src="{% static 'app/js/wishlist.js' %}"></script>
+
+  {% if user.is_authenticated %}
+  <!-- =====================================================
+       CHAT WIDGET – Customer & Staff
+       ===================================================== -->
+  <style>
+    /* ── Nút bubble chung ── */
+    #chat-bubble-btn {
+      position: fixed; bottom: 28px; right: 28px;
+      width: 58px; height: 58px; border-radius: 50%;
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      border: none; cursor: pointer;
+      box-shadow: 0 4px 18px rgba(243,156,18,0.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9998; transition: transform 0.2s, box-shadow 0.2s;
+    }
+    #chat-bubble-btn:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(243,156,18,0.55); }
+    #chat-bubble-btn i { font-size: 1.45rem; color: #fff; }
+    #chat-notif-badge {
+      position: absolute; top: -4px; right: -4px;
+      min-width: 20px; height: 20px; padding: 0 5px;
+      background: #e74c3c; border-radius: 10px;
+      border: 2px solid #fff; display: none;
+      font-size: 0.68rem; font-weight: 700; color: #fff;
+      align-items: center; justify-content: center;
+      line-height: 1;
+    }
+    #chat-notif-badge.show { display: flex; }
+
+    /* ── Panel chung ── */
+    #chat-panel {
+      position: fixed; bottom: 100px; right: 28px;
+      width: 360px; background: #fff; border-radius: 18px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+      display: flex; flex-direction: column;
+      z-index: 9999; overflow: hidden;
+      transform: scale(0.88) translateY(24px); opacity: 0; pointer-events: none;
+      transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), opacity 0.2s;
+      font-family: 'Roboto','Segoe UI',sans-serif;
+      max-height: 520px;
+    }
+    #chat-panel.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
+
+    /* ── Header ── */
+    .cp-header {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      padding: 13px 16px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+    .cp-header-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.22);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; color: #fff; flex-shrink: 0;
+    }
+    .cp-header-title { flex: 1; }
+    .cp-header-title strong { display: block; color: #fff; font-size: 0.92rem; }
+    .cp-header-title span { font-size: 0.72rem; color: rgba(255,255,255,0.85); }
+    .cp-close {
+      background: none; border: none; color: rgba(255,255,255,0.85);
+      font-size: 1.15rem; cursor: pointer; padding: 3px 7px; border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .cp-close:hover { background: rgba(255,255,255,0.2); }
+
+    /* ── Back button (staff) ── */
+    .cp-back {
+      background: none; border: none; color: rgba(255,255,255,0.9);
+      font-size: 1rem; cursor: pointer; padding: 3px 8px; border-radius: 6px;
+      transition: background 0.15s; display: none;
+    }
+    .cp-back:hover { background: rgba(255,255,255,0.2); }
+    .cp-back.show { display: inline-flex; align-items: center; gap: 5px; }
+
+    /* ── SESSION LIST (staff) ── */
+    #cp-session-list {
+      overflow-y: auto; flex: 1;
+      max-height: 400px;
+    }
+    #cp-session-list::-webkit-scrollbar { width: 4px; }
+    #cp-session-list::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+    .session-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f5f0ea;
+      transition: background 0.15s;
+    }
+    .session-item:hover { background: #fdf8f2; }
+    .session-item.active { background: #fff4e0; }
+    .session-avatar {
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; color: #fff; font-weight: 700; position: relative;
+    }
+    .session-unread-dot {
+      position: absolute; top: -2px; right: -2px;
+      min-width: 18px; height: 18px; padding: 0 4px;
+      background: #e74c3c; border-radius: 9px; border: 2px solid #fff;
+      font-size: 0.62rem; font-weight: 700; color: #fff;
+      display: none; align-items: center; justify-content: center;
+    }
+    .session-unread-dot.show { display: flex; }
+    .session-info { flex: 1; min-width: 0; }
+    .session-name { font-weight: 600; font-size: 0.88rem; color: #222; }
+    .session-preview {
+      font-size: 0.78rem; color: #888; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; margin-top: 2px;
+    }
+    .session-time { font-size: 0.7rem; color: #bbb; flex-shrink: 0; }
+
+    .session-empty {
+      padding: 32px 16px; text-align: center; color: #bbb; font-size: 0.85rem;
+    }
+
+    /* ── MESSAGES ── */
+    #cp-messages {
+      flex: 1; overflow-y: auto; padding: 14px 13px;
+      display: flex; flex-direction: column; gap: 9px;
+      background: #f8f5f0; min-height: 200px; max-height: 340px;
+    }
+    #cp-messages::-webkit-scrollbar { width: 4px; }
+    #cp-messages::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+    .msg-row { display: flex; align-items: flex-end; gap: 7px; }
+    .msg-row.me { flex-direction: row-reverse; }
+    .msg-av {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; color: #fff;
+    }
+    .msg-bubble {
+      max-width: 215px; padding: 8px 12px; border-radius: 17px;
+      font-size: 0.84rem; line-height: 1.44; word-break: break-word;
+      animation: bubbleIn 0.18s ease;
+    }
+    @keyframes bubbleIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+    .msg-bubble.other { background:#fff; color:#333; border-bottom-left-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+    .msg-bubble.me { background: linear-gradient(135deg,#f39c12,#e67e22); color:#fff; border-bottom-right-radius:4px; }
+    .msg-bubble.system {
+      background:#eaf6ee; color:#27ae60; border-radius:11px; font-size:0.78rem;
+      text-align:center; border:1px solid #b8e4c9; max-width:100%; width:100%; box-sizing:border-box;
+    }
+    .msg-time { font-size:0.62rem; color:#bbb; margin-top:2px; padding:0 3px; }
+    .msg-row.me .msg-time { text-align:left; }
+
+    /* Typing */
+    .typing-dots { background:#fff; border-radius:17px; padding:8px 13px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; gap:3px; align-items:center; }
+    .typing-dots span { width:6px; height:6px; background:#ccc; border-radius:50%; animation:dotBounce 1.2s infinite; }
+    .typing-dots span:nth-child(2) { animation-delay:.2s; }
+    .typing-dots span:nth-child(3) { animation-delay:.4s; }
+    @keyframes dotBounce { 0%,80%,100%{transform:translateY(0);background:#ccc;} 40%{transform:translateY(-5px);background:#f39c12;} }
+
+    /* ── Input ── */
+    .cp-input-row {
+      padding: 10px 13px; border-top: 1px solid #f0ede8;
+      display: flex; gap: 8px; align-items: center;
+      background: #fff; flex-shrink: 0;
+    }
+    .cp-input {
+      flex:1; border:1.5px solid #e8e0d5; border-radius:20px;
+      padding:8px 13px; font-size:0.84rem; outline:none;
+      font-family:inherit; background:#faf8f5; color:#333;
+      height:36px; transition:border-color 0.15s;
+    }
+    .cp-input:focus { border-color:#f39c12; }
+    .cp-send {
+      width:36px; height:36px; border-radius:50%;
+      background:linear-gradient(135deg,#f39c12,#e67e22);
+      border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      flex-shrink:0; transition:transform 0.15s; box-shadow:0 2px 8px rgba(243,156,18,0.3);
+    }
+    .cp-send:hover { transform:scale(1.08); }
+    .cp-send i { color:#fff; font-size:0.88rem; }
+
+    /* ── Views ── */
+    #cp-view-list { display:flex; flex-direction:column; flex:1; overflow:hidden; }
+    #cp-view-chat { display:none; flex-direction:column; flex:1; overflow:hidden; }
+    #cp-view-list.active { display:flex; }
+    #cp-view-chat.active { display:flex; }
+
+    @media (max-width:480px) {
+      #chat-panel { right:10px; left:10px; width:auto; bottom:90px; }
+      #chat-bubble-btn { right:18px; bottom:20px; }
+    }
+  </style>
+
+  <!-- Nút bubble -->
+  <button id="chat-bubble-btn" onclick="chatToggle()" title="Chat hỗ trợ">
+    <i class="fas {% if user.is_staff %}fa-headset{% else %}fa-comments{% endif %}" id="chat-bubble-icon"></i>
+    <div id="chat-notif-badge"></div>
+  </button>
+
+  <!-- Panel -->
+  <div id="chat-panel">
+
+    <!-- HEADER -->
+    <div class="cp-header">
+      <button class="cp-back" id="cp-back-btn" onclick="staffBackToList()">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <div class="cp-header-icon" id="cp-header-icon">
+        <i class="fas {% if user.is_staff %}fa-headset{% else %}fa-comments{% endif %}"></i>
+      </div>
+      <div class="cp-header-title">
+        <strong id="cp-header-title">{% if user.is_staff %}Hỗ trợ khách hàng{% else %}DDC Books – Hỗ trợ{% endif %}</strong>
+        <span id="cp-header-sub">{% if user.is_staff %}Danh sách yêu cầu{% else %}Nhân viên trực tuyến{% endif %}</span>
+      </div>
+      <button class="cp-close" onclick="chatToggle()"><i class="fas fa-times"></i></button>
+    </div>
+
+    {% if user.is_staff %}
+    <!-- ═══ STAFF: View List ═══ -->
+    <div id="cp-view-list" class="active">
+      <div id="cp-session-list">
+        <div class="session-empty">Đang tải...</div>
+      </div>
+    </div>
+
+    <!-- ═══ STAFF: View Chat ═══ -->
+    <div id="cp-view-chat">
+      <div id="cp-messages"></div>
+      <div class="cp-input-row">
+        <input class="cp-input" id="cp-staff-input" type="text"
+               placeholder="Nhắn tin cho khách..." maxlength="500"
+               onkeydown="if(event.key==='Enter')staffSend()" autocomplete="off"/>
+        <button class="cp-send" onclick="staffSend()"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
+
+    {% else %}
+    <!-- ═══ CUSTOMER: View Chat ═══ -->
+    <div id="cp-view-chat" class="active">
+      <div id="cp-messages">
+        <div class="msg-row">
+          <div class="msg-av"><i class="fas fa-headset"></i></div>
+          <div>
+            <div class="msg-bubble other">Xin chào bạn! Bạn cần giúp gì? 😊</div>
+            <div class="msg-time">DDC Books</div>
+          </div>
+        </div>
+      </div>
+      <div class="cp-input-row">
+        <input class="cp-input" id="cp-cust-input" type="text"
+               placeholder="Nhắn tin..." maxlength="500"
+               onkeydown="if(event.key==='Enter')custSend()" autocomplete="off"/>
+        <button class="cp-send" onclick="custSend()"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
+    {% endif %}
+
+  </div><!-- /chat-panel -->
+
+  <script>
+  (function(){
+    const isStaff = {{ user.is_staff|yesno:"true,false" }};
+    const csrfToken = getCookie('csrftoken');
+
+    // ── State ──
+    let panelOpen    = false;
+    let lastMsgId    = 0;          // customer: id tin nhắn cuối
+    let pollTimer    = null;
+    let autoReplied  = false;      // customer: đã auto reply chưa
+    let currentSid   = null;       // staff: session đang mở
+    let staffLastId  = 0;          // staff: id tin cuối của session hiện tại
+    let staffPollT   = null;
+    let sessionPollT = null;
+
+    // ── Elements ──
+    const panel      = document.getElementById('chat-panel');
+    const badge      = document.getElementById('chat-notif-badge');
+    const bubbleIcon = document.getElementById('chat-bubble-icon');
+    const backBtn    = document.getElementById('cp-back-btn');
+    const headerTitle= document.getElementById('cp-header-title');
+    const headerSub  = document.getElementById('cp-header-sub');
+
+    // ── Toggle panel ──
+    window.chatToggle = function(){
+      panelOpen = !panelOpen;
+      panel.classList.toggle('open', panelOpen);
+      bubbleIcon.className = panelOpen
+        ? 'fas fa-times'
+        : (isStaff ? 'fas fa-headset' : 'fas fa-comments');
+
+      if(panelOpen){
+        badge.classList.remove('show');
+        if(isStaff){ loadSessionList(); startSessionPoll(); }
+        else       { loadCustHistory(); }
+      } else {
+        stopAllPolls();
+        if(isStaff && currentSid){ staffBackToList(); }
+      }
+    };
+
+    // ════════════════════════════════════════
+    //  CUSTOMER logic
+    // ════════════════════════════════════════
+
+    // Load toàn bộ lịch sử chat từ DB khi mở panel lần đầu
+    function loadCustHistory(){
+      const msgsEl = document.getElementById('cp-messages');
+      // Xoá tin chào mặc định tạm thời, sẽ render lại từ DB
+      msgsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#bbb;font-size:0.8rem;">Đang tải...</div>';
+
+      fetch('/chat/customer/poll/?after=0&history=1')
+        .then(r=>r.json())
+        .then(d=>{
+          msgsEl.innerHTML = '';
+          if(d.messages.length === 0){
+            // Chưa có lịch sử → hiện lại tin chào mặc định
+            msgsEl.innerHTML = `
+              <div class="msg-row">
+                <div class="msg-av"><i class="fas fa-headset" style="font-size:0.65rem;"></i></div>
+                <div>
+                  <div class="msg-bubble other">Xin chào bạn! Bạn cần giúp gì? 😊</div>
+                  <div class="msg-time">DDC Books</div>
+                </div>
+              </div>`;
+          } else {
+            d.messages.forEach(m => {
+              if(m.id > lastMsgId) lastMsgId = m.id;
+              appendMsgWithTime(m.content, m.is_mine ? 'me' : 'other', m.created_at);
+            });
+            // Nếu đã từng nhắn → không hiện auto-reply nữa
+            autoReplied = true;
+          }
+          scrollBottom('cp-messages');
+          startCustPoll(); // bắt đầu polling sau khi đã load xong lịch sử
+        })
+        .catch(()=>{
+          msgsEl.innerHTML = '';
+          startCustPoll();
+        });
+    }
+
+    window.custSend = function(){
+      const inp = document.getElementById('cp-cust-input');
+      const txt = inp.value.trim();
+      if(!txt) return;
+      appendMsg(txt, 'me');
+      inp.value = '';
+      scrollBottom('cp-messages');
+
+      fetch('/chat/customer/send/', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':csrfToken},
+        body: JSON.stringify({content: txt})
+      })
+      .then(r=>r.json())
+      .then(d=>{ if(d.id) lastMsgId = Math.max(lastMsgId, d.id); });
+
+      if(!autoReplied){
+        autoReplied = true;
+        showTyping(true);
+        setTimeout(()=>{
+          showTyping(false);
+          appendSystem('✅ Yêu cầu đã được ghi nhận. Nhân viên sẽ hỗ trợ bạn sớm nhất!');
+          scrollBottom('cp-messages');
+        }, 900);
+      }
+    };
+
+    function startCustPoll(){
+      stopAllPolls();
+      pollTimer = setInterval(()=>{
+        fetch(`/chat/customer/poll/?after=${lastMsgId}`)
+          .then(r=>r.json())
+          .then(d=>{
+            d.messages.forEach(m=>{
+              if(m.id > lastMsgId) lastMsgId = m.id;
+              // Chỉ append tin của staff (tin của mình đã append lúc gửi)
+              if(!m.is_mine) appendMsgWithTime(m.content, 'other', m.created_at);
+            });
+            if(d.messages.some(m=>!m.is_mine)) scrollBottom('cp-messages');
+          });
+      }, 3000);
+    }
+
+    // ════════════════════════════════════════
+    //  STAFF logic
+    // ════════════════════════════════════════
+    function loadSessionList(){
+      fetch('/chat/staff/sessions/')
+        .then(r=>r.json())
+        .then(d=>{
+          renderSessionList(d.sessions);
+          updateGlobalBadge(d.total_unread);
+        });
+    }
+
+    function startSessionPoll(){
+      clearInterval(sessionPollT);
+      sessionPollT = setInterval(loadSessionList, 4000);
+    }
+
+    function renderSessionList(sessions){
+      const el = document.getElementById('cp-session-list');
+      if(!sessions || sessions.length === 0){
+        el.innerHTML = '<div class="session-empty"><i class="fas fa-comments" style="font-size:1.8rem;color:#ddd;display:block;margin-bottom:8px;"></i>Chưa có yêu cầu hỗ trợ</div>';
+        return;
+      }
+      el.innerHTML = sessions.map(s=>`
+        <div class="session-item ${currentSid===s.id?'active':''}"
+             onclick="staffOpenChat(${s.id},'${escHtml(s.customer_name)}')">
+          <div class="session-avatar">
+            ${s.customer_name.charAt(0).toUpperCase()}
+            <div class="session-unread-dot ${s.unread>0?'show':''}">${s.unread>0?s.unread:''}</div>
+          </div>
+          <div class="session-info">
+            <div class="session-name">${escHtml(s.customer_name)}</div>
+            <div class="session-preview">${escHtml(s.last_message)}</div>
+          </div>
+          <div class="session-time">${s.last_time}</div>
+        </div>
+      `).join('');
+    }
+
+    window.staffOpenChat = function(sid, name){
+      currentSid   = sid;
+      staffLastId  = 0;
+      clearInterval(sessionPollT);
+
+      // Chuyển view
+      document.getElementById('cp-view-list').classList.remove('active');
+      document.getElementById('cp-view-chat').classList.add('active');
+      backBtn.classList.add('show');
+      headerTitle.textContent = name;
+      headerSub.textContent   = 'Đang trò chuyện';
+      document.getElementById('cp-messages').innerHTML = '';
+
+      // Load tin nhắn
+      fetchStaffMsgs();
+      staffPollT = setInterval(fetchStaffMsgs, 3000);
+      setTimeout(()=>document.getElementById('cp-staff-input').focus(), 200);
+    };
+
+    window.staffBackToList = function(){
+      currentSid = null;
+      clearInterval(staffPollT);
+      document.getElementById('cp-view-chat').classList.remove('active');
+      document.getElementById('cp-view-list').classList.add('active');
+      backBtn.classList.remove('show');
+      headerTitle.textContent = 'Hỗ trợ khách hàng';
+      headerSub.textContent   = 'Danh sách yêu cầu';
+      document.getElementById('cp-messages').innerHTML = '';
+      startSessionPoll();
+    };
+
+    function fetchStaffMsgs(){
+      if(!currentSid) return;
+      fetch(`/chat/staff/${currentSid}/poll/?after=${staffLastId}`)
+        .then(r=>r.json())
+        .then(d=>{
+          let hasNew = false;
+          d.messages.forEach(m=>{
+            if(m.id > staffLastId){ staffLastId = m.id; hasNew = true; }
+            appendMsg(m.content, m.is_mine ? 'me' : 'other');
+          });
+          if(hasNew) scrollBottom('cp-messages');
+        });
+    }
+
+    window.staffSend = function(){
+      if(!currentSid) return;
+      const inp = document.getElementById('cp-staff-input');
+      const txt = inp.value.trim();
+      if(!txt) return;
+      appendMsg(txt,'me');
+      inp.value = '';
+      scrollBottom('cp-messages');
+
+      fetch(`/chat/staff/${currentSid}/send/`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':csrfToken},
+        body: JSON.stringify({content: txt})
+      })
+      .then(r=>r.json())
+      .then(d=>{ if(d.id) staffLastId = Math.max(staffLastId, d.id); });
+    };
+
+    // ── Badge toàn cục (staff) ──
+    function updateGlobalBadge(count){
+      if(!panelOpen){
+        badge.textContent = count > 0 ? (count > 99 ? '99+' : count) : '';
+        badge.classList.toggle('show', count > 0);
+      }
+    }
+
+    // ── Polling badge khi panel đóng (staff) ──
+    function startBgBadgePoll(){
+      if(!isStaff) return;
+      setInterval(()=>{
+        if(!panelOpen){
+          fetch('/chat/staff/sessions/')
+            .then(r=>r.json())
+            .then(d=>updateGlobalBadge(d.total_unread));
+        }
+      }, 8000);
+    }
+    // Badge ngay khi load (staff)
+    if(isStaff){
+      fetch('/chat/staff/sessions/')
+        .then(r=>r.json())
+        .then(d=>updateGlobalBadge(d.total_unread));
+      startBgBadgePoll();
+    } else {
+      // Customer: badge sau 3s nếu chưa mở
+      setTimeout(()=>{ if(!panelOpen) badge.classList.add('show'); }, 3000);
+    }
+
+    // ── Helpers ──
+    function appendMsg(text, type){ appendMsgWithTime(text, type, null); }
+
+    function appendMsgWithTime(text, type, timeStr){
+      const el = document.getElementById('cp-messages');
+      if(!timeStr){
+        const now = new Date();
+        timeStr = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+      }
+      const row = document.createElement('div');
+      row.className = 'msg-row' + (type==='me' ? ' me' : '');
+      if(type !== 'me'){
+        const av = document.createElement('div');
+        av.className = 'msg-av';
+        av.innerHTML = isStaff ? '<i class="fas fa-user" style="font-size:0.65rem;"></i>'
+                                : '<i class="fas fa-headset" style="font-size:0.65rem;"></i>';
+        row.appendChild(av);
+      }
+      const wrap  = document.createElement('div');
+      const bub   = document.createElement('div');
+      bub.className = 'msg-bubble ' + type;
+      bub.textContent = text;
+      const t = document.createElement('div');
+      t.className = 'msg-time'; t.textContent = timeStr;
+      wrap.appendChild(bub); wrap.appendChild(t);
+      row.appendChild(wrap);
+      el.appendChild(row);
+    }
+
+    function appendSystem(text){
+      const el = document.getElementById('cp-messages');
+      const row = document.createElement('div');
+      row.className = 'msg-row';
+      const bub = document.createElement('div');
+      bub.className = 'msg-bubble system';
+      bub.innerHTML = text;
+      row.appendChild(bub);
+      el.appendChild(row);
+    }
+
+    let typingEl = null;
+    function showTyping(show){
+      const el = document.getElementById('cp-messages');
+      if(show && !typingEl){
+        typingEl = document.createElement('div');
+        typingEl.className = 'msg-row';
+        typingEl.innerHTML = '<div class="msg-av"><i class="fas fa-headset" style="font-size:0.65rem;"></i></div><div class="typing-dots"><span></span><span></span><span></span></div>';
+        el.appendChild(typingEl); scrollBottom('cp-messages');
+      } else if(!show && typingEl){ typingEl.remove(); typingEl = null; }
+    }
+
+    function scrollBottom(id){ setTimeout(()=>{ const e=document.getElementById(id); if(e) e.scrollTop=e.scrollHeight; },30); }
+    function stopAllPolls(){ clearInterval(pollTimer); clearInterval(staffPollT); clearInterval(sessionPollT); }
+    function escHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+  })();
+  </script>
+  {% endif %}
+  <!-- ===== END CHAT WIDGET ===== -->
+
   </body>
 </html>
