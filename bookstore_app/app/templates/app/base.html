@@ -15,6 +15,264 @@
 
     <link rel="stylesheet" href="{% static 'app/css/style.css' %}?v={% now 'U' %}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <style>
+      /* ═══════════════════════════════════════════
+         BASE LAYOUT ENHANCEMENTS
+         ═══════════════════════════════════════════ */
+
+      /* ── Scroll reveal utility ── */
+      .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.55s cubic-bezier(.22,1,.36,1), transform 0.55s cubic-bezier(.22,1,.36,1); }
+      .reveal.visible { opacity: 1; transform: none; }
+
+      /* ── HEADER ── */
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: rgba(255, 252, 247, 0.82);
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+        box-shadow: 0 2px 24px rgba(0,0,0,0.06);
+        transition: box-shadow 0.3s, background 0.3s;
+      }
+      header.scrolled {
+        background: rgba(255, 252, 247, 0.97);
+        box-shadow: 0 4px 32px rgba(0,0,0,0.1);
+      }
+
+      /* Logo pulse on hover */
+      .logo { letter-spacing: -0.5px; transition: transform 0.2s; display: inline-block; }
+      .logo:hover { transform: scale(1.04); }
+      .logo span { position: relative; }
+      .logo span::after {
+        content: '';
+        position: absolute;
+        bottom: -2px; left: 0; right: 0;
+        height: 2px;
+        background: var(--primary);
+        border-radius: 2px;
+        transform: scaleX(0);
+        transition: transform 0.25s ease;
+        transform-origin: left;
+      }
+      .logo:hover span::after { transform: scaleX(1); }
+
+      /* Nav link hover line */
+      nav .menu-links > li > a {
+        position: relative;
+        transition: color 0.2s;
+      }
+      nav .menu-links > li > a::after {
+        content: '';
+        position: absolute;
+        bottom: -4px; left: 0; right: 0;
+        height: 2px;
+        background: var(--primary, #e67e22);
+        border-radius: 2px;
+        transform: scaleX(0);
+        transition: transform 0.22s ease;
+        transform-origin: left;
+      }
+      nav .menu-links > li > a:hover::after { transform: scaleX(1); }
+      nav .menu-links > li > a:hover { color: var(--primary, #e67e22); }
+
+      /* Submenu improved */
+      .submenu {
+        animation: submenuIn 0.2s cubic-bezier(.22,1,.36,1) both;
+      }
+      @keyframes submenuIn {
+        from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      /* Cart icon animated */
+      .cart-link { transition: transform 0.2s; }
+      .cart-link:hover { transform: scale(1.15) rotate(-5deg); }
+      .cart-badge {
+        animation: badgePop 0.35s cubic-bezier(.34,1.56,.64,1) both;
+      }
+      @keyframes badgePop {
+        from { transform: scale(0); }
+        to   { transform: scale(1); }
+      }
+
+      /* ── SEARCH BOX ── */
+      .header-search-box .search-wrapper {
+        transition: box-shadow 0.2s, transform 0.2s;
+      }
+      .header-search-box .search-wrapper:focus-within {
+        box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.18);
+        transform: translateY(-1px);
+      }
+      #search-dropbox {
+        border-radius: 12px !important;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+        border: 1px solid rgba(0,0,0,0.06) !important;
+        overflow: hidden;
+        animation: dropboxIn 0.18s ease both;
+      }
+      @keyframes dropboxIn {
+        from { opacity: 0; transform: translateY(-6px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .suggestion-item { transition: background 0.15s; }
+      .suggestion-item:hover { background: #fff8f2 !important; }
+
+      /* ── FILTER DRAWER ── */
+      .filter-drawer {
+        transition: transform 0.32s cubic-bezier(.22,1,.36,1) !important;
+      }
+      .filter-drawer .drawer-header {
+        background: linear-gradient(135deg, #f8f4ee, #fff);
+        border-bottom: 1px solid #f0e8de;
+      }
+      .filter-drawer select,
+      .filter-drawer input[type="text"],
+      .filter-drawer input[type="number"] {
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .filter-drawer select:focus,
+      .filter-drawer input:focus {
+        border-color: var(--primary, #e67e22) !important;
+        box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.12);
+        outline: none;
+      }
+      .filter-drawer button[type="submit"] {
+        background: linear-gradient(135deg, #f39c12, #e67e22) !important;
+        transition: transform 0.2s, box-shadow 0.2s !important;
+        letter-spacing: 0.3px;
+      }
+      .filter-drawer button[type="submit"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(230, 126, 34, 0.35) !important;
+      }
+
+      /* ── RECENTLY VIEWED SECTION ── */
+      .recent-box {
+        position: relative;
+      }
+      .viewed-card {
+        transition: transform 0.22s cubic-bezier(.22,1,.36,1), box-shadow 0.22s !important;
+      }
+      .viewed-card:hover {
+        transform: translateY(-5px) !important;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        position: relative;
+        overflow: hidden;
+      }
+      footer::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #f39c12, #e67e22, #f39c12);
+        background-size: 200% 100%;
+        animation: footerLine 3s linear infinite;
+      }
+      @keyframes footerLine {
+        from { background-position: 0% 0%; }
+        to   { background-position: 200% 0%; }
+      }
+      footer a:hover {
+        color: #f39c12 !important;
+        transition: color 0.2s;
+      }
+      footer .fab {
+        transition: transform 0.2s, color 0.2s;
+      }
+      footer a:hover .fab {
+        transform: scale(1.25);
+        color: #f39c12 !important;
+      }
+
+      /* ── FLOATING FILTER BUTTON ── */
+      .btn-filter-floating {
+        transition: transform 0.2s, box-shadow 0.2s !important;
+        animation: floatPulse 2.5s ease-in-out infinite;
+      }
+      .btn-filter-floating:hover {
+        transform: scale(1.12) !important;
+        animation: none !important;
+      }
+      @keyframes floatPulse {
+        0%, 100% { box-shadow: 0 4px 16px rgba(230,126,34,0.35); }
+        50%       { box-shadow: 0 8px 28px rgba(230,126,34,0.5); }
+      }
+
+      /* ── USER DROPDOWN ── */
+      .user-dropdown .dropdown-menu {
+        border-radius: 14px !important;
+        overflow: hidden;
+        animation: submenuIn 0.2s cubic-bezier(.22,1,.36,1) both;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+        border: 1px solid rgba(0,0,0,0.05) !important;
+      }
+      .user-dropdown .dropdown-menu a {
+        transition: background 0.15s, padding-left 0.15s !important;
+      }
+      .user-dropdown .dropdown-menu a:hover {
+        background: #fff8f2 !important;
+        padding-left: 22px !important;
+      }
+      .avatar-small {
+        transition: transform 0.2s;
+      }
+      .user-dropdown:hover .avatar-small {
+        transform: scale(1.06);
+      }
+
+      /* ── TOAST / SWEETALERT enhancements ── */
+      .swal2-popup { border-radius: 18px !important; }
+      .swal2-confirm { border-radius: 10px !important; }
+
+      /* ── Page transition overlay ── */
+      #page-transition {
+        position: fixed; inset: 0;
+        background: #fff;
+        z-index: 99999;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.25s;
+      }
+      #page-transition.active { opacity: 1; }
+
+      /* ── Scroll to top button ── */
+      #scroll-top-btn {
+        position: fixed;
+        bottom: 100px;
+        left: 28px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: white;
+        border: 1.5px solid #eee;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9000;
+        opacity: 0;
+        transform: translateY(12px);
+        transition: opacity 0.3s, transform 0.3s, box-shadow 0.2s;
+        color: #666;
+        font-size: 1rem;
+      }
+      #scroll-top-btn.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      #scroll-top-btn:hover {
+        box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+        color: var(--primary, #e67e22);
+        border-color: var(--primary, #e67e22);
+      }
+    </style>
   </head>
   <script>
   // Hàm này chạy ngay khi load trang để tính lại tổng số lượng từ Session
@@ -52,6 +310,12 @@
   }
 </script>
   <body>
+    <!-- Page transition overlay -->
+    <div id="page-transition"></div>
+    <!-- Scroll to top button -->
+    <button id="scroll-top-btn" title="Lên đầu trang" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+      <i class="fas fa-arrow-up"></i>
+    </button>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.all.min.js"></script>
     <header>
     <div class="container header-flex">
@@ -222,6 +486,8 @@
 {% endblock sidebar %}
 
                 <div style="flex-grow: 1;">
+
+                    {% block hero_banner %}{% endblock %}
                     
                     <div class="main-books-content" style="margin-bottom: 50px;">
                         {% block content %}
@@ -284,9 +550,9 @@
                     Hành trình tri thức bắt đầu từ những trang sách. Chúng tôi cung cấp những tựa sách chất lượng nhất từ các tác giả hàng đầu.
                 </p>
                 <div style="margin-top: 20px;">
-                    <a href="#" style="color: #ecf0f1; margin-right: 15px; font-size: 1.2rem;"><i class="fab fa-facebook"></i></a>
-                    <a href="#" style="color: #ecf0f1; margin-right: 15px; font-size: 1.2rem;"><i class="fab fa-instagram"></i></a>
-                    <a href="#" style="color: #ecf0f1; font-size: 1.2rem;"><i class="fab fa-youtube"></i></a>
+                    <a href="#" style="color: #ecf0f1; margin-right: 15px; font-size: 1.4rem; display:inline-block; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.transform='scale(1.3)';this.style.color='#f39c12'" onmouseout="this.style.transform='';this.style.color='#ecf0f1'"><i class="fab fa-facebook"></i></a>
+                    <a href="#" style="color: #ecf0f1; margin-right: 15px; font-size: 1.4rem; display:inline-block; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.transform='scale(1.3)';this.style.color='#f39c12'" onmouseout="this.style.transform='';this.style.color='#ecf0f1'"><i class="fab fa-instagram"></i></a>
+                    <a href="#" style="color: #ecf0f1; font-size: 1.4rem; display:inline-block; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.transform='scale(1.3)';this.style.color='#f39c12'" onmouseout="this.style.transform='';this.style.color='#ecf0f1'"><i class="fab fa-youtube"></i></a>
                 </div>
             </div>
 
@@ -416,6 +682,88 @@ document.addEventListener('DOMContentLoaded', function() {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{% static 'app/js/script.js' %}"></script>
     <script src="{% static 'app/js/wishlist.js' %}"></script>
+
+    <script>
+    /* ═══════════════════════════════════════════
+       INTERACTIVE ENHANCEMENTS – base.html
+       ═══════════════════════════════════════════ */
+
+    (function(){
+      // ── Sticky header shadow on scroll ──
+      const header = document.querySelector('header');
+      if(header){
+        window.addEventListener('scroll', ()=>{
+          header.classList.toggle('scrolled', window.scrollY > 20);
+        }, { passive: true });
+      }
+
+      // ── Scroll-to-top button ──
+      const scrollBtn = document.getElementById('scroll-top-btn');
+      if(scrollBtn){
+        window.addEventListener('scroll', ()=>{
+          scrollBtn.classList.toggle('show', window.scrollY > 300);
+        }, { passive: true });
+      }
+
+      // ── Scroll reveal for main content areas ──
+      const observer = new IntersectionObserver((entries)=>{
+        entries.forEach(e => {
+          if(e.isIntersecting){
+            e.target.classList.add('visible');
+            observer.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.08 });
+
+      document.querySelectorAll('.viewed-card, .recent-box, footer > .container > div > div').forEach((el, i)=>{
+        el.classList.add('reveal');
+        el.style.transitionDelay = (i * 60) + 'ms';
+        observer.observe(el);
+      });
+
+      // ── Filter button floating label tooltip ──
+      const filterBtn = document.querySelector('.btn-filter-floating');
+      if(filterBtn){
+        filterBtn.setAttribute('title', 'Bộ lọc tìm kiếm');
+      }
+
+      // ── Radio button highlight on select ──
+      document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function(){
+          const name = this.getAttribute('name');
+          document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+            r.closest('label') && r.closest('label').classList.remove('radio-selected');
+          });
+          this.closest('label') && this.closest('label').classList.add('radio-selected');
+        });
+        // Init already-checked
+        if(radio.checked){
+          radio.closest('label') && radio.closest('label').classList.add('radio-selected');
+        }
+      });
+
+      // ── Recently viewed: smooth horizontal scroll with drag ──
+      const rcScroll = document.querySelector('.recent-box [style*="overflow-x"]');
+      if(rcScroll){
+        let isDragging = false, startX, scrollLeft;
+        rcScroll.addEventListener('mousedown', e=>{
+          isDragging = true; startX = e.pageX - rcScroll.offsetLeft;
+          scrollLeft = rcScroll.scrollLeft; rcScroll.style.cursor='grabbing';
+        });
+        ['mouseup','mouseleave'].forEach(ev=>rcScroll.addEventListener(ev,()=>{ isDragging=false; rcScroll.style.cursor=''; }));
+        rcScroll.addEventListener('mousemove', e=>{
+          if(!isDragging) return; e.preventDefault();
+          rcScroll.scrollLeft = scrollLeft - (e.pageX - rcScroll.offsetLeft - startX);
+        });
+      }
+
+    })();
+    </script>
+    <style>
+      /* Radio selected label highlight */
+      label.radio-selected { color: var(--primary, #e67e22) !important; font-weight: 600 !important; }
+      label.radio-selected input { accent-color: var(--primary, #e67e22); }
+    </style>
 
   {% if user.is_authenticated %}
   <!-- =====================================================
@@ -601,6 +949,23 @@ document.addEventListener('DOMContentLoaded', function() {
       #chat-panel { right:10px; left:10px; width:auto; bottom:90px; }
       #chat-bubble-btn { right:18px; bottom:20px; }
     }
+
+    /* ── Bot chip buttons ── */
+    .bot-chip {
+      background:#fff3e0; border:1.5px solid #f9c87a; border-radius:20px;
+      padding:4px 11px; font-size:0.75rem; color:#b7600a; cursor:pointer;
+      transition:background 0.15s,border-color 0.15s; white-space:nowrap;
+      font-family:inherit;
+    }
+    .bot-chip:hover { background:#ffe0b2; border-color:#f39c12; }
+
+    /* ── Bot messages area scrollbar ── */
+    #cp-bot-messages::-webkit-scrollbar { width: 4px; }
+    #cp-bot-messages::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+    /* ── Mode view ── */
+    #cp-view-mode { display:flex; flex-direction:column; flex:1; overflow:hidden; }
+    #cp-view-mode.active { display:flex; }
   </style>
 
   <!-- Nút bubble -->
@@ -647,17 +1012,68 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 
     {% else %}
-    <!-- ═══ CUSTOMER: View Chat ═══ -->
-    <div id="cp-view-chat" class="active">
-      <div id="cp-messages">
-        <div class="msg-row">
-          <div class="msg-av"><i class="fas fa-headset"></i></div>
-          <div>
-            <div class="msg-bubble other">Xin chào bạn! Bạn cần giúp gì? 😊</div>
-            <div class="msg-time">DDC Books</div>
+    <!-- ═══ CUSTOMER: Mode Selection ═══ -->
+    <div id="cp-view-mode" class="active" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div style="padding:24px 18px 20px;display:flex;flex-direction:column;gap:14px;background:#f8f5f0;flex:1;">
+        <div style="text-align:center;margin-bottom:6px;">
+          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#f39c12,#e67e22);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 14px rgba(243,156,18,0.35);">
+            <i class="fas fa-book-open" style="font-size:1.3rem;color:#fff;"></i>
           </div>
+          <p style="margin:0;font-size:0.92rem;font-weight:600;color:#333;">Xin chào! Bạn cần hỗ trợ gì?</p>
+          <p style="margin:4px 0 0;font-size:0.78rem;color:#888;">Chọn một trong hai kênh hỗ trợ bên dưới</p>
         </div>
+
+        <!-- Option 1: Chatbot -->
+        <button onclick="custChooseMode('bot')" style="display:flex;align-items:center;gap:14px;background:#fff;border:2px solid #f0ede8;border-radius:14px;padding:15px 16px;cursor:pointer;text-align:left;transition:border-color 0.2s,box-shadow 0.2s;width:100%;" onmouseover="this.style.borderColor='#f39c12';this.style.boxShadow='0 4px 16px rgba(243,156,18,0.18)';" onmouseout="this.style.borderColor='#f0ede8';this.style.boxShadow='none';">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="fas fa-robot" style="font-size:1.1rem;color:#fff;"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:0.9rem;color:#222;margin-bottom:3px;">🤖 Chat với AI Bot</div>
+            <div style="font-size:0.76rem;color:#888;line-height:1.4;">Tư vấn sách, tra đơn hàng, gợi ý cá nhân hóa – phản hồi ngay lập tức!</div>
+          </div>
+          <i class="fas fa-chevron-right" style="color:#ccc;font-size:0.8rem;flex-shrink:0;"></i>
+        </button>
+
+        <!-- Option 2: Staff -->
+        <button onclick="custChooseMode('staff')" style="display:flex;align-items:center;gap:14px;background:#fff;border:2px solid #f0ede8;border-radius:14px;padding:15px 16px;cursor:pointer;text-align:left;transition:border-color 0.2s,box-shadow 0.2s;width:100%;" onmouseover="this.style.borderColor='#f39c12';this.style.boxShadow='0 4px 16px rgba(243,156,18,0.18)';" onmouseout="this.style.borderColor='#f0ede8';this.style.boxShadow='none';">
+          <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#f39c12,#e67e22);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="fas fa-headset" style="font-size:1.1rem;color:#fff;"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:0.9rem;color:#222;margin-bottom:3px;">👩‍💼 Liên hệ nhân viên</div>
+            <div style="font-size:0.76rem;color:#888;line-height:1.4;">Kết nối trực tiếp với đội ngũ hỗ trợ DDC Books – T2 → CN, 8:00–22:00.</div>
+          </div>
+          <i class="fas fa-chevron-right" style="color:#ccc;font-size:0.8rem;flex-shrink:0;"></i>
+        </button>
       </div>
+    </div>
+
+    <!-- ═══ CUSTOMER: Bot Chat ═══ -->
+    <div id="cp-view-bot" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+      <!-- Quick-action chips -->
+      <div id="cp-bot-chips" style="padding:10px 12px 6px;background:#fff;border-bottom:1px solid #f0ede8;display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0;">
+        <button class="bot-chip" onclick="botChip('Tìm sách tặng quà')">🎁 Tặng quà</button>
+        <button class="bot-chip" onclick="botChip('Sách đang giảm giá')">🔥 Giảm giá</button>
+        <button class="bot-chip" onclick="botChip('Kiểm tra đơn hàng')">📦 Đơn hàng</button>
+        <button class="bot-chip" onclick="botChip('Chính sách đổi trả')">↩️ Đổi trả</button>
+        <button class="bot-chip" onclick="botChip('Gợi ý sách cho tôi')">✨ Gợi ý</button>
+        <button class="bot-chip" onclick="botChip('Địa chỉ cửa hàng')">📍 Địa chỉ</button>
+      </div>
+      <div id="cp-bot-messages" style="flex:1;overflow-y:auto;padding:14px 13px;display:flex;flex-direction:column;gap:9px;background:#f8f5f0;min-height:200px;max-height:320px;">
+        <!-- welcome msg injected by JS -->
+      </div>
+      <div class="cp-input-row">
+        <input class="cp-input" id="cp-bot-input" type="text"
+               placeholder="Hỏi gì cũng được..." maxlength="500"
+               onkeydown="if(event.key==='Enter')botSend()" autocomplete="off"/>
+        <button class="cp-send" onclick="botSend()"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
+
+    <!-- ═══ CUSTOMER: Staff Chat ═══ -->
+    <div id="cp-view-chat" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+      <div id="cp-messages" style="flex:1;overflow-y:auto;padding:14px 13px;display:flex;flex-direction:column;gap:9px;background:#f8f5f0;min-height:200px;max-height:340px;"></div>
       <div class="cp-input-row">
         <input class="cp-input" id="cp-cust-input" type="text"
                placeholder="Nhắn tin..." maxlength="500"
@@ -703,21 +1119,244 @@ document.addEventListener('DOMContentLoaded', function() {
       if(panelOpen){
         badge.classList.remove('show');
         if(isStaff){ loadSessionList(); startSessionPoll(); }
-        else       { loadCustHistory(); }
+        else {
+          // Customer: if no mode chosen yet, show selection screen
+          if(!custMode){
+            showModeSelection();
+          } else if(custMode === 'staff'){
+            loadCustHistory();
+          }
+          // bot mode: already initialized
+        }
       } else {
         stopAllPolls();
         if(isStaff && currentSid){ staffBackToList(); }
       }
     };
 
+    // ── Customer mode state ──
+    let custMode = null; // null | 'bot' | 'staff'
+
+    function showModeSelection(){
+      headerTitle.textContent = 'DDC Books – Hỗ trợ';
+      headerSub.textContent   = 'Chọn kênh hỗ trợ';
+      document.getElementById('cp-header-icon').innerHTML = '<i class="fas fa-comments"></i>';
+      backBtn.classList.remove('show');
+      document.getElementById('cp-view-mode').style.display = 'flex';
+      document.getElementById('cp-view-bot').style.display  = 'none';
+      document.getElementById('cp-view-chat').style.display = 'none';
+    }
+
+    window.custChooseMode = function(mode){
+      custMode = mode;
+      if(mode === 'bot'){
+        headerTitle.textContent = 'DDC Books AI Bot';
+        headerSub.textContent   = '✨ Trả lời ngay lập tức';
+        document.getElementById('cp-header-icon').innerHTML = '<i class="fas fa-robot"></i>';
+        backBtn.classList.add('show');
+        backBtn.onclick = function(){ custMode = null; showModeSelection(); };
+        document.getElementById('cp-view-mode').style.display = 'none';
+        document.getElementById('cp-view-bot').style.display  = 'flex';
+        document.getElementById('cp-view-chat').style.display = 'none';
+        initBot();
+      } else {
+        headerTitle.textContent = 'DDC Books – Hỗ trợ';
+        headerSub.textContent   = 'Nhân viên trực tuyến';
+        document.getElementById('cp-header-icon').innerHTML = '<i class="fas fa-headset"></i>';
+        backBtn.classList.add('show');
+        backBtn.onclick = function(){ custMode = null; stopAllPolls(); showModeSelection(); };
+        document.getElementById('cp-view-mode').style.display = 'none';
+        document.getElementById('cp-view-bot').style.display  = 'none';
+        document.getElementById('cp-view-chat').style.display = 'flex';
+        loadCustHistory();
+      }
+    };
+
     // ════════════════════════════════════════
-    //  CUSTOMER logic
+    //  BOT logic
+    // ════════════════════════════════════════
+    let botInited = false;
+    let botTypingEl = null;
+
+    function initBot(){
+      if(botInited) return;
+      botInited = true;
+      const el = document.getElementById('cp-bot-messages');
+      el.innerHTML = '';
+      appendBotMsg('other', 'Xin chào! Mình là DDC Books AI Bot 🤖\nMình có thể giúp bạn tìm sách, kiểm tra đơn hàng, tư vấn theo sở thích và nhiều hơn nữa!\n\nBạn muốn hỏi gì hôm nay? 😊');
+    }
+
+    window.botChip = function(text){
+      appendBotMsg('me', text);
+      processBotInput(text);
+    };
+
+    window.botSend = function(){
+      const inp = document.getElementById('cp-bot-input');
+      const txt = inp.value.trim();
+      if(!txt) return;
+      appendBotMsg('me', txt);
+      inp.value = '';
+      processBotInput(txt);
+    };
+
+    function processBotInput(text){
+      showBotTyping(true);
+      const lower = text.toLowerCase();
+
+      // ── Rule-based fast responses ──
+      let quickReply = null;
+
+      if(/(địa chỉ|cửa hàng|ở đâu|chỗ nào)/i.test(lower)){
+        quickReply = '📍 DDC Books tọa lạc tại:\n📌 Số 9 Nguyễn Trãi, Hà Đông, Hà Nội\n⏰ Giờ mở cửa: 08:00 – 22:00 (Hàng ngày)\n📞 Hotline: 094.152.7660';
+      } else if(/(đổi trả|hoàn hàng|trả hàng|chính sách|bảo hành)/i.test(lower)){
+        quickReply = '↩️ Chính sách đổi trả DDC Books:\n• Đổi trả trong vòng 7 ngày kể từ ngày nhận hàng\n• Sản phẩm còn nguyên seal, chưa qua sử dụng\n• Lỗi do nhà sản xuất: đổi mới 100%\n• Liên hệ: support@ddcbooks.com hoặc Hotline 094.152.7660';
+      } else if(/(vận chuyển|giao hàng|ship|phí ship|thời gian giao)/i.test(lower)){
+        quickReply = '🚚 Thông tin vận chuyển:\n• Nội thành Hà Nội: 1–2 ngày (miễn phí từ 250.000đ)\n• Toàn quốc: 3–5 ngày làm việc\n• Phí ship: 25.000đ – 40.000đ tùy khu vực\n• Có thể theo dõi đơn qua mã vận đơn';
+      } else if(/(đơn hàng|kiểm tra đơn|tình trạng đơn|mã đơn|order)/i.test(lower)){
+        quickReply = '📦 Để kiểm tra đơn hàng, bạn vui lòng:\n1. Truy cập mục "Lịch sử mua hàng" trên tài khoản\n2. Hoặc cung cấp mã đơn hàng để mình tra giúp!\n\nBạn có mã đơn hàng không?';
+      } else if(/(giảm giá|sale|khuyến mãi|ưu đãi|đang sale)/i.test(lower)){
+        quickReply = '🔥 Sách đang giảm giá hot tại DDC Books:\n\nMình sẽ chuyển bạn đến trang khuyến mãi ngay!\n👉 <a href="/?filter=sale" style="color:#f39c12;font-weight:600;">Xem sách giảm giá</a>';
+      } else if(/(tặng quà|quà tặng|gift|sinh nhật|quà)/i.test(lower)){
+        quickReply = '🎁 Tư vấn sách tặng quà:\n\nBạn cho mình biết thêm:\n• Người nhận bao nhiêu tuổi?\n• Họ thích chủ đề gì? (Văn học, kỹ năng, khoa học...)\n• Ngân sách dự kiến?\n\nMình sẽ gợi ý những cuốn sách phù hợp nhất! 😊';
+      } else if(/(lập trình|coding|code|python|javascript|công nghệ|it|dev)/i.test(lower)){
+        quickReply = '💻 Sách lập trình cho bạn:\n\nMình gợi ý một số hướng:\n• Người mới bắt đầu: "Python Cơ Bản", "Lập Trình Không Khó"\n• Web development: "HTML/CSS Thực Chiến"\n• Tư duy logic: "Cấu Trúc Dữ Liệu & Giải Thuật"\n\n👉 <a href="/?category=&q=lập+trình" style="color:#f39c12;font-weight:600;">Xem tất cả sách lập trình</a>';
+      } else if(/(wishlist|yêu thích|sách yêu thích)/i.test(lower)){
+        quickReply = '❤️ Danh sách yêu thích của bạn:\n\nBạn có thể xem danh sách sách yêu thích tại:\n👉 <a href="/wishlist/" style="color:#f39c12;font-weight:600;">Xem Wishlist của tôi</a>\n\nMình sẽ thông báo ngay khi sách trong wishlist được giảm giá! 🔔';
+      } else if(/(giỏ hàng|cart|chưa thanh toán|bỏ quên)/i.test(lower)){
+        quickReply = '🛒 Bạn còn sản phẩm trong giỏ hàng chưa thanh toán!\n\n👉 <a href="/cart/" style="color:#f39c12;font-weight:600;">Xem giỏ hàng ngay</a>\n\nMình nhắc nhẹ: nhiều sách đang có giá ưu đãi, đừng để lỡ nhé! 😉';
+      } else if(/(hết hàng|out of stock|thông báo khi có hàng|nhận thông báo)/i.test(lower)){
+        quickReply = '🔔 Đăng ký nhận thông báo khi có hàng:\n\nBạn chỉ cần:\n1. Vào trang sản phẩm đang hết hàng\n2. Nhấn nút "Thông báo khi có hàng"\n3. Mình sẽ email ngay khi sách về kho!\n\nHoặc cho mình biết tên sách, mình hỗ trợ đăng ký luôn nhé!';
+      } else if(/(gợi ý|recommend|tư vấn|nên đọc|đọc gì|sách hay)/i.test(lower)){
+        quickReply = '✨ Gợi ý sách cá nhân hóa cho bạn:\n\nĐể gợi ý chính xác nhất, bạn cho mình biết:\n• Bạn thích thể loại gì? (Tiểu thuyết, Self-help, Kinh tế, Khoa học...)\n• Bạn đang cần đọc để làm gì? (Học tập, giải trí, công việc...)\n• Ngân sách bạn có là bao nhiêu?\n\nMình sẽ chọn ra những cuốn "best match" cho bạn! 📚';
+      } else if(/(tiếng anh|english|tiếng nhật|tiếng hàn|tiếng trung|ngoại văn|foreign)/i.test(lower)){
+        quickReply = '🌍 DDC Books có đa dạng sách ngoại văn:\n\n🇺🇸 Tiếng Anh • 🇯🇵 Tiếng Nhật\n🇰🇷 Tiếng Hàn • 🇨🇳 Tiếng Trung\n\nBạn đang tìm sách ngoại văn ở trình độ nào?\n(Sơ cấp / Trung cấp / Nâng cao)\n\n👉 <a href="/?q=ngoại+văn" style="color:#f39c12;font-weight:600;">Xem sách ngoại văn</a>';
+      } else if(/(đánh giá|review|phản hồi|nhận xét|feedback)/i.test(lower)){
+        quickReply = '⭐ Cảm ơn bạn đã quan tâm đến việc đánh giá!\n\nSau khi nhận hàng, bạn có thể:\n1. Vào trang chi tiết sách đã mua\n2. Cuộn xuống phần "Đánh giá"\n3. Để lại nhận xét và số sao\n\nĐánh giá của bạn giúp cộng đồng độc giả rất nhiều! 🙏';
+      }
+
+      setTimeout(()=>{
+        showBotTyping(false);
+        if(quickReply){
+          appendBotMsgHtml('other', quickReply);
+        } else {
+          // Fallback: call Claude API
+          callClaudeBot(text);
+          return; // don't scroll yet, handled in callClaudeBot
+        }
+        scrollBotBottom();
+      }, 700);
+    }
+
+    async function callClaudeBot(userText){
+      try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 1000,
+            system: `Bạn là AI Bot tư vấn sách của DDC Books - một website bán sách uy tín tại Việt Nam.
+Thông tin cửa hàng:
+- Địa chỉ: Số 9 Nguyễn Trãi, Hà Đông, Hà Nội
+- Hotline: 094.152.7660 | Email: support@ddcbooks.com
+- Giờ mở cửa: 08:00 – 22:00 hàng ngày
+- Chính sách đổi trả: 7 ngày, sản phẩm nguyên seal
+- Vận chuyển: Nội thành 1-2 ngày, toàn quốc 3-5 ngày
+
+Nhiệm vụ của bạn:
+1. Tư vấn, gợi ý sách theo nhu cầu khách hàng
+2. Trả lời câu hỏi về chính sách, vận chuyển, cửa hàng
+3. Hỗ trợ tìm sách theo thể loại, giá, tác giả
+4. Giải thích nội dung, tóm tắt cuốn sách khách hỏi
+
+Quy tắc trả lời:
+- Luôn thân thiện, ngắn gọn (tối đa 150 từ)
+- Dùng emoji phù hợp để tạo cảm giác gần gũi
+- Nếu không chắc về thông tin sản phẩm cụ thể, hãy đề xuất khách liên hệ staff
+- Trả lời bằng tiếng Việt trừ khi khách hỏi bằng ngôn ngữ khác`,
+            messages: [{ role: 'user', content: userText }]
+          })
+        });
+        const data = await res.json();
+        showBotTyping(false);
+        const reply = data.content && data.content[0] ? data.content[0].text : 'Xin lỗi, mình chưa hiểu câu hỏi của bạn. Bạn có thể diễn đạt lại không? 😊';
+        appendBotMsg('other', reply);
+        scrollBotBottom();
+      } catch(e){
+        showBotTyping(false);
+        appendBotMsg('other', 'Xin lỗi, có lỗi xảy ra. Bạn thử lại hoặc liên hệ nhân viên hỗ trợ nhé! 🙏');
+        scrollBotBottom();
+      }
+    }
+
+    function appendBotMsg(type, text){
+      const el = document.getElementById('cp-bot-messages');
+      const now = new Date();
+      const timeStr = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+      const row = document.createElement('div');
+      row.className = 'msg-row' + (type==='me'?' me':'');
+      if(type !== 'me'){
+        const av = document.createElement('div');
+        av.className = 'msg-av';
+        av.innerHTML = '<i class="fas fa-robot" style="font-size:0.65rem;"></i>';
+        row.appendChild(av);
+      }
+      const wrap = document.createElement('div');
+      const bub = document.createElement('div');
+      bub.className = 'msg-bubble ' + type;
+      bub.style.whiteSpace = 'pre-line';
+      bub.textContent = text;
+      const t = document.createElement('div');
+      t.className = 'msg-time'; t.textContent = timeStr;
+      wrap.appendChild(bub); wrap.appendChild(t);
+      row.appendChild(wrap);
+      el.appendChild(row);
+    }
+
+    function appendBotMsgHtml(type, html){
+      const el = document.getElementById('cp-bot-messages');
+      const now = new Date();
+      const timeStr = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+      const row = document.createElement('div');
+      row.className = 'msg-row' + (type==='me'?' me':'');
+      if(type !== 'me'){
+        const av = document.createElement('div');
+        av.className = 'msg-av';
+        av.innerHTML = '<i class="fas fa-robot" style="font-size:0.65rem;"></i>';
+        row.appendChild(av);
+      }
+      const wrap = document.createElement('div');
+      const bub = document.createElement('div');
+      bub.className = 'msg-bubble ' + type;
+      bub.style.whiteSpace = 'pre-line';
+      bub.innerHTML = html;
+      const t = document.createElement('div');
+      t.className = 'msg-time'; t.textContent = timeStr;
+      wrap.appendChild(bub); wrap.appendChild(t);
+      row.appendChild(wrap);
+      el.appendChild(row);
+    }
+
+    function showBotTyping(show){
+      const el = document.getElementById('cp-bot-messages');
+      if(show && !botTypingEl){
+        botTypingEl = document.createElement('div');
+        botTypingEl.className = 'msg-row';
+        botTypingEl.innerHTML = '<div class="msg-av"><i class="fas fa-robot" style="font-size:0.65rem;"></i></div><div class="typing-dots"><span></span><span></span><span></span></div>';
+        el.appendChild(botTypingEl); scrollBotBottom();
+      } else if(!show && botTypingEl){ botTypingEl.remove(); botTypingEl = null; }
+    }
+
+    function scrollBotBottom(){ setTimeout(()=>{ const e=document.getElementById('cp-bot-messages'); if(e) e.scrollTop=e.scrollHeight; },30); }
+
+    // ════════════════════════════════════════
+    //  CUSTOMER (Staff) logic
     // ════════════════════════════════════════
 
-    // Load toàn bộ lịch sử chat từ DB khi mở panel lần đầu
+    // Load toàn bộ lịch sử chat từ DB khi mở panel lần đầu (staff chat mode)
     function loadCustHistory(){
       const msgsEl = document.getElementById('cp-messages');
-      // Xoá tin chào mặc định tạm thời, sẽ render lại từ DB
       msgsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#bbb;font-size:0.8rem;">Đang tải...</div>';
 
       fetch('/chat/customer/poll/?after=0&history=1')
@@ -922,7 +1561,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(d=>updateGlobalBadge(d.total_unread));
       startBgBadgePoll();
     } else {
-      // Customer: badge sau 3s nếu chưa mở
+      // Customer: badge sau 3s nếu chưa mở (invite to chat)
       setTimeout(()=>{ if(!panelOpen) badge.classList.add('show'); }, 3000);
     }
 
