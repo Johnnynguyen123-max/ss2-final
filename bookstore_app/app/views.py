@@ -11,7 +11,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.decorators import user_passes_test
 from django.db.models import Q,Case,When
-from django.shortcuts import render, redirect
+
 
 
 
@@ -55,6 +55,22 @@ def home(request):
         last_90_days = timezone.now() - timedelta(days=90)
         books = books.filter(release_date__gte=last_90_days)
 
+    elif filter_type == 'sale':
+        # Lọc sách đang giảm giá
+        # Nếu model Book có trường is_on_sale: books = books.filter(is_on_sale=True)
+        # Tạm thời sắp xếp theo giá tăng dần để không ra trang trống
+        books = books.order_by('price')
+
+    elif filter_type == 'bestseller':
+        # Lọc sách bán chạy
+        # Nếu model Book có trường sold_count: books = books.order_by('-sold_count')
+        # Tạm thời sắp xếp theo ngày phát hành cũ nhất
+        books = books.order_by('release_date')
+
+    elif filter_type == 'combo':
+        # Hiển thị toàn bộ sách (bổ sung logic combo sau nếu cần)
+        books = books.order_by('-release_date')
+
     if price_range:
         if price_range == "0-100000":
             books = books.filter(price__lt=100000)
@@ -91,10 +107,11 @@ def home(request):
     context = {
         'books': books,
         'categories': categories,
-        'year_choices': year_choices,  # Bổ sung để UI render vòng lặp năm
+        'year_choices': year_choices,
         'favorite_book_ids': favorite_book_ids,
         'query': query,
         'is_new_filter': filter_type == 'new',
+        'filter_type': filter_type,          # ← để home.html render tiêu đề đúng
         'recently_viewed_books': recently_viewed_books,
         'selected_price': price_range,
         'selected_year': year,
@@ -223,12 +240,8 @@ def toggle_wishlist(request):
             
     return JsonResponse({'status': 'error', 'message': 'Yêu cầu không hợp lệ'}, status=405)
 
-from django.shortcuts import get_object_or_404
 from .models import Book
 
-# views.py
-# views.py
-# views.py
 def book_detail(request, book_id): # Đổi id thành book_id ở đây
     # 1. Lấy thông tin sách từ Database
     book = get_object_or_404(Book, id=book_id)

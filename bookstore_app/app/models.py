@@ -44,6 +44,7 @@ class Book(models.Model):
     wishlist = models.ManyToManyField(User, related_name="favorite_books", blank=True)
     description = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='books/', blank=True, null=True)
+    sold_count = models.IntegerField(default=0)
 
     def __str__(self):
         return self.title
