@@ -10,11 +10,11 @@ from django.utils import timezone
 from django.db.models import Q, Case, When, Avg
 from django.views.decorators.http import require_POST, require_GET
 from datetime import datetime, timedelta
+import urllib.request
 
 from .models import (
     Profile, Book, Category, Order, OrderItem,
     Comment, OrderTracking, ChatSession, ChatMessage,
-    FlashSaleConfig,
 )
 from .forms import UserUpdateForm, ProfileUpdateForm
 
@@ -40,10 +40,8 @@ def home(request):
     if filter_type == 'new':
         last_90_days = timezone.now() - timedelta(days=90)
         books = books.filter(release_date__gte=last_90_days)
-    elif filter_type == 'sale':
-        books = books.order_by('price')
     elif filter_type == 'bestseller':
-        books = books.order_by('release_date')  # TODO: đổi sang -sold_count sau khi chạy migrate
+        books = books.order_by('-sold_count')
     elif filter_type == 'combo':
         books = books.order_by('-release_date')
 
@@ -83,17 +81,6 @@ def home(request):
         release_date__gte=timezone.now().date() - timedelta(days=90)
     ).count()
 
-    # ── Flash sale ────────────────────────────────────────────
-    flash_config   = FlashSaleConfig.get_config()
-    flash_active   = flash_config.is_sale_now()
-    flash_discount = flash_config.discount_percent if flash_active else 0
-
-    # Nếu đang sale, filter=sale sẽ hiển thị toàn bộ sách (đã giảm hết)
-    if filter_type == 'sale' and flash_active:
-        books = Book.objects.all().order_by('-release_date')
-        if query:
-            books = books.filter(Q(title__icontains=query) | Q(author__icontains=query))
-
     context = {
         'books': books,
         'categories': categories,
@@ -106,10 +93,6 @@ def home(request):
         'selected_year': year,
         'avg_rating': avg_rating,
         'new_books_count': new_books_count,
-        # Flash sale
-        'flash_active': flash_active,
-        'flash_discount': flash_discount,
-        'flash_config': flash_config,
     }
     return render(request, 'app/home.html', context)
 
@@ -276,10 +259,38 @@ def search_suggestions(request):
 # ── GIỎ HÀNG ─────────────────────────────────────────────────────────────────
 def add_to_cart(request, book_id):
     if request.method == 'POST':
+        book = get_object_or_404(Book, id=book_id)
+
+        # Kiểm tra tồn kho
+        if book.stock <= 0:
+            return JsonResponse({'status': 'error', 'message': 'Sách này đã hết hàng!'}, status=400)
+
         cart = request.session.get('cart', {})
         quantity = int(request.POST.get('quantity', 1))
         str_id = str(book_id)
-        cart[str_id] = cart.get(str_id, 0) + quantity
+        current_in_cart = cart.get(str_id, 0)
+        new_quantity = current_in_cart + quantity
+
+        # Không cho đặt vượt quá tồn kho
+        if new_quantity > book.stock:
+            available = book.stock - current_in_cart
+            if available <= 0:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Bạn đã có {current_in_cart} quyển trong giỏ. Sách chỉ còn {book.stock} quyển trong kho!'
+                }, status=400)
+            # Chỉ thêm đúng số lượng còn có thể thêm
+            new_quantity = book.stock
+            cart[str_id] = new_quantity
+            request.session['cart'] = cart
+            request.session.modified = True
+            return JsonResponse({
+                'status': 'warning',
+                'message': f'Chỉ còn {book.stock} quyển trong kho. Đã thêm tối đa {available} quyển vào giỏ hàng!',
+                'total_items': sum(cart.values())
+            })
+
+        cart[str_id] = new_quantity
         request.session['cart'] = cart
         request.session.modified = True
         return JsonResponse({'status': 'success', 'total_items': sum(cart.values())})
@@ -292,20 +303,34 @@ def cart_detail(request):
     total_price = 0
     for book_id, quantity in cart.items():
         book = get_object_or_404(Book, id=book_id)
-        subtotal = book.price * quantity
-        total_price += subtotal
-        cart_items.append({'book': book, 'quantity': quantity, 'subtotal': subtotal})
+        # Tự động clamp nếu tồn kho giảm sau khi thêm vào giỏ
+        if quantity > book.stock:
+            quantity = book.stock
+            cart[book_id] = quantity
+            request.session['cart'] = cart
+            request.session.modified = True
+        if quantity > 0:
+            subtotal = book.price * quantity
+            total_price += subtotal
+            cart_items.append({'book': book, 'quantity': quantity, 'subtotal': subtotal})
     return render(request, 'app/cart.html', {'cart_items': cart_items, 'total_price': total_price})
 
 
 def update_cart(request, book_id):
     if request.method == 'POST':
+        book = get_object_or_404(Book, id=book_id)
         cart = request.session.get('cart', {})
         action = request.POST.get('action')
         str_id = str(book_id)
         if str_id in cart:
             if action == 'increase':
-                cart[str_id] += 1
+                if cart[str_id] < book.stock:
+                    cart[str_id] += 1
+                else:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Chỉ còn {book.stock} quyển trong kho!'
+                    }, status=400)
             elif action == 'decrease':
                 cart[str_id] = max(1, cart[str_id] - 1)
             request.session['cart'] = cart
@@ -334,11 +359,24 @@ def checkout(request):
 
     cart_items = []
     total_bill = 0
+    stock_errors = []
     for book_id, quantity in cart_session.items():
         book = get_object_or_404(Book, id=book_id)
-        subtotal = book.price * quantity
-        total_bill += subtotal
-        cart_items.append({'book': book, 'quantity': quantity, 'subtotal': subtotal})
+        # Kiểm tra tồn kho lần cuối trước khi thanh toán
+        if quantity > book.stock:
+            stock_errors.append(f'"{book.title}" chỉ còn {book.stock} quyển trong kho.')
+            quantity = book.stock
+            cart_session[book_id] = quantity
+            request.session['cart'] = cart_session
+            request.session.modified = True
+        if quantity > 0:
+            subtotal = book.price * quantity
+            total_bill += subtotal
+            cart_items.append({'book': book, 'quantity': quantity, 'subtotal': subtotal})
+
+    if stock_errors:
+        for err in stock_errors:
+            messages.warning(request, err)
 
     user_profile = getattr(request.user, 'profile', None)
     initial_full_name = f"{request.user.last_name} {request.user.first_name}".strip() or request.user.username
@@ -364,6 +402,12 @@ def checkout(request):
                 'full_name': full_name, 'phone': phone, 'address': address
             })
 
+        # Kiểm tra tồn kho một lần nữa khi submit
+        for item in cart_items:
+            if item['quantity'] > item['book'].stock:
+                messages.error(request, f'"{item["book"].title}" chỉ còn {item["book"].stock} quyển. Vui lòng cập nhật giỏ hàng.')
+                return redirect('cart_detail')
+
         order = Order.objects.create(
             user=request.user, full_name=full_name,
             phone=phone, address=address, total_price=total_bill
@@ -373,6 +417,10 @@ def checkout(request):
                 order=order, book=item['book'],
                 quantity=item['quantity'], price=item['book'].price
             )
+            # Giảm tồn kho
+            item['book'].stock -= item['quantity']
+            item['book'].sold_count += item['quantity']
+            item['book'].save(update_fields=['stock', 'sold_count'])
 
         request.session['cart'] = {}
         request.session.modified = True
@@ -449,16 +497,17 @@ def order_tracking(request, order_id):
 def confirm_received(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
     if order.status == 'Shipped':
-        order.status = 'Received'
+        order.status = 'Delivered'
         order.save()
         OrderTracking.objects.create(
-            order=order, status='Received',
+            order=order, status='Delivered',
             message='Giao hàng thành công. Người mua đã xác nhận nhận hàng.'
         )
     return redirect('order_history')
 
 
 # ── ĐƠN HÀNG (STAFF) ─────────────────────────────────────────────────────────
+# Định nghĩa is_staff TRƯỚC tất cả @user_passes_test(is_staff) để tránh NameError
 def is_staff(user):
     return user.groups.filter(name='Staff').exists() or user.is_superuser
 
@@ -486,6 +535,7 @@ def cancel_order(request, order_id):
     return redirect('manage_orders')
 
 
+@user_passes_test(is_staff)
 def pack_and_ship(request, order_id):
     if request.method == 'POST':
         order = get_object_or_404(Order, id=order_id)
@@ -500,20 +550,21 @@ def pack_and_ship(request, order_id):
     return redirect('manage_orders')
 
 
+@user_passes_test(is_staff)
 def staff_order_detail(request, order_id):
-    if not request.user.is_staff:
-        return redirect('home')
     order = get_object_or_404(Order, id=order_id)
     items = OrderItem.objects.filter(order=order)
     return render(request, 'app/staff_order_detail.html', {'order': order, 'items': items})
 
 
 # ── QUẢN LÝ SÁCH (STAFF) ─────────────────────────────────────────────────────
+@user_passes_test(is_staff)
 def staff_book_list(request):
     books = Book.objects.all()
     return render(request, 'app/staff_book_list.html', {'books': books})
 
 
+@user_passes_test(is_staff)
 def staff_book_insert(request):
     if request.method == "POST":
         category_id = request.POST.get('category')
@@ -534,6 +585,7 @@ def staff_book_insert(request):
     return render(request, 'app/staff_book_form.html', {'categories': Category.objects.all()})
 
 
+@user_passes_test(is_staff)
 def staff_book_update(request, book_id):
     book = get_object_or_404(Book, id=book_id)
     if request.method == "POST":
@@ -551,6 +603,7 @@ def staff_book_update(request, book_id):
     })
 
 
+@user_passes_test(is_staff)
 def staff_book_delete(request, book_id):
     book = get_object_or_404(Book, id=book_id)
     if request.method == 'POST':
@@ -688,43 +741,261 @@ def staff_send(request, session_id):
     return JsonResponse({'id': msg.id, 'created_at': msg.created_at.strftime('%H:%M')})
 
 
-# ── FLASH SALE (STAFF) ────────────────────────────────────────────────────────
-@user_passes_test(is_staff)
-def staff_flash_sale(request):
-    config = FlashSaleConfig.get_config()
+# ── AI CHATBOT (SERVER-SIDE) ──────────────────────────────────────────────────
+@login_required
+@require_POST
+def chat_bot(request):
+    """
+    Endpoint AI Bot: nhận tin nhắn + history từ client, thu thập context thực
+    từ DB (đơn hàng + tracking, wishlist, lịch sử xem, sở thích theo danh mục,
+    sách mới/bán chạy), rồi gọi Anthropic API từ server.
+    API key đặt trong settings.py (ANTHROPIC_API_KEY).
+    """
+    from django.conf import settings as django_settings
 
-    if request.method == 'POST':
-        config.is_active       = 'is_active' in request.POST
-        config.discount_percent = int(request.POST.get('discount_percent', 30))
-        config.start_hour      = int(request.POST.get('start_hour', 20))
-        config.start_minute    = int(request.POST.get('start_minute', 0))
-        config.end_hour        = int(request.POST.get('end_hour', 22))
-        config.end_minute      = int(request.POST.get('end_minute', 0))
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
-        # Validate đơn giản
-        if not (0 <= config.discount_percent <= 99):
-            messages.error(request, '% giảm giá phải từ 1 đến 99.')
-        elif (config.start_hour * 60 + config.start_minute
-              >= config.end_hour * 60 + config.end_minute):
-            messages.error(request, 'Giờ bắt đầu phải trước giờ kết thúc.')
+    user_message = data.get('message', '').strip()
+    history      = data.get('history', [])
+    if not user_message:
+        return JsonResponse({'error': 'Tin nhắn trống'}, status=400)
+
+    user         = request.user
+    user_display = user.get_full_name() or user.username
+
+    # ── 1. Đơn hàng + tracking chi tiết ──────────────────────────────────────
+    recent_orders = (
+        Order.objects
+        .filter(user=user)
+        .prefetch_related('items__book', 'trackings')
+        .order_by('-created_at')[:5]
+    )
+    if recent_orders:
+        order_lines = []
+        for o in recent_orders:
+            items_str = ", ".join(
+                f"{i.book.title} (x{i.quantity}, {i.price:,.0f}đ/cuốn)"
+                for i in o.items.all()
+            )
+            # Lấy bước tracking mới nhất
+            last_track = o.trackings.order_by('-created_at').first()
+            track_msg  = f" | Tracking: {last_track.message}" if last_track else ""
+            ship_info  = f" | Đơn vị ship: {o.shipping_unit}" if o.shipping_unit else ""
+            order_lines.append(
+                f"  • Đơn #{o.id} [{o.get_status_display()}]{ship_info}"
+                f" | {o.created_at.strftime('%d/%m/%Y')} | Tổng: {o.total_price:,.0f}đ"
+                f" | Sách: {items_str}{track_msg}"
+            )
+        orders_info = "ĐƠN HÀNG GẦN ĐÂY:\n" + "\n".join(order_lines)
+    else:
+        orders_info = "ĐƠN HÀNG: Khách chưa có đơn hàng nào."
+
+    # ── 2. Wishlist + suy ra sở thích theo danh mục ───────────────────────────
+    wishlist_qs = (
+        Book.objects
+        .filter(wishlist=user)
+        .select_related('category')[:10]
+    )
+    if wishlist_qs:
+        wishlist_lines = [
+            f"  • {b.title} – {b.author}"
+            f"{' [' + b.category.name + ']' if b.category else ''}"
+            f" – {b.price:,.0f}đ"
+            f"{' (còn hàng)' if b.stock > 0 else ' (hết hàng)'}"
+            for b in wishlist_qs
+        ]
+        # Tần suất danh mục để suy sở thích
+        from collections import Counter
+        cat_counter  = Counter(
+            b.category.name for b in wishlist_qs if b.category
+        )
+        fav_cats     = ", ".join(
+            f"{cat} ({cnt} cuốn)" for cat, cnt in cat_counter.most_common(3)
+        )
+        wishlist_info = (
+            "WISHLIST:\n" + "\n".join(wishlist_lines)
+            + (f"\n  → Sở thích nổi bật: {fav_cats}" if fav_cats else "")
+        )
+        fav_cat_names = [cat for cat, _ in cat_counter.most_common(2)]
+    else:
+        wishlist_info = "WISHLIST: Khách chưa có sách yêu thích."
+        fav_cat_names = []
+
+    # ── 3. Lịch sử xem gần đây ───────────────────────────────────────────────
+    viewed_ids = request.session.get('recently_viewed', [])
+    if viewed_ids:
+        viewed_books = (
+            Book.objects
+            .filter(id__in=viewed_ids)
+            .select_related('category')
+        )
+        viewed_map   = {b.id: b for b in viewed_books}
+        viewed_lines = []
+        for vid in viewed_ids:
+            b = viewed_map.get(vid)
+            if b:
+                viewed_lines.append(
+                    f"  • {b.title} – {b.author}"
+                    f"{' [' + b.category.name + ']' if b.category else ''}"
+                    f" – {b.price:,.0f}đ (ID:{b.id})"
+                )
+        viewed_info = "LỊCH SỬ XEM GẦN ĐÂY:\n" + "\n".join(viewed_lines)
+    else:
+        viewed_info = "LỊCH SỬ XEM: Chưa xem sách nào trong phiên này."
+
+    # ── 4. Sách mới (90 ngày, còn hàng, tối đa 8) ────────────────────────────
+    cutoff    = timezone.now().date() - timedelta(days=90)
+    new_books = (
+        Book.objects
+        .filter(stock__gt=0, release_date__gte=cutoff)
+        .select_related('category')
+        .order_by('-release_date')[:8]
+    )
+    if new_books:
+        new_books_info = "SÁCH MỚI (90 ngày gần đây, còn hàng):\n" + "\n".join(
+            f"  • [ID:{b.id}] {b.title} – {b.author}"
+            f"{' [' + b.category.name + ']' if b.category else ''}"
+            f" – {b.price:,.0f}đ | Còn {b.stock} cuốn"
+            for b in new_books
+        )
+    else:
+        new_books_info = "SÁCH MỚI: Hiện chưa có sách mới trong 90 ngày."
+
+    # ── 5. Sách bán chạy (tối đa 5) ──────────────────────────────────────────
+    bestsellers = (
+        Book.objects
+        .filter(stock__gt=0)
+        .select_related('category')
+        .order_by('-sold_count')[:5]
+    )
+    bestseller_info = "SÁCH BÁN CHẠY:\n" + "\n".join(
+        f"  • [ID:{b.id}] {b.title} – {b.author}"
+        f"{' [' + b.category.name + ']' if b.category else ''}"
+        f" – {b.price:,.0f}đ | Đã bán: {b.sold_count}"
+        for b in bestsellers
+    ) if bestsellers else "SÁCH BÁN CHẠY: Chưa có dữ liệu."
+
+    # ── 6. Gợi ý cá nhân hoá theo sở thích danh mục ──────────────────────────
+    if fav_cat_names:
+        personal_books = (
+            Book.objects
+            .filter(stock__gt=0, category__name__in=fav_cat_names)
+            .select_related('category')
+            .order_by('-sold_count')[:5]
+        )
+        if personal_books:
+            personal_info = (
+                f"GỢI Ý CÁ NHÂN HÓA (theo sở thích {', '.join(fav_cat_names)}):\n"
+                + "\n".join(
+                    f"  • [ID:{b.id}] {b.title} – {b.author} – {b.price:,.0f}đ"
+                    for b in personal_books
+                )
+            )
         else:
-            config.save()
-            messages.success(request, 'Đã lưu cấu hình flash sale!')
-            return redirect('staff_flash_sale')
+            personal_info = ""
+    else:
+        personal_info = ""
 
-    return render(request, 'app/staff_flash_sale.html', {
-        'config': config,
-        'flash_active': config.is_sale_now(),
-    })
+    # ── 7. Tất cả danh mục ───────────────────────────────────────────────────
+    all_cats  = Category.objects.all()
+    cat_info  = "DANH MỤC: " + ", ".join(c.name for c in all_cats)
 
+    # ── 8. Xây dựng system prompt ─────────────────────────────────────────────
+    system_prompt = f"""Bạn là DDC Books AI Bot – trợ lý tư vấn sách thông minh, thân thiện của DDC Books (Việt Nam).
 
-@user_passes_test(is_staff)
-def staff_flash_sale_toggle(request):
-    """Bật/tắt nhanh flash sale không cần vào form."""
-    if request.method == 'POST':
-        config = FlashSaleConfig.get_config()
-        config.is_active = not config.is_active
-        config.save()
-        state = 'BẬT' if config.is_active else 'TẮT'
-        messages.success(request, f'Flash sale đã được {state}.')
-    return redirect('staff_flash_sale')
+=== THÔNG TIN CỬA HÀNG ===
+- Địa chỉ: Số 9 Nguyễn Trãi, Hà Đông, Hà Nội
+- Hotline: 094.152.7660 | Email: support@ddcbooks.com
+- Giờ mở cửa: 08:00 – 22:00 (T2–CN)
+- Đổi trả: 7 ngày, sản phẩm nguyên seal chưa qua sử dụng
+- Vận chuyển nội thành HN: 1–2 ngày (miễn phí từ 250.000đ)
+- Vận chuyển toàn quốc: 3–5 ngày (25.000–40.000đ)
+- Thanh toán: COD hoặc chuyển khoản
+
+=== KHÁCH HÀNG ĐANG CHAT ===
+- Tên: {user_display}
+
+{orders_info}
+
+{wishlist_info}
+
+{viewed_info}
+
+=== DỮ LIỆU KHO SÁCH THỰC TẾ ===
+{new_books_info}
+
+{bestseller_info}
+
+{personal_info}
+
+{cat_info}
+
+=== CÁCH TẠO LINK ĐẾN TRANG SÁCH ===
+Khi đề cập một cuốn sách cụ thể có ID, hãy tạo link HTML như sau:
+<a href="/book/ID/" style="color:#e67e22;font-weight:600;">Tên sách</a>
+Ví dụ: <a href="/book/12/" style="color:#e67e22;font-weight:600;">Đắc Nhân Tâm</a>
+
+=== NHIỆM VỤ ===
+1. TRA ĐƠN HÀNG: Dùng dữ liệu đơn hàng ở trên, trả lời chính xác tình trạng, ngày đặt, sách trong đơn, đơn vị vận chuyển
+2. GỢI Ý SÁCH: Ưu tiên sách còn hàng trong kho thực tế; cá nhân hoá theo wishlist và lịch sử xem; luôn kèm giá và link
+3. TƯ VẤN: Trả lời câu hỏi về chính sách, vận chuyển, đổi trả, cách dùng website
+4. PHÂN TÍCH SỞ THÍCH: Dùng wishlist và lịch sử xem để hiểu khách thích gì, gợi ý sách cùng danh mục
+
+=== QUY TẮC TRẢ LỜI ===
+- Thân thiện, nhiệt tình, ngắn gọn (tối đa 200 từ mỗi tin)
+- Gọi khách bằng tên "{user_display}" khi phù hợp
+- Dùng emoji hợp lý để gần gũi
+- Khi gợi ý sách: luôn kèm tên tác giả, giá, và link HTML (dùng ID từ dữ liệu trên)
+- Khi tra đơn hàng: đưa ra thông tin cụ thể (số đơn, trạng thái, ngày, sách)
+- Không bịa thông tin sách ngoài danh sách đã cho
+- Nếu câu hỏi vượt khả năng, đề xuất liên hệ nhân viên hoặc hotline 094.152.7660
+- Luôn trả lời tiếng Việt trừ khi khách dùng ngôn ngữ khác"""
+
+    # ── 9. Gọi Anthropic API ──────────────────────────────────────────────────
+    api_key = getattr(django_settings, 'ANTHROPIC_API_KEY', '')
+    if not api_key:
+        return JsonResponse(
+            {'error': 'Chưa cấu hình ANTHROPIC_API_KEY trong settings.py'},
+            status=500
+        )
+
+    # Giới hạn history tối đa 20 lượt (40 items) để tránh payload quá lớn
+    trimmed_history  = history[-40:] if len(history) > 40 else history
+    messages_payload = trimmed_history + [{'role': 'user', 'content': user_message}]
+
+    payload = json.dumps({
+        'model'   : 'claude-sonnet-4-20250514',
+        'max_tokens': 600,
+        'system'  : system_prompt,
+        'messages': messages_payload,
+    }).encode('utf-8')
+
+    req = urllib.request.Request(
+        'https://api.anthropic.com/v1/messages',
+        data=payload,
+        headers={
+            'Content-Type'     : 'application/json',
+            'x-api-key'        : api_key,
+            'anthropic-version': '2023-06-01',
+        },
+        method='POST'
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+        reply = (
+            result.get('content', [{}])[0].get('text', '')
+            or 'Xin lỗi, mình chưa có câu trả lời phù hợp. Bạn thử hỏi lại hoặc liên hệ nhân viên nhé! 🙏'
+        )
+        return JsonResponse({'reply': reply})
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode('utf-8')
+        return JsonResponse({'error': f'Lỗi API: {e.code}', 'detail': error_body}, status=502)
+    except urllib.error.URLError:
+        return JsonResponse({'reply': 'Không kết nối được server AI. Vui lòng thử lại sau! 🙏'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

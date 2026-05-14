@@ -38,56 +38,115 @@
             <h1 style="font-family: 'Playfair Display'; font-size: 3.2rem; color: var(--dark-brown); margin: 15px 0 10px 0; line-height: 1.2;">{{ book.title }}</h1>
             <p style="font-size: 1.2rem; color: #7A6D5D;">Tác giả: <span style="font-weight: 600; color: var(--dark-brown);">{{ book.author }}</span></p>
             <div class="book-info-item" style="margin-top: 10px; color: #666; display: flex; align-items: center; gap: 8px;">
-    <i class="far fa-calendar-alt" style="color: var(--primary);"></i>
-    <span>Ngày ra mắt: <strong>{{ book.release_date|date:"d/m/Y" }}</strong></span>
-</div>
+                <i class="far fa-calendar-alt" style="color: var(--primary);"></i>
+                <span>Ngày ra mắt: <strong>{{ book.release_date|date:"d/m/Y" }}</strong></span>
+            </div>
             
             <div style="margin: 30px 0; display: flex; align-items: center; gap: 20px;">
                 <h2 style="color: var(--primary); font-size: 2.8rem; font-weight: 800; margin: 0;">{{ book.price }}đ</h2>
                 {% if book.stock > 0 %}
-    <span style="color: #27ae60; background: #eafaf1; padding: 5px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 600;">
-        <i class="fas fa-check"></i> Còn hàng ({{ book.stock }})
-    </span>
-{% else %}
-    <span style="color: #e74c3c; background: #fdedec; padding: 5px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 600;">
-        <i class="fas fa-times"></i> Hết hàng
-    </span>
-{% endif %}
+                    <span style="color: #27ae60; background: #eafaf1; padding: 5px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 600;">
+                        <i class="fas fa-check"></i> Còn hàng ({{ book.stock }})
+                    </span>
+                {% else %}
+                    <span style="color: #e74c3c; background: #fdedec; padding: 5px 12px; border-radius: 6px; font-size: 0.9rem; font-weight: 600;">
+                        <i class="fas fa-times"></i> Hết hàng
+                    </span>
+                {% endif %}
             </div>
 
             <div class="purchase-box" style="margin-bottom: 40px;">
-    <form action="{% url 'add_to_cart' book.id %}" method="POST" style="display: flex; gap: 15px;">
-        {% csrf_token %}
-        
-        <div style="display: flex; flex-direction: column; gap: 5px;">
-            <label style="font-size: 0.8rem; color: #999; font-weight: bold; text-transform: uppercase;">Số lượng</label>
-            <input type="number" name="quantity" value="1" min="1" 
-                {% if book.stock <= 0 %} disabled style="background-color: #f5f5f5; cursor: not-allowed;" {% endif %}
-                style="width: 80px; padding: 15px; border-radius: 12px; border: 2px solid #eee; text-align: center; font-size: 1.1rem; font-weight: bold;">
-        </div>
+                <form action="{% url 'add_to_cart' book.id %}" method="POST" id="add-to-cart-form" style="display: flex; gap: 15px;">
+                    {% csrf_token %}
+                    
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <label style="font-size: 0.8rem; color: #999; font-weight: bold; text-transform: uppercase;">Số lượng</label>
+                        <input type="number" name="quantity" id="quantity-input" value="1" min="1" max="{{ book.stock }}"
+                            {% if book.stock <= 0 %} disabled style="background-color: #f5f5f5; cursor: not-allowed;" {% endif %}
+                            style="width: 80px; padding: 15px; border-radius: 12px; border: 2px solid #eee; text-align: center; font-size: 1.1rem; font-weight: bold;">
+                    </div>
 
-        {% if book.stock > 0 %}
-            <button type="button" 
-                    onclick="addToCartFromModal(event, '{{ book.id }}')" 
-                    class="btn-submit" 
-                    style="flex: 1; margin-top: 22px; border-radius: 12px; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s; cursor: pointer; background-color: #27ae60; color: white; border: none;">
-                <i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng
-            </button>
-        {% else %}
-            <button type="button" 
-                    disabled 
-                    style="flex: 1; margin-top: 22px; border-radius: 12px; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 12px; background-color: #bdc3c7; color: #7f8c8d; border: none; cursor: not-allowed;">
-                <i class="fas fa-ban"></i> Hết hàng
-            </button>
-        {% endif %}
-    </form>
-    
-    {% if book.stock <= 0 %}
-        <p style="color: #e74c3c; font-size: 0.85rem; margin-top: 10px; font-weight: 500;">
-            <i class="fas fa-info-circle"></i> Sản phẩm hiện đang hết hàng và không thể đặt thêm.
-        </p>
-    {% endif %}
-</div>
+                    {% if book.stock > 0 %}
+                        <button type="button" 
+                                onclick="addToCartFromModal(event, '{{ book.id }}')" 
+                                class="btn-submit" 
+                                style="flex: 1; margin-top: 22px; border-radius: 12px; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 12px; transition: 0.3s; cursor: pointer; background-color: #27ae60; color: white; border: none;">
+                            <i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng
+                        </button>
+                    {% else %}
+                        <button type="button" 
+                                disabled 
+                                style="flex: 1; margin-top: 22px; border-radius: 12px; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 12px; background-color: #bdc3c7; color: #7f8c8d; border: none; cursor: not-allowed;">
+                            <i class="fas fa-ban"></i> Hết hàng
+                        </button>
+                    {% endif %}
+                </form>
+
+                <!-- Thông báo lỗi số lượng -->
+                <div id="quantity-error" style="display: none; color: #e74c3c; font-size: 0.85rem; margin-top: 8px; font-weight: 500;">
+                    <i class="fas fa-exclamation-circle"></i> <span id="quantity-error-msg"></span>
+                </div>
+
+                {% if book.stock <= 0 %}
+                    <p style="color: #e74c3c; font-size: 0.85rem; margin-top: 10px; font-weight: 500;">
+                        <i class="fas fa-info-circle"></i> Sản phẩm hiện đang hết hàng và không thể đặt thêm.
+                    </p>
+                {% endif %}
+            </div>
+
+            <!-- Script validate số lượng phía client -->
+            <script>
+            (function(){
+                const stockAvailable = {{ book.stock }};
+                const qtyInput = document.getElementById('quantity-input');
+                const errorBox = document.getElementById('quantity-error');
+                const errorMsg = document.getElementById('quantity-error-msg');
+
+                if (!qtyInput) return;
+
+                function validateQty(){
+                    const val = parseInt(qtyInput.value) || 1;
+                    if (val < 1){
+                        qtyInput.value = 1;
+                        showError(null);
+                        return true;
+                    }
+                    if (val > stockAvailable){
+                        qtyInput.value = stockAvailable;
+                        showError(`Chỉ còn ${stockAvailable} quyển trong kho!`);
+                        return false;
+                    }
+                    showError(null);
+                    return true;
+                }
+
+                function showError(msg){
+                    if (msg){
+                        errorMsg.textContent = msg;
+                        errorBox.style.display = 'flex';
+                        errorBox.style.alignItems = 'center';
+                        errorBox.style.gap = '5px';
+                        qtyInput.style.borderColor = '#e74c3c';
+                    } else {
+                        errorBox.style.display = 'none';
+                        qtyInput.style.borderColor = '#eee';
+                    }
+                }
+
+                qtyInput.addEventListener('input', validateQty);
+                qtyInput.addEventListener('change', validateQty);
+                qtyInput.addEventListener('blur', validateQty);
+
+                // Override hàm addToCartFromModal để validate trước khi gửi
+                const _origAddToCart = window.addToCartFromModal;
+                window.addToCartFromModal = function(event, bookId){
+                    if (!validateQty()) return; // chặn nếu không hợp lệ
+                    if (_origAddToCart) {
+                        _origAddToCart(event, bookId);
+                    }
+                };
+            })();
+            </script>
 
             <div class="desc-container" style="background: var(--white-warm); padding: 35px; border-radius: 20px; border-left: 6px solid var(--primary);">
                 <h4 style="margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem; color: #8d7a68;">Giới thiệu nội dung</h4>
@@ -97,82 +156,76 @@
             </div>
 
             <div class="comments-section" style="margin-top: 60px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-    <h3 style="font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 30px; display: flex; align-items: center; gap: 15px;">
-        <i class="far fa-comments" style="color: #8B4513;"></i> Đánh giá từ độc giả ({{ book.comments.count }})
-    </h3>
+                <h3 style="font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 30px; display: flex; align-items: center; gap: 15px;">
+                    <i class="far fa-comments" style="color: #8B4513;"></i> Đánh giá từ độc giả ({{ book.comments.count }})
+                </h3>
 
-    {% if user.is_authenticated %}
-    <div style="background: #fff; padding: 25px; border-radius: 15px; border: 1px solid #f0f0f0; margin-bottom: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-        <form action="{% url 'post_comment' book.id %}" method="POST">
-            {% csrf_token %}
-            
-            <div style="margin-bottom: 20px;">
-                <label style="font-weight: 600; color: #5d4037; display: block; margin-bottom: 8px;">Đánh giá của bạn:</label>
-                <div class="star-rating">
-                    <input type="radio" id="5-stars" name="rating" value="5" checked />
-                    <label for="5-stars" class="star">&#9733;</label>
-                    <input type="radio" id="4-stars" name="rating" value="4" />
-                    <label for="4-stars" class="star">&#9733;</label>
-                    <input type="radio" id="3-stars" name="rating" value="3" />
-                    <label for="3-stars" class="star">&#9733;</label>
-                    <input type="radio" id="2-stars" name="rating" value="2" />
-                    <label for="2-stars" class="star">&#9733;</label>
-                    <input type="radio" id="1-star" name="rating" value="1" />
-                    <label for="1-star" class="star">&#9733;</label>
+                {% if user.is_authenticated %}
+                <div style="background: #fff; padding: 25px; border-radius: 15px; border: 1px solid #f0f0f0; margin-bottom: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                    <form action="{% url 'post_comment' book.id %}" method="POST">
+                        {% csrf_token %}
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="font-weight: 600; color: #5d4037; display: block; margin-bottom: 8px;">Đánh giá của bạn:</label>
+                            <div class="star-rating">
+                                <input type="radio" id="5-stars" name="rating" value="5" checked />
+                                <label for="5-stars" class="star">&#9733;</label>
+                                <input type="radio" id="4-stars" name="rating" value="4" />
+                                <label for="4-stars" class="star">&#9733;</label>
+                                <input type="radio" id="3-stars" name="rating" value="3" />
+                                <label for="3-stars" class="star">&#9733;</label>
+                                <input type="radio" id="2-stars" name="rating" value="2" />
+                                <label for="2-stars" class="star">&#9733;</label>
+                                <input type="radio" id="1-star" name="rating" value="1" />
+                                <label for="1-star" class="star">&#9733;</label>
+                            </div>
+                        </div>
+
+                        <textarea name="content" rows="3" required placeholder="Chia sẻ cảm nhận chân thực về cuốn sách..." 
+                                  style="width: 100%; padding: 15px; border: 1px solid #eee; border-radius: 10px; font-size: 14px; outline: none; background: #fcfcfc;"></textarea>
+                        
+                        <button type="submit" style="margin-top: 15px; background: #5d4037; color: white; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            Gửi đánh giá ngay
+                        </button>
+                    </form>
                 </div>
-            </div>
+                {% endif %}
 
-            <textarea name="content" rows="3" required placeholder="Chia sẻ cảm nhận chân thực về cuốn sách..." 
-                      style="width: 100%; padding: 15px; border: 1px solid #eee; border-radius: 10px; font-size: 14px; outline: none; background: #fcfcfc;"></textarea>
-            
-            <button type="submit" style="margin-top: 15px; background: #5d4037; color: white; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                Gửi đánh giá ngay
-            </button>
-        </form>
-    </div>
-    {% endif %}
-
-    {% for comment in book.comments.all reversed %}
-        <div class="comment-card" style="padding: 25px; background: #fff; border-radius: 15px; margin-bottom: 15px; border: 1px solid #f0f0f0; transition: transform 0.2s;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <strong style="color: #5d4037; font-size: 1.1rem;">
-                        {{ comment.user.first_name|default:comment.user.username }}
-                    </strong>
-                    <div style="color: #f39c12; font-size: 0.9rem;">
-                        {% if comment.rating == 5 %}⭐⭐⭐⭐⭐{% elif comment.rating == 4 %}⭐⭐⭐⭐{% elif comment.rating == 3 %}⭐⭐⭐{% elif comment.rating == 2 %}⭐⭐{% else %}⭐{% endif %}
+                {% for comment in book.comments.all reversed %}
+                    <div class="comment-card" style="padding: 25px; background: #fff; border-radius: 15px; margin-bottom: 15px; border: 1px solid #f0f0f0; transition: transform 0.2s;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <strong style="color: #5d4037; font-size: 1.1rem;">
+                                    {{ comment.user.first_name|default:comment.user.username }}
+                                </strong>
+                                <div style="color: #f39c12; font-size: 0.9rem;">
+                                    {% if comment.rating == 5 %}⭐⭐⭐⭐⭐{% elif comment.rating == 4 %}⭐⭐⭐⭐{% elif comment.rating == 3 %}⭐⭐⭐{% elif comment.rating == 2 %}⭐⭐{% else %}⭐{% endif %}
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <small style="color: #bbb;">{{ comment.created_at|date:"H:i - d/m/Y" }}</small>
+                                
+                                {% if request.user == comment.user or request.user.is_superuser %}
+                                    <a href="{% url 'delete_comment' comment.id %}" 
+                                       onclick="return confirm('Đăng có chắc chắn muốn xóa bình luận này không?')"
+                                       style="color: #e74c3c; text-decoration: none; font-size: 0.8rem; display: flex; align-items: center; gap: 3px;">
+                                        <i class="fas fa-trash-alt"></i> Xóa
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <p style="color: #555; margin: 0; line-height: 1.6;">{{ comment.content }}</p>
                     </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 15px;">
-    <small style="color: #bbb;">{{ comment.created_at|date:"H:i - d/m/Y" }}</small>
-    
-    {% if request.user == comment.user or request.user.is_superuser %}
-        <a href="{% url 'delete_comment' comment.id %}" 
-           onclick="return confirm('Đăng có chắc chắn muốn xóa bình luận này không?')"
-           style="color: #e74c3c; text-decoration: none; font-size: 0.8rem; display: flex; align-items: center; gap: 3px;">
-            <i class="fas fa-trash-alt"></i> Xóa
-        </a>
-    {% endif %}
-</div>
+                {% empty %}
+                    <div style="text-align: center; padding: 40px; background: #f9f9f9; border-radius: 15px; color: #999; font-style: italic;">
+                        Chưa có bình luận nào. Hãy là người đầu tiên đánh giá cuốn sách này!
+                    </div>
+                {% endfor %}
             </div>
-            <p style="color: #555; margin: 0; line-height: 1.6;">{{ comment.content }}</p>
-        </div>
-    {% empty %}
-        <div style="text-align: center; padding: 40px; background: #f9f9f9; border-radius: 15px; color: #999; font-style: italic;">
-            Chưa có bình luận nào. Hãy là người đầu tiên đánh giá cuốn sách này!
-        </div>
-    {% endfor %}
-</div>
-
-
-
-            
-
-    
-
         </div>
     </div>
 </div>
+
 {% if related_books %}
     <div class="related-section" style="margin-top: 80px; padding-top: 40px; border-top: 2px solid #f0f0f0;">
         <h3 style="font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--dark-brown); margin-bottom: 30px; display: flex; align-items: center; gap: 15px;">
@@ -196,7 +249,11 @@
                     
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="color: var(--primary); font-weight: 800; font-size: 1.1rem;">{{ r_book.price|floatformat:0 }}đ</span>
-                        <i class="fas fa-plus-circle" style="color: #ddd; font-size: 1.2rem;"></i>
+                        {% if r_book.stock <= 0 %}
+                            <span style="font-size: 0.7rem; color: #e74c3c; background: #fdedec; padding: 2px 6px; border-radius: 4px;">Hết hàng</span>
+                        {% else %}
+                            <i class="fas fa-plus-circle" style="color: #ddd; font-size: 1.2rem;"></i>
+                        {% endif %}
                     </div>
                 </div>
             {% endfor %}
@@ -215,12 +272,11 @@
         .related-card:hover h5 {
             color: var(--primary);
         }
-        /* Responsive cho mobile */
         @media (max-width: 768px) {
             .related-card {
                 width: calc(50% - 15px);
             }
         }
     </style>
-    {% endif %}
+{% endif %}
 {% endblock %}

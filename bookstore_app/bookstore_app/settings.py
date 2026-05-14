@@ -132,3 +132,7 @@ MEDIA_URL = '/media/'
 
 # Thư mục thực tế trên máy tính để lưu trữ ảnh
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# ── Anthropic API Key (dùng cho AI Bot) ──
+# Khuyến nghị: đặt biến môi trường ANTHROPIC_API_KEY thay vì hardcode
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')

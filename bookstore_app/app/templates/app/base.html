@@ -1053,12 +1053,12 @@ document.addEventListener('DOMContentLoaded', function() {
     <div id="cp-view-bot" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
       <!-- Quick-action chips -->
       <div id="cp-bot-chips" style="padding:10px 12px 6px;background:#fff;border-bottom:1px solid #f0ede8;display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0;">
-        <button class="bot-chip" onclick="botChip('Tìm sách tặng quà')">🎁 Tặng quà</button>
-        <button class="bot-chip" onclick="botChip('Sách đang giảm giá')">🔥 Giảm giá</button>
-        <button class="bot-chip" onclick="botChip('Kiểm tra đơn hàng')">📦 Đơn hàng</button>
+        <button class="bot-chip" onclick="botChip('Kiểm tra đơn hàng của tôi')">📦 Đơn hàng</button>
+        <button class="bot-chip" onclick="botChip('Gợi ý sách hay cho tôi')">✨ Gợi ý sách</button>
+        <button class="bot-chip" onclick="botChip('Sách mới về gần đây')">🆕 Sách mới</button>
+        <button class="bot-chip" onclick="botChip('Sách bán chạy nhất')">🔥 Bán chạy</button>
         <button class="bot-chip" onclick="botChip('Chính sách đổi trả')">↩️ Đổi trả</button>
-        <button class="bot-chip" onclick="botChip('Gợi ý sách cho tôi')">✨ Gợi ý</button>
-        <button class="bot-chip" onclick="botChip('Địa chỉ cửa hàng')">📍 Địa chỉ</button>
+        <button class="bot-chip" onclick="botChip('Địa chỉ và giờ mở cửa')">📍 Địa chỉ</button>
       </div>
       <div id="cp-bot-messages" style="flex:1;overflow-y:auto;padding:14px 13px;display:flex;flex-direction:column;gap:9px;background:#f8f5f0;min-height:200px;max-height:320px;">
         <!-- welcome msg injected by JS -->
@@ -1248,44 +1248,39 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 700);
     }
 
+    // ── Lưu lịch sử hội thoại bot (multi-turn) ──
+    let botHistory = [];
+
     async function callClaudeBot(userText){
+      // Thêm tin user vào history trước khi gửi
+      botHistory.push({ role: 'user', content: userText });
       try {
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
+        const res = await fetch('/chat/bot/', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
           body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 1000,
-            system: `Bạn là AI Bot tư vấn sách của DDC Books - một website bán sách uy tín tại Việt Nam.
-Thông tin cửa hàng:
-- Địa chỉ: Số 9 Nguyễn Trãi, Hà Đông, Hà Nội
-- Hotline: 094.152.7660 | Email: support@ddcbooks.com
-- Giờ mở cửa: 08:00 – 22:00 hàng ngày
-- Chính sách đổi trả: 7 ngày, sản phẩm nguyên seal
-- Vận chuyển: Nội thành 1-2 ngày, toàn quốc 3-5 ngày
-
-Nhiệm vụ của bạn:
-1. Tư vấn, gợi ý sách theo nhu cầu khách hàng
-2. Trả lời câu hỏi về chính sách, vận chuyển, cửa hàng
-3. Hỗ trợ tìm sách theo thể loại, giá, tác giả
-4. Giải thích nội dung, tóm tắt cuốn sách khách hỏi
-
-Quy tắc trả lời:
-- Luôn thân thiện, ngắn gọn (tối đa 150 từ)
-- Dùng emoji phù hợp để tạo cảm giác gần gũi
-- Nếu không chắc về thông tin sản phẩm cụ thể, hãy đề xuất khách liên hệ staff
-- Trả lời bằng tiếng Việt trừ khi khách hỏi bằng ngôn ngữ khác`,
-            messages: [{ role: 'user', content: userText }]
+            message: userText,
+            history: botHistory.slice(0, -1), // gửi history TRƯỚC tin hiện tại
           })
         });
         const data = await res.json();
         showBotTyping(false);
-        const reply = data.content && data.content[0] ? data.content[0].text : 'Xin lỗi, mình chưa hiểu câu hỏi của bạn. Bạn có thể diễn đạt lại không? 😊';
-        appendBotMsg('other', reply);
+        if(data.reply){
+          // Lưu reply của bot vào history
+          botHistory.push({ role: 'assistant', content: data.reply });
+          // Giới hạn history tối đa 40 lượt (~20 turns) để tránh quá nặng
+          if(botHistory.length > 40) botHistory = botHistory.slice(-40);
+          appendBotMsg('other', data.reply);
+        } else {
+          appendBotMsg('other', 'Xin lỗi, có lỗi xảy ra. Bạn thử lại hoặc liên hệ nhân viên nhé! 🙏');
+        }
         scrollBotBottom();
       } catch(e){
         showBotTyping(false);
-        appendBotMsg('other', 'Xin lỗi, có lỗi xảy ra. Bạn thử lại hoặc liên hệ nhân viên hỗ trợ nhé! 🙏');
+        appendBotMsg('other', 'Xin lỗi, không kết nối được server. Vui lòng thử lại! 🙏');
         scrollBotBottom();
       }
     }

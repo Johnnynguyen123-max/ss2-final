@@ -563,19 +563,6 @@
   color:#0a3820; background:#a8e6c4; padding:4px 10px; border-radius:6px;
   border:1px solid rgba(10,56,32,0.15);
 }
-.ddc-badge-sale {
-  position:absolute; top:42px; right:12px; z-index:10;
-  font-family:'DM Sans',sans-serif; font-size:0.58rem; font-weight:700;
-  letter-spacing:1px; text-transform:uppercase;
-  color:#fff; background:linear-gradient(135deg,#e74c3c,#922b21);
-  padding:4px 10px; border-radius:6px;
-  box-shadow:0 3px 10px rgba(231,76,60,0.35);
-  animation:salePulse 2.2s ease-in-out infinite;
-}
-@keyframes salePulse {
-  0%,100%{ transform:scale(1); }
-  50%    { transform:scale(1.06); }
-}
 .ddc-badge-cat {
   position:absolute; top:12px; left:46px; z-index:9;
   font-family:'DM Sans',sans-serif; font-size:0.54rem; font-weight:600;
@@ -629,39 +616,6 @@
   border-bottom:1px solid rgba(168,96,32,0.4); padding-bottom:2px; transition:opacity 0.2s;
 }
 .ddc-empty a:hover { opacity:0.7; }
-
-/* Flash sale banner */
-.ddc-flash-banner {
-  background: linear-gradient(90deg, #922b21, #e74c3c, #922b21);
-  background-size: 200% 100%;
-  animation: flashBannerSlide 3s linear infinite;
-  padding: 12px 40px;
-}
-@keyframes flashBannerSlide {
-  0%   { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
-}
-.ddc-flash-inner {
-  max-width: 1400px; margin: 0 auto;
-  display: flex; align-items: center; gap: 14px;
-}
-.ddc-flash-icon { font-size: 1.1rem; animation: flashBob 0.8s ease-in-out infinite alternate; }
-@keyframes flashBob { from{transform:translateY(0);} to{transform:translateY(-3px);} }
-.ddc-flash-text {
-  font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
-  font-weight: 500; color: rgba(255,255,255,0.92); flex: 1;
-}
-.ddc-flash-text strong { color: #fff; font-weight: 700; }
-.ddc-flash-cta {
-  display: inline-flex; align-items: center;
-  padding: 7px 20px; border-radius: 100px;
-  background: #fff; color: #c0392b;
-  font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 700;
-  text-decoration: none; white-space: nowrap;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.18);
-}
-.ddc-flash-cta:hover { transform: translateY(-2px); color: #922b21; text-decoration: none; }
 
 /* Responsive */
 @media(max-width:900px){
@@ -787,89 +741,35 @@
         </div>
       </div>
 
-      <!-- SLIDE 2: Flash Sale với countdown -->
+      <!-- SLIDE 2: Sách mới nhất -->
       <div class="hs-slide hs-s2">
         <div class="hs-grid"></div><div class="hs-glow"></div>
         <div style="position:absolute;right:29%;top:-22%;width:310px;height:310px;background:radial-gradient(circle,rgba(52,152,219,0.14),transparent 68%);border-radius:50%;pointer-events:none;"></div>
-        <div class="hs-badge" style="background:linear-gradient(135deg,#e74c3c,#922b21);">
-          <span class="hs-badge-big">{% if flash_active %}{{ flash_discount }}{% else %}??{% endif %}%</span><span class="hs-badge-sm">OFF</span>
+        <div class="hs-badge" style="background:linear-gradient(135deg,#2471a3,#143a5e);">
+          <span style="font-family:'DM Sans',sans-serif;font-size:0.58rem;font-weight:700;color:#fdf3e3;letter-spacing:0.8px;line-height:1.3;text-align:center;">SÁCH<br>MỚI</span>
         </div>
         <div class="hs-visual">
           <div style="animation:floatBob 3.4s ease-in-out infinite;display:flex;flex-direction:column;gap:7px;align-items:center;padding-right:42px;">
-            <div style="font-size:3.8rem;margin-bottom:6px;filter:drop-shadow(0 8px 18px rgba(52,152,219,0.38));">⚡</div>
+            <div style="font-size:3.8rem;margin-bottom:6px;filter:drop-shadow(0 8px 18px rgba(52,152,219,0.38));">📖</div>
             <div style="display:flex;flex-direction:column;gap:6px;width:138px;">
               {% for cat in categories|slice:":3" %}
-              <div style="height:26px;background:linear-gradient(90deg,{% cycle '#c8832a,#a06018' '#2471a3,#143a5e' '#1e8c50,#0e5230' %});border-radius:7px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.25);">
+              <div style="height:26px;background:linear-gradient(90deg,{% cycle '#2471a3,#143a5e' '#1e8c50,#0e5230' '#c8832a,#a06018' %});border-radius:7px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,0.25);">
                 <span style="font-family:'DM Sans',sans-serif;font-size:0.52rem;color:#fdf3e3;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;">{{ cat.name|upper|truncatechars:14 }}</span>
               </div>
-              {% empty %}
-              <div style="height:26px;background:linear-gradient(90deg,#c8832a,#a06018);border-radius:7px;display:flex;align-items:center;justify-content:center;"><span style="font-family:'DM Sans',sans-serif;font-size:0.52rem;color:#fdf3e3;font-weight:600;letter-spacing:1.5px;">KỸ NĂNG SỐNG</span></div>
               {% endfor %}
             </div>
           </div>
         </div>
         <div class="hs-body">
-          <div class="hs-tag" style="color:#5dade2;"><span class="hs-tag-dot"></span>Flash Sale · {% if flash_active %}Đang diễn ra!{% else %}Sắp diễn ra{% endif %}</div>
-          <h2 class="hs-title">Giảm Tới<br><em style="color:#c8832a;">{% if flash_active %}{{ flash_discount }}{% else %}??{% endif %}%</em> Tất Cả Sách</h2>
-          <div class="hs-countdown">
-            <div class="hs-cd"><span class="hs-cd-n" id="cd-h">00</span><span class="hs-cd-l">Giờ</span></div>
-            <div class="hs-cd"><span class="hs-cd-n" id="cd-m">00</span><span class="hs-cd-l">Phút</span></div>
-            <div class="hs-cd"><span class="hs-cd-n" id="cd-s">00</span><span class="hs-cd-l">Giây</span></div>
-          </div>
-          <a href="{% url 'home' %}?filter=sale" class="hs-btn hs-btn-amber"><i class="fas fa-bolt" style="font-size:0.78rem;"></i> Mua ngay</a>
+          <div class="hs-tag" style="color:#5dade2;"><span class="hs-tag-dot"></span>Sách mới · Cập nhật liên tục</div>
+          <h2 class="hs-title">{{ new_books_count }}+ Đầu Sách<br><em style="color:#5dade2;">Mới Nhất</em><br>90 Ngày Qua</h2>
+          <p class="hs-desc">Luôn có những tựa sách mới được cập nhật thường xuyên cho bạn khám phá.</p>
+          <a href="{% url 'home' %}?filter=new" class="hs-btn hs-btn-amber"><i class="fas fa-certificate" style="font-size:0.78rem;"></i> Xem sách mới</a>
         </div>
       </div>
 
-      <!-- SLIDE 3: Bestseller -->
+      <!-- SLIDE 3: Wishlist / Đăng ký -->
       <div class="hs-slide hs-s3">
-        <div class="hs-grid"></div><div class="hs-glow"></div>
-        <div style="position:absolute;right:30%;top:-20%;width:290px;height:290px;background:radial-gradient(circle,rgba(175,50,200,0.16),transparent 68%);border-radius:50%;pointer-events:none;"></div>
-        <div class="hs-badge" style="background:linear-gradient(135deg,#c8832a,#8c5a1a);">
-          <span style="font-family:'DM Sans',sans-serif;font-size:0.58rem;font-weight:700;color:#fdf3e3;letter-spacing:0.8px;line-height:1.3;text-align:center;">BEST<br>SELLER</span>
-        </div>
-        <div class="hs-visual">
-          <div class="hs-float" style="width:178px;">
-            <div style="font-size:3.2rem;margin-bottom:10px;">📚</div>
-            <div style="display:flex;gap:3px;justify-content:center;margin-bottom:10px;"><span style="color:#f0c040;font-size:0.95rem;">★★★★★</span></div>
-            <div style="font-family:'DM Sans',sans-serif;font-size:0.6rem;color:rgba(244,237,224,0.45);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Đánh giá trung bình</div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;color:#f4ede0;line-height:1;">{{ avg_rating|floatformat:1 }}<span style="font-size:0.88rem;opacity:0.45;">/5</span></div>
-          </div>
-        </div>
-        <div class="hs-body">
-          <div class="hs-tag" style="color:#c39bd3;"><span class="hs-tag-dot"></span>Bestseller · Độc giả bình chọn</div>
-          <h2 class="hs-title">Top Sách<br><em style="color:#c39bd3;">Bán Chạy</em><br>Tháng Này</h2>
-          <p class="hs-desc">Những cuốn sách được yêu thích nhất — được hàng nghìn độc giả đánh giá 5 sao.</p>
-          <a href="{% url 'home' %}?filter=bestseller" class="hs-btn hs-btn-ghost"><i class="fas fa-star" style="font-size:0.78rem;"></i> Xem danh sách</a>
-        </div>
-      </div>
-
-      <!-- SLIDE 4: Sách mới — hiển thị sách is_new thực từ DB -->
-      <div class="hs-slide hs-s4">
-        <div class="hs-grid"></div><div class="hs-glow"></div>
-        <div style="position:absolute;right:28%;top:-18%;width:275px;height:275px;background:radial-gradient(circle,rgba(46,204,113,0.14),transparent 68%);border-radius:50%;pointer-events:none;"></div>
-        <div class="hs-visual">
-          <div style="animation:floatBob 4s ease-in-out infinite;position:relative;padding-right:42px;">
-            <div style="width:138px;height:182px;background:linear-gradient(148deg,#1e8c50,#0e5230);border-radius:14px;box-shadow:0 22px 56px rgba(0,0,0,0.34),inset 0 1px 0 rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
-              <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#c8832a,#e8a040);"></div>
-              <div style="text-align:center;padding:16px;">
-                <div style="font-size:2.2rem;margin-bottom:10px;">📗</div>
-                <div style="font-family:'DM Sans',sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.78);font-weight:600;letter-spacing:2.5px;text-transform:uppercase;">Vừa ra mắt</div>
-                <div style="width:32px;height:1px;background:rgba(255,255,255,0.28);margin:9px auto;"></div>
-                <div style="font-family:'DM Sans',sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.45);">{{ new_books_count }} cuốn mới 90 ngày</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="hs-body">
-          <div class="hs-tag" style="color:#58d68d;"><span class="hs-tag-dot"></span>Mới nhất · Vừa cập nhật</div>
-          <h2 class="hs-title">Sách Mới<br><em style="color:#58d68d;">Vừa Về Kho</em></h2>
-          <p class="hs-desc">Đầu sách mới tuần này — từ văn học đương đại đến self-help và kỹ năng sống.</p>
-          <a href="{% url 'home' %}?filter=new" class="hs-btn hs-btn-green"><i class="fas fa-certificate" style="font-size:0.78rem;"></i> Xem sách mới</a>
-        </div>
-      </div>
-
-      <!-- SLIDE 5: Wishlist CTA (nếu chưa login) / Xem wishlist (nếu đã login) -->
-      <div class="hs-slide hs-s5">
         <div class="hs-grid"></div><div class="hs-glow"></div>
         <div style="position:absolute;right:27%;top:-18%;width:290px;height:290px;background:radial-gradient(circle,rgba(200,131,42,0.13),transparent 68%);border-radius:50%;pointer-events:none;"></div>
         <div class="hs-visual">
@@ -935,8 +835,6 @@
       <button class="hs-dot active" onclick="hsGoto(0)"></button>
       <button class="hs-dot" onclick="hsGoto(1)"></button>
       <button class="hs-dot" onclick="hsGoto(2)"></button>
-      <button class="hs-dot" onclick="hsGoto(3)"></button>
-      <button class="hs-dot" onclick="hsGoto(4)"></button>
     </div>
   </div>
 </div>
@@ -959,7 +857,7 @@
 <script>
 /* ── Slider ── */
 (function(){
-  const TOTAL=5, DELAY=5500;
+  const TOTAL=3, DELAY=5500;
   let cur=0, timer=null, dragX=null;
   const track=document.getElementById('hs-track');
   const dots=document.querySelectorAll('.hs-dot');
@@ -981,18 +879,6 @@
   document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')hsMove(-1);if(e.key==='ArrowRight')hsMove(1);});
   resetTimer();
 
-  /* Countdown đến 22:00 */
-  function updateCD(){
-    const now=new Date(), end=new Date(now);
-    end.setHours(22,0,0,0);
-    const diff=Math.max(0,end-now);
-    const pad=n=>String(n).padStart(2,'0');
-    const h=document.getElementById('cd-h'),m=document.getElementById('cd-m'),s=document.getElementById('cd-s');
-    if(h)h.textContent=pad(Math.floor(diff/3600000));
-    if(m)m.textContent=pad(Math.floor((diff%3600000)/60000));
-    if(s)s.textContent=pad(Math.floor((diff%60000)/1000));
-  }
-  updateCD(); setInterval(updateCD,1000);
 })();
 </script>
 {% endblock hero_banner %}
@@ -1034,20 +920,6 @@
 </section>
 {% endif %}
 
-<!-- ══════════ FLASH SALE BANNER (chỉ hiện khi đang sale) ══════════ -->
-{% if flash_active %}
-<div class="ddc-flash-banner">
-  <div class="ddc-flash-inner">
-    <span class="ddc-flash-icon">⚡</span>
-    <span class="ddc-flash-text">
-      FLASH SALE đang diễn ra — Giảm <strong>{{ flash_discount }}%</strong> toàn bộ sách
-      đến <strong>{{ flash_config.end_hour|stringformat:"02d" }}:{{ flash_config.end_minute|stringformat:"02d" }}</strong>
-    </span>
-    <a href="{% url 'home' %}?filter=sale" class="ddc-flash-cta">Mua ngay</a>
-  </div>
-</div>
-{% endif %}
-
 <!-- ══════════════════ BOOKS SECTION ══════════════════ -->
 <div class="ddc-books">
 
@@ -1055,7 +927,6 @@
   <div class="ddc-books-head">
     <h2 class="ddc-books-title">
       {% if request.GET.q %}Kết quả cho "{{ request.GET.q }}"
-      {% elif request.GET.filter == 'sale' %}Flash Sale — Giảm 30%
       {% elif request.GET.filter == 'bestseller' %}Top Sách Bán Chạy
       {% elif request.GET.filter == 'new' %}Sách Mới Nhất
       {% elif request.GET.category %}
@@ -1063,8 +934,7 @@
       {% else %}Sách mới cập nhật{% endif %}
     </h2>
     {% if not request.GET.q %}
-      {% if request.GET.filter == 'sale' %}<span class="ddc-pill">🔥 Flash Sale</span>
-      {% elif request.GET.filter == 'bestseller' %}<span class="ddc-pill">⭐ Bestseller</span>
+      {% if request.GET.filter == 'bestseller' %}<span class="ddc-pill">⭐ Bestseller</span>
       {% elif request.GET.filter == 'new' %}<span class="ddc-pill">✦ Mới nhất</span>
       {% elif request.GET.category %}<span class="ddc-pill">📂 Theo thể loại</span>
       {% else %}<span class="ddc-pill">✦ Mới nhất</span>{% endif %}
@@ -1084,10 +954,6 @@
     <a href="?filter=new{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}"
        class="ddc-filter-btn {% if request.GET.filter == 'new' %}active{% endif %}">
       <i class="fas fa-certificate" style="font-size:0.68rem;"></i> Mới nhất
-    </a>
-    <a href="?filter=sale{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}"
-       class="ddc-filter-btn {% if request.GET.filter == 'sale' %}active{% endif %}">
-      <i class="fas fa-bolt" style="font-size:0.68rem;"></i> Đang sale
     </a>
     <a href="?filter=bestseller{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}"
        class="ddc-filter-btn {% if request.GET.filter == 'bestseller' %}active{% endif %}">
@@ -1121,7 +987,6 @@
       <div class="ddc-card">
 
         {% if book.is_new %}<span class="ddc-badge-new">Mới</span>{% endif %}
-        {% if flash_active %}<span class="ddc-badge-sale">-{{ flash_discount }}%</span>{% endif %}
 
         <button class="wishlist-btn {% if book.id in favorite_book_ids %}active{% endif %}"
                 onclick="event.preventDefault();event.stopPropagation();toggleWishlist(this,'{{ book.id }}')">
