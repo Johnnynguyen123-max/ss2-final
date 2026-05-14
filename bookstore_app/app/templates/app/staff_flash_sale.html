@@ -1,0 +1,250 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:wght@600&display=swap');
+
+.fs-wrap {
+  max-width: 620px; margin: 48px auto; padding: 0 20px;
+  font-family: 'DM Sans', sans-serif;
+}
+.fs-header {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 32px;
+}
+.fs-header-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  background: linear-gradient(135deg, #e74c3c, #922b21);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; box-shadow: 0 6px 20px rgba(231,76,60,0.35);
+}
+.fs-header h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.85rem; font-weight: 600; color: #1a1108; margin: 0;
+}
+.fs-header p { font-size: 0.82rem; color: #9e8878; margin: 2px 0 0; }
+
+/* Status badge */
+.fs-status {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 20px; border-radius: 14px; margin-bottom: 28px;
+  border: 1px solid;
+}
+.fs-status.on  { background: #eafaf1; border-color: #a9dfbf; }
+.fs-status.off { background: #fdfefe; border-color: #e8dece; }
+.fs-status-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.fs-status.on  .fs-status-dot { background: #27ae60; animation: pulse-green 1.8s infinite; }
+.fs-status.off .fs-status-dot { background: #bdc3c7; }
+@keyframes pulse-green {
+  0%,100% { box-shadow: 0 0 0 0 rgba(39,174,96,0.4); }
+  50%      { box-shadow: 0 0 0 7px rgba(39,174,96,0); }
+}
+.fs-status-text { font-size: 0.88rem; font-weight: 500; }
+.fs-status.on  .fs-status-text { color: #1e8449; }
+.fs-status.off .fs-status-text { color: #7f8c8d; }
+.fs-toggle-btn {
+  margin-left: auto; padding: 8px 20px; border-radius: 100px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 600;
+  border: none; cursor: pointer; transition: all 0.2s;
+}
+.fs-status.on  .fs-toggle-btn { background: #e74c3c; color: #fff; }
+.fs-status.off .fs-toggle-btn { background: #27ae60; color: #fff; }
+.fs-toggle-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+/* Card form */
+.fs-card {
+  background: #fff; border: 1px solid #eae4da;
+  border-radius: 18px; padding: 28px 30px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+.fs-section-title {
+  font-size: 0.68rem; font-weight: 600; letter-spacing: 2px;
+  text-transform: uppercase; color: #c8832a; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 8px;
+}
+.fs-section-title::after {
+  content: ''; flex: 1; height: 1px; background: #f0ebe4;
+}
+.fs-field { margin-bottom: 22px; }
+.fs-field label {
+  display: block; font-size: 0.8rem; font-weight: 500;
+  color: #5a4030; margin-bottom: 7px;
+}
+.fs-field label span { font-size: 0.72rem; color: #9e8878; font-weight: 400; margin-left: 4px; }
+.fs-input {
+  width: 100%; padding: 11px 16px; border-radius: 10px;
+  border: 1.5px solid #e8dece; background: #fdfaf6;
+  font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: #1a1108;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.fs-input:focus { border-color: #c8832a; box-shadow: 0 0 0 3px rgba(200,131,42,0.12); }
+
+/* Time row */
+.fs-time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* Toggle checkbox */
+.fs-toggle-wrap {
+  display: flex; align-items: center; gap: 14px;
+  background: #fdfaf6; border: 1.5px solid #e8dece;
+  border-radius: 10px; padding: 13px 16px; cursor: pointer;
+}
+.fs-toggle-wrap input[type=checkbox] { display: none; }
+.fs-switch {
+  width: 44px; height: 24px; border-radius: 12px;
+  background: #ddd; position: relative; flex-shrink: 0;
+  transition: background 0.25s;
+}
+.fs-switch::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; transition: transform 0.25s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.fs-toggle-wrap.checked .fs-switch { background: #27ae60; }
+.fs-toggle-wrap.checked .fs-switch::after { transform: translateX(20px); }
+.fs-toggle-label { font-size: 0.88rem; font-weight: 500; color: #1a1108; }
+
+/* Preview */
+.fs-preview {
+  margin-top: 22px; padding: 16px 18px;
+  background: linear-gradient(135deg, #fff5f5, #fff);
+  border: 1px dashed #f1948a; border-radius: 12px;
+}
+.fs-preview-title { font-size: 0.72rem; color: #e74c3c; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.fs-preview-text  { font-size: 0.9rem; color: #1a1108; }
+.fs-preview-text strong { color: #e74c3c; }
+
+/* Submit */
+.fs-submit {
+  width: 100%; padding: 14px; margin-top: 24px;
+  background: linear-gradient(135deg, #c8832a, #a06018);
+  color: #fdf3e3; border: none; border-radius: 12px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600;
+  cursor: pointer; letter-spacing: 0.3px;
+  box-shadow: 0 6px 22px rgba(160,90,20,0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.fs-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(160,90,20,0.45);
+}
+</style>
+
+<div class="fs-wrap">
+  <div class="fs-header">
+    <div class="fs-header-icon">⚡</div>
+    <div>
+      <h1>Flash Sale</h1>
+      <p>Cấu hình khung giờ giảm giá tự động mỗi ngày</p>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+    <div style="padding:12px 18px;border-radius:10px;margin-bottom:18px;font-size:0.88rem;font-weight:500;
+      {% if msg.tags == 'success' %}background:#eafaf1;color:#1e8449;border:1px solid #a9dfbf;
+      {% else %}background:#fdf2f2;color:#c0392b;border:1px solid #f1948a;{% endif %}">
+      {{ msg }}
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Trạng thái hiện tại + nút bật/tắt nhanh -->
+  <div class="fs-status {% if flash_active %}on{% else %}off{% endif %}">
+    <span class="fs-status-dot"></span>
+    <span class="fs-status-text">
+      {% if flash_active %}
+        Đang chạy — giảm <strong>{{ config.discount_percent }}%</strong>
+        đến {{ config.end_hour|stringformat:"02d" }}:{{ config.end_minute|stringformat:"02d" }}
+      {% else %}
+        Flash sale chưa chạy
+        {% if config.is_active %}(ngoài khung giờ {{ config.start_hour|stringformat:"02d" }}:{{ config.start_minute|stringformat:"02d" }}–{{ config.end_hour|stringformat:"02d" }}:{{ config.end_minute|stringformat:"02d" }}){% endif %}
+      {% endif %}
+    </span>
+    <form method="post" action="{% url 'staff_flash_sale_toggle' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="fs-toggle-btn">
+        {% if config.is_active %}Tắt ngay{% else %}Bật ngay{% endif %}
+      </button>
+    </form>
+  </div>
+
+  <!-- Form cấu hình -->
+  <form method="post" action="{% url 'staff_flash_sale' %}">
+    {% csrf_token %}
+    <div class="fs-card">
+
+      <div class="fs-section-title">Bật / Tắt</div>
+      <div class="fs-field">
+        <label class="fs-toggle-wrap {% if config.is_active %}checked{% endif %}" id="toggle-wrap">
+          <input type="checkbox" name="is_active" id="id_is_active"
+                 {% if config.is_active %}checked{% endif %}
+                 onchange="document.getElementById('toggle-wrap').classList.toggle('checked',this.checked)">
+          <span class="fs-switch"></span>
+          <span class="fs-toggle-label">Bật flash sale (cho phép chạy trong khung giờ)</span>
+        </label>
+      </div>
+
+      <div class="fs-section-title">Mức giảm giá</div>
+      <div class="fs-field">
+        <label for="id_discount">% giảm giá <span>(áp dụng cho toàn bộ sách)</span></label>
+        <input class="fs-input" type="number" id="id_discount" name="discount_percent"
+               min="1" max="99" value="{{ config.discount_percent }}"
+               oninput="updatePreview()">
+      </div>
+
+      <div class="fs-section-title">Khung giờ (lặp mỗi ngày)</div>
+      <div class="fs-time-row">
+        <div class="fs-field">
+          <label>Giờ bắt đầu</label>
+          <input class="fs-input" type="number" name="start_hour"
+                 min="0" max="23" value="{{ config.start_hour }}" oninput="updatePreview()">
+        </div>
+        <div class="fs-field">
+          <label>Phút bắt đầu</label>
+          <input class="fs-input" type="number" name="start_minute"
+                 min="0" max="59" value="{{ config.start_minute }}" oninput="updatePreview()">
+        </div>
+        <div class="fs-field">
+          <label>Giờ kết thúc</label>
+          <input class="fs-input" type="number" name="end_hour"
+                 min="0" max="23" value="{{ config.end_hour }}" oninput="updatePreview()">
+        </div>
+        <div class="fs-field">
+          <label>Phút kết thúc</label>
+          <input class="fs-input" type="number" name="end_minute"
+                 min="0" max="59" value="{{ config.end_minute }}" oninput="updatePreview()">
+        </div>
+      </div>
+
+      <!-- Live preview -->
+      <div class="fs-preview" id="preview-box">
+        <div class="fs-preview-title">⚡ Xem trước</div>
+        <div class="fs-preview-text" id="preview-text"></div>
+      </div>
+
+      <button type="submit" class="fs-submit">
+        <i class="fas fa-save" style="margin-right:8px;"></i> Lưu cấu hình
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+function pad(n){ return String(n).padStart(2,'0'); }
+function updatePreview(){
+  const d  = document.querySelector('[name=discount_percent]').value || 0;
+  const sh = document.querySelector('[name=start_hour]').value   || 0;
+  const sm = document.querySelector('[name=start_minute]').value || 0;
+  const eh = document.querySelector('[name=end_hour]').value     || 0;
+  const em = document.querySelector('[name=end_minute]').value   || 0;
+  document.getElementById('preview-text').innerHTML =
+    `Mỗi ngày từ <strong>${pad(sh)}:${pad(sm)}</strong> đến <strong>${pad(eh)}:${pad(em)}</strong>, ` +
+    `tất cả sách giảm <strong>${d}%</strong>.`;
+}
+updatePreview();
+</script>
+{% endblock %}

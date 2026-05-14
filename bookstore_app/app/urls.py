@@ -43,10 +43,14 @@ urlpatterns = [
     path('staff/order/<int:order_id>/',           views.staff_order_detail, name='staff_order_detail'),
 
     # ── Quản lý sách (staff) ──────────────────────────────────
-    path('staff/books/',                          views.staff_book_list,   name='staff_book_list'),
-    path('staff/books/insert/',                   views.staff_book_insert, name='staff_book_insert'),
-    path('staff/books/update/<int:book_id>/',     views.staff_book_update, name='staff_book_update'),
-    path('staff/books/delete/<int:book_id>/',     views.staff_book_delete, name='staff_book_delete'),
+    path('staff/books/',                          views.staff_book_list,        name='staff_book_list'),
+    path('staff/books/insert/',                   views.staff_book_insert,      name='staff_book_insert'),
+    path('staff/books/update/<int:book_id>/',     views.staff_book_update,      name='staff_book_update'),
+    path('staff/books/delete/<int:book_id>/',     views.staff_book_delete,      name='staff_book_delete'),
+
+    # ── Flash Sale (staff) ────────────────────────────────────
+    path('staff/flash-sale/',                     views.staff_flash_sale,        name='staff_flash_sale'),
+    path('staff/flash-sale/toggle/',              views.staff_flash_sale_toggle, name='staff_flash_sale_toggle'),
 
     # ── Chat ──────────────────────────────────────────────────
     path('chat/customer/send/',                   views.customer_send,   name='customer_send'),

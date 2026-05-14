@@ -563,6 +563,19 @@
   color:#0a3820; background:#a8e6c4; padding:4px 10px; border-radius:6px;
   border:1px solid rgba(10,56,32,0.15);
 }
+.ddc-badge-sale {
+  position:absolute; top:42px; right:12px; z-index:10;
+  font-family:'DM Sans',sans-serif; font-size:0.58rem; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  color:#fff; background:linear-gradient(135deg,#e74c3c,#922b21);
+  padding:4px 10px; border-radius:6px;
+  box-shadow:0 3px 10px rgba(231,76,60,0.35);
+  animation:salePulse 2.2s ease-in-out infinite;
+}
+@keyframes salePulse {
+  0%,100%{ transform:scale(1); }
+  50%    { transform:scale(1.06); }
+}
 .ddc-badge-cat {
   position:absolute; top:12px; left:46px; z-index:9;
   font-family:'DM Sans',sans-serif; font-size:0.54rem; font-weight:600;
@@ -616,6 +629,39 @@
   border-bottom:1px solid rgba(168,96,32,0.4); padding-bottom:2px; transition:opacity 0.2s;
 }
 .ddc-empty a:hover { opacity:0.7; }
+
+/* Flash sale banner */
+.ddc-flash-banner {
+  background: linear-gradient(90deg, #922b21, #e74c3c, #922b21);
+  background-size: 200% 100%;
+  animation: flashBannerSlide 3s linear infinite;
+  padding: 12px 40px;
+}
+@keyframes flashBannerSlide {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+.ddc-flash-inner {
+  max-width: 1400px; margin: 0 auto;
+  display: flex; align-items: center; gap: 14px;
+}
+.ddc-flash-icon { font-size: 1.1rem; animation: flashBob 0.8s ease-in-out infinite alternate; }
+@keyframes flashBob { from{transform:translateY(0);} to{transform:translateY(-3px);} }
+.ddc-flash-text {
+  font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+  font-weight: 500; color: rgba(255,255,255,0.92); flex: 1;
+}
+.ddc-flash-text strong { color: #fff; font-weight: 700; }
+.ddc-flash-cta {
+  display: inline-flex; align-items: center;
+  padding: 7px 20px; border-radius: 100px;
+  background: #fff; color: #c0392b;
+  font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 700;
+  text-decoration: none; white-space: nowrap;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+}
+.ddc-flash-cta:hover { transform: translateY(-2px); color: #922b21; text-decoration: none; }
 
 /* Responsive */
 @media(max-width:900px){
@@ -681,12 +727,12 @@
       <span class="ddc-stat-l">Thể loại</span>
     </div>
     <div class="ddc-stat">
-      <span class="ddc-stat-n">4.9★</span>
+      <span class="ddc-stat-n">{{ avg_rating|floatformat:1 }}★</span>
       <span class="ddc-stat-l">Đánh giá TB</span>
     </div>
     <div class="ddc-stat">
-      <span class="ddc-stat-n">12K+</span>
-      <span class="ddc-stat-l">Độc giả</span>
+      <span class="ddc-stat-n">{{ new_books_count }}+</span>
+      <span class="ddc-stat-l">Sách mới (90 ngày)</span>
     </div>
   </div>
 </section>
@@ -746,7 +792,7 @@
         <div class="hs-grid"></div><div class="hs-glow"></div>
         <div style="position:absolute;right:29%;top:-22%;width:310px;height:310px;background:radial-gradient(circle,rgba(52,152,219,0.14),transparent 68%);border-radius:50%;pointer-events:none;"></div>
         <div class="hs-badge" style="background:linear-gradient(135deg,#e74c3c,#922b21);">
-          <span class="hs-badge-big">30%</span><span class="hs-badge-sm">OFF</span>
+          <span class="hs-badge-big">{% if flash_active %}{{ flash_discount }}{% else %}??{% endif %}%</span><span class="hs-badge-sm">OFF</span>
         </div>
         <div class="hs-visual">
           <div style="animation:floatBob 3.4s ease-in-out infinite;display:flex;flex-direction:column;gap:7px;align-items:center;padding-right:42px;">
@@ -763,8 +809,8 @@
           </div>
         </div>
         <div class="hs-body">
-          <div class="hs-tag" style="color:#5dade2;"><span class="hs-tag-dot"></span>Flash Sale · Hôm nay duy nhất</div>
-          <h2 class="hs-title">Giảm Tới<br><em style="color:#c8832a;">30%</em> Tất Cả Sách</h2>
+          <div class="hs-tag" style="color:#5dade2;"><span class="hs-tag-dot"></span>Flash Sale · {% if flash_active %}Đang diễn ra!{% else %}Sắp diễn ra{% endif %}</div>
+          <h2 class="hs-title">Giảm Tới<br><em style="color:#c8832a;">{% if flash_active %}{{ flash_discount }}{% else %}??{% endif %}%</em> Tất Cả Sách</h2>
           <div class="hs-countdown">
             <div class="hs-cd"><span class="hs-cd-n" id="cd-h">00</span><span class="hs-cd-l">Giờ</span></div>
             <div class="hs-cd"><span class="hs-cd-n" id="cd-m">00</span><span class="hs-cd-l">Phút</span></div>
@@ -786,7 +832,7 @@
             <div style="font-size:3.2rem;margin-bottom:10px;">📚</div>
             <div style="display:flex;gap:3px;justify-content:center;margin-bottom:10px;"><span style="color:#f0c040;font-size:0.95rem;">★★★★★</span></div>
             <div style="font-family:'DM Sans',sans-serif;font-size:0.6rem;color:rgba(244,237,224,0.45);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Đánh giá trung bình</div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;color:#f4ede0;line-height:1;">4.9<span style="font-size:0.88rem;opacity:0.45;">/5</span></div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;color:#f4ede0;line-height:1;">{{ avg_rating|floatformat:1 }}<span style="font-size:0.88rem;opacity:0.45;">/5</span></div>
           </div>
         </div>
         <div class="hs-body">
@@ -809,7 +855,7 @@
                 <div style="font-size:2.2rem;margin-bottom:10px;">📗</div>
                 <div style="font-family:'DM Sans',sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.78);font-weight:600;letter-spacing:2.5px;text-transform:uppercase;">Vừa ra mắt</div>
                 <div style="width:32px;height:1px;background:rgba(255,255,255,0.28);margin:9px auto;"></div>
-                <div style="font-family:'DM Sans',sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.45);">Mới trong 90 ngày</div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:0.5rem;color:rgba(255,255,255,0.45);">{{ new_books_count }} cuốn mới 90 ngày</div>
               </div>
             </div>
           </div>
@@ -988,6 +1034,20 @@
 </section>
 {% endif %}
 
+<!-- ══════════ FLASH SALE BANNER (chỉ hiện khi đang sale) ══════════ -->
+{% if flash_active %}
+<div class="ddc-flash-banner">
+  <div class="ddc-flash-inner">
+    <span class="ddc-flash-icon">⚡</span>
+    <span class="ddc-flash-text">
+      FLASH SALE đang diễn ra — Giảm <strong>{{ flash_discount }}%</strong> toàn bộ sách
+      đến <strong>{{ flash_config.end_hour|stringformat:"02d" }}:{{ flash_config.end_minute|stringformat:"02d" }}</strong>
+    </span>
+    <a href="{% url 'home' %}?filter=sale" class="ddc-flash-cta">Mua ngay</a>
+  </div>
+</div>
+{% endif %}
+
 <!-- ══════════════════ BOOKS SECTION ══════════════════ -->
 <div class="ddc-books">
 
@@ -1061,6 +1121,7 @@
       <div class="ddc-card">
 
         {% if book.is_new %}<span class="ddc-badge-new">Mới</span>{% endif %}
+        {% if flash_active %}<span class="ddc-badge-sale">-{{ flash_discount }}%</span>{% endif %}
 
         <button class="wishlist-btn {% if book.id in favorite_book_ids %}active{% endif %}"
                 onclick="event.preventDefault();event.stopPropagation();toggleWishlist(this,'{{ book.id }}')">
