@@ -467,8 +467,21 @@ def order_history(request):
 @login_required
 def delete_order(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
-    order.delete()
-    messages.success(request, "Đã xóa đơn hàng thành công!")
+
+    # Chỉ cho hủy khi đang Pending — các trạng thái khác đã khóa nút rồi
+    if order.status != 'Pending':
+        messages.error(request, "Không thể hủy đơn hàng này.")
+        return redirect('order_history')
+
+    # Hoàn tồn kho cho từng sản phẩm
+    for item in order.items.all():
+        item.book.stock += item.quantity
+        item.book.sold_count = max(0, item.book.sold_count - item.quantity)
+        item.book.save(update_fields=['stock', 'sold_count'])
+
+    order.status = 'Cancelled'
+    order.save(update_fields=['status'])
+    messages.success(request, "Đã hủy đơn hàng thành công.")
     return redirect('order_history')
 
 
@@ -476,6 +489,9 @@ def delete_order(request, order_id):
 def update_order_info(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
     if request.method == 'POST':
+        if order.status != 'Pending':
+            messages.error(request, "Không thể chỉnh sửa đơn hàng đã xử lý.")
+            return redirect('order_history')
         order.full_name = request.POST.get('full_name')
         order.phone = request.POST.get('phone')
         order.address = request.POST.get('address')
@@ -497,10 +513,10 @@ def order_tracking(request, order_id):
 def confirm_received(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
     if order.status == 'Shipped':
-        order.status = 'Delivered'
-        order.save()
+        order.status = 'Received'           # ← khớp với template
+        order.save(update_fields=['status'])
         OrderTracking.objects.create(
-            order=order, status='Delivered',
+            order=order, status='Received',  # ← khớp
             message='Giao hàng thành công. Người mua đã xác nhận nhận hàng.'
         )
     return redirect('order_history')
@@ -529,7 +545,7 @@ def confirm_order(request, order_id):
 @user_passes_test(is_staff)
 def cancel_order(request, order_id):
     order = get_object_or_404(Order, id=order_id)
-    if order.status != 'Delivered':
+    if order.status not in ('Received', 'Cancelled'):
         order.status = 'Cancelled'
         order.save()
     return redirect('manage_orders')
@@ -539,6 +555,9 @@ def cancel_order(request, order_id):
 def pack_and_ship(request, order_id):
     if request.method == 'POST':
         order = get_object_or_404(Order, id=order_id)
+        if order.status != 'Confirmed':
+            messages.error(request, "Chỉ có thể giao đơn hàng đã xác nhận.")
+            return redirect('manage_orders')
         unit = request.POST.get('shipping_unit')
         order.status = 'Shipped'
         order.shipping_unit = unit
@@ -573,7 +592,7 @@ def staff_book_insert(request):
             author=request.POST.get('author'),
             price=request.POST.get('price'),
             stock=request.POST.get('stock', 0),
-            category=Category.objects.get(id=category_id) if category_id else None,
+            category=Category.objects.filter(id=category_id).first() if category_id else None,
             release_date=request.POST.get('release_date') or timezone.now().date(),
             description=request.POST.get('description'),
             image=request.FILES.get('image'),
@@ -593,8 +612,14 @@ def staff_book_update(request, book_id):
         book.author = request.POST.get('author')
         book.price = request.POST.get('price')
         book.stock = request.POST.get('stock')
+        book.description = request.POST.get('description')
         category_id = request.POST.get('category')
-        book.category = Category.objects.get(id=category_id) if category_id else None
+        try:
+            book.category = Category.objects.get(id=category_id) if category_id else None
+        except Category.DoesNotExist:
+            book.category = None
+        if request.FILES.get('image'):
+            book.image = request.FILES.get('image')
         book.save()
         return redirect('staff_book_list')
 
@@ -967,7 +992,7 @@ Ví dụ: <a href="/book/12/" style="color:#e67e22;font-weight:600;">Đắc Nhâ
     messages_payload = trimmed_history + [{'role': 'user', 'content': user_message}]
 
     payload = json.dumps({
-        'model'   : 'claude-sonnet-4-20250514',
+        'model'   : 'claude-sonnet-4-5',
         'max_tokens': 600,
         'system'  : system_prompt,
         'messages': messages_payload,

@@ -67,9 +67,9 @@ class Comment(models.Model):
 class Order(models.Model):
     STATUS_CHOICES = (
         ('Pending', 'Chờ xử lý'),
-        ('Processing', 'Đang đóng gói'),
+        ('Confirmed', 'Đã xác nhận'),
         ('Shipped', 'Đang giao'),
-        ('Delivered', 'Đã nhận hàng'),
+        ('Received', 'Đã nhận hàng'),
         ('Cancelled', 'Đã hủy'),
     )
 
