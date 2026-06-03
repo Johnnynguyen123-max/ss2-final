@@ -64,23 +64,54 @@ class Comment(models.Model):
         return f'{self.user.username} - {self.book.title}'
 
 
+class Coupon(models.Model):
+    """Mã giảm giá áp dụng khi thanh toán."""
+    code             = models.CharField(max_length=20, unique=True, verbose_name='Mã coupon')
+    discount_percent = models.IntegerField(default=10, verbose_name='Giảm (%)')
+    valid_until      = models.DateField(verbose_name='Hết hạn')
+    max_uses         = models.IntegerField(default=100, verbose_name='Số lần dùng tối đa')
+    used_count       = models.IntegerField(default=0, verbose_name='Đã dùng')
+    is_active        = models.BooleanField(default=True, verbose_name='Đang hoạt động')
+
+    class Meta:
+        verbose_name = 'Mã giảm giá'
+        verbose_name_plural = 'Mã giảm giá'
+
+    def __str__(self):
+        return f'{self.code} – {self.discount_percent}%'
+
+    @property
+    def is_valid(self):
+        """Kiểm tra coupon còn hiệu lực không."""
+        from django.utils import timezone
+        return (
+            self.is_active
+            and self.valid_until > timezone.now().date()
+            and self.used_count < self.max_uses
+        )
+
+
 class Order(models.Model):
     STATUS_CHOICES = (
-        ('Pending', 'Chờ xử lý'),
-        ('Processing', 'Đang đóng gói'),
-        ('Shipped', 'Đang giao'),
-        ('Delivered', 'Đã nhận hàng'),
-        ('Cancelled', 'Đã hủy'),
+        ('Pending',    'Chờ xử lý'),
+        ('Confirmed',  'Đã xác nhận'),
+        ('Shipped',    'Đang giao'),
+        ('Received',   'Đã nhận hàng'),
+        ('Cancelled',  'Đã hủy'),
     )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    full_name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=20)
-    address = models.TextField()
-    total_price = models.DecimalField(max_digits=12, decimal_places=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
-    shipping_unit = models.CharField(max_length=50, blank=True, null=True)
+    user            = models.ForeignKey(User, on_delete=models.CASCADE)
+    full_name       = models.CharField(max_length=255)
+    phone           = models.CharField(max_length=20)
+    address         = models.TextField()
+    total_price     = models.DecimalField(max_digits=12, decimal_places=0)
+    created_at      = models.DateTimeField(auto_now_add=True)
+    status          = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    shipping_unit   = models.CharField(max_length=50, blank=True, null=True)
+    coupon          = models.ForeignKey('Coupon', null=True, blank=True, on_delete=models.SET_NULL,
+                                        related_name='orders', verbose_name='Mã giảm giá')
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=0, default=0,
+                                          verbose_name='Số tiền giảm')
 
     def mark_as_shipped(self, unit_name):
         self.status = 'Shipped'
@@ -89,6 +120,8 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Đơn hàng {self.id} - {self.full_name}"
+
+
 
 
 class OrderItem(models.Model):

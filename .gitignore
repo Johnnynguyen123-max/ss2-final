@@ -1,0 +1,47 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual Environments ──
+.venv/
+.venv-1/
+venv/
+env/
+ENV/
+
+# ── Django ──
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# ── Media uploads (user content — không commit lên Git) ──
+media/
+
+# ── Static collected (do collectstatic tạo ra) ──
+staticfiles/
+
+# ── Environment variables (chứa SECRET_KEY, API keys — KHÔNG BAO GIỜ commit) ──
+.env
+.env.local
+.env.*.local
+
+# ── IDE & Editor ──
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Archive / Build artifacts ──
+*.zip
+*.tar.gz
+*.rar

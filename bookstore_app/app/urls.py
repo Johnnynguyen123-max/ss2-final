@@ -22,6 +22,7 @@ urlpatterns = [
     path('add-to-cart/<int:book_id>/',      views.add_to_cart,         name='add_to_cart'),
     path('update-cart/<int:book_id>/',      views.update_cart,         name='update_cart'),
     path('remove-from-cart/<int:book_id>/', views.remove_from_cart,    name='remove_from_cart'),
+    path('validate-coupon/',                views.validate_coupon,     name='validate_coupon'),
     path('checkout/',                       views.checkout,            name='checkout'),
 
     # ── Wishlist ──────────────────────────────────────────────
@@ -50,6 +51,7 @@ urlpatterns = [
 
 
     # ── Flash Sale (staff) ───────────────────────────────────────────────────────
+    path('staff/dashboard/',                              views.staff_dashboard,         name='staff_dashboard'),
     path('staff/flash-sale/',                         views.staff_flash_sale,        name='staff_flash_sale'),
     path('staff/flash-sale/toggle/',                  views.staff_flash_sale_toggle, name='staff_flash_sale_toggle'),
 

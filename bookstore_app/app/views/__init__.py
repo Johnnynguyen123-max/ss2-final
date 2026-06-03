@@ -32,6 +32,7 @@ from .cart import (
     cart_detail,
     update_cart,
     remove_from_cart,
+    validate_coupon,
     checkout,
 )
 
@@ -45,6 +46,7 @@ from .orders import (
 
 from .staff import (
     is_staff,
+    staff_dashboard,
     manage_orders,
     confirm_order,
     cancel_order,

@@ -1,4 +1,4 @@
-﻿{% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="vi">
   <head>
@@ -30,7 +30,7 @@
 
     if (totalItems > 0) {
       cartCountElement.innerText = totalItems;
-      cartCountElement.style.display = 'inline-block';
+      cartCountElement.style.display = 'flex';
     } else {
       cartCountElement.style.display = 'none';
     }
@@ -70,7 +70,7 @@
                     <a href="{% url 'home' %}">Trang chủ</a>
                 </li>
                 <li class="dropdown">
-                    <a href="#">Danh mục <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 4px;"></i></a>
+                    <a href="#">Danh mục <i class="fas fa-chevron-down"></i></a>
                     <ul class="submenu">
                         {% for cat in categories %}
                         <li>
@@ -80,15 +80,20 @@
                     </ul>
                 </li>
                 <li>
-                    <a href="{% url 'home' %}?filter=new" style="{% if request.GET.filter == 'new' %}color: var(--primary); font-weight: bold;{% endif %}">Sách mới</a>
+                    <a href="{% url 'home' %}?filter=new" {% if request.GET.filter == 'new' %}class="active"{% endif %}>Sách mới</a>
                 </li>
 
                 {% if user.is_staff %}
                 <li class="dropdown">
-                    <a href="#" style="color: #d35400; font-weight: bold;">
-                        <i class="fas fa-user-shield"></i> QUẢN TRỊ <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+                    <a href="#" class="admin-trigger">
+                        <i class="fas fa-user-shield"></i> QUẢN TRỊ <i class="fas fa-chevron-down"></i>
                     </a>
                     <ul class="submenu">
+                        <li>
+                            <a href="{% url 'staff_dashboard' %}">
+                                <i class="fas fa-chart-line"></i> Dashboard thống kê
+                            </a>
+                        </li>
                         <li>
                             <a href="{% url 'manage_orders' %}">
                                 <i class="fas fa-clipboard-list"></i> Quản lý đơn hàng
@@ -121,14 +126,14 @@
                 {% if user.is_authenticated %}
                 <div class="user-dropdown">
                     <div class="avatar-small">
-                        <img src="{{ user.profile.avatar.url }}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--beige); box-shadow: 0 4px 10px rgba(0,0,0,0.1);" />
+                        <img src="{{ user.profile.avatar.url }}" alt="Avatar" />
                     </div>
                     <span>Chào, {{ user.first_name }}</span>
                     <div class="dropdown-menu">
                         <a href="{% url 'profile' %}"><i class="far fa-user"></i> Hồ sơ cá nhân</a>
                         <a href="{% url 'order_history' %}"><i class="fa-regular fa-calendar"></i> Lịch sử mua hàng</a>
                         <a href="{% url 'wishlist_list' %}"><i class="far fa-heart"></i> Sách yêu thích</a>
-                        <a href="{% url 'logout' %}" style="color: #ff6b6b;"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+                        <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
                     </div>
                 </div>
                 {% else %}
@@ -140,9 +145,9 @@
                 {% endif %}
             </div>
 
-            <a href="{% url 'cart_detail' %}" class="cart-link" style="position: relative; color: var(--dark-brown); text-decoration: none; top:4px; left: -25px;">
-                <i class="fa-solid fa-cart-arrow-down" style="font-size: 1.4rem;"></i>
-                <span id="cart-count" class="cart-badge" style="position: absolute; top: -12px; right: -16px; background: var(--primary); color: white; font-size: 0.7rem; padding: 2px 7px; border-radius: 50%; font-weight: bold; display: {% if not request.session.cart %}none{% else %}inline-block{% endif %};">
+            <a href="{% url 'cart_detail' %}" class="cart-link">
+                <i class="fa-solid fa-cart-arrow-down"></i>
+                <span id="cart-count" class="cart-badge">
                     0
                 </span>
             </a>
@@ -152,12 +157,12 @@
     
 
    <main>
-    <div class="content-wrapper" style="background-color: #ffffff; min-height: 100vh;">
-        <div class="container" style="max-width: 1300px; margin: 0 auto; padding: 20px 15px;">
+    <div class="content-wrapper">
+        <div class="container">
             
-            <div style="display: flex; gap: 30px; align-items: flex-start;">
+            <div class="main-layout">
               {% block sidebar %}
-<!-- Nút kích hoạt tròn màu cam -->
+<!-- Nút kích hoạt tròn bộ lọc -->
 <button type="button" class="btn-filter-floating" onclick="toggleDrawer()">
     <i class="fas fa-filter"></i>
 </button>
@@ -165,19 +170,18 @@
 <!-- Lớp phủ -->
 <div id="filterOverlay" class="drawer-overlay" onclick="toggleDrawer()"></div>
 
-<!-- Drawer bộ lọc[cite: 1] -->
+<!-- Drawer bộ lọc -->
 <aside id="filterDrawer" class="filter-drawer">
     <div class="drawer-header">
-        <h3 style="margin:0; font-size: 1.2rem; color: #333;">Bộ lọc tìm kiếm</h3>
-        <button type="button" onclick="toggleDrawer()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#999;">&times;</button>
+        <h3>Bộ lọc tìm kiếm</h3>
+        <button type="button" onclick="toggleDrawer()">&times;</button>
     </div>
 
     <div class="drawer-content">
         <form method="GET" action="{% url 'home' %}">
-            <!-- Giữ nguyên Logic Thể loại[cite: 1] -->
-            <div style="margin-bottom: 20px;">
-                <h4 style="font-size: 0.95rem; margin-bottom: 10px; font-weight: bold; color: #333;">Thể loại</h4>
-                <select name="category" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+            <div class="filter-group">
+                <h4>Thể loại</h4>
+                <select name="category">
                     <option value="">Tất cả thể loại</option>
                     {% for cat in categories %}
                         <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"i" %}selected{% endif %}>
@@ -187,26 +191,24 @@
                 </select>
             </div>
 
-            <!-- Giữ nguyên Logic Khoảng giá[cite: 1] -->
-            <div style="margin-bottom: 25px;">
-                <h4 style="font-size: 0.95rem; margin-bottom: 12px; font-weight: bold; color: #333;">Khoảng giá</h4>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <label style="font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <div class="filter-group">
+                <h4>Khoảng giá</h4>
+                <div class="price-options">
+                    <label>
                         <input type="radio" name="price_range" value="0-100000" {% if selected_price == '0-100000' %}checked{% endif %}> Dưới 100.000đ
                     </label>
-                    <label style="font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <label>
                         <input type="radio" name="price_range" value="100000-300000" {% if selected_price == '100000-300000' %}checked{% endif %}> 100.000đ - 300.000đ
                     </label>
-                    <label style="font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <label>
                         <input type="radio" name="price_range" value="300000-max" {% if selected_price == '300000-max' %}checked{% endif %}> Trên 300.000đ
                     </label>
                 </div>
             </div>
 
-            <!-- Giữ nguyên Logic Năm phát hành[cite: 1] -->
-            <div style="margin-bottom: 25px;">
-                <h4 style="font-size: 0.95rem; margin-bottom: 10px; font-weight: bold; color: #333;">Năm phát hành</h4>
-                <select name="year" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+            <div class="filter-group">
+                <h4>Năm phát hành</h4>
+                <select name="year">
                     <option value="">Chọn năm</option>
                     {% for y in year_choices %}
                         <option value="{{ y }}" {% if selected_year == y|stringformat:"i" %}selected{% endif %}>Năm {{ y }}</option>
@@ -215,64 +217,49 @@
                 </select>
             </div>
 
-            <button type="submit" style="width: 100%; background: #007bff; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">
+            <button type="submit" class="btn-submit">
                 Áp dụng bộ lọc
             </button>
             
-            <!-- Giữ nguyên Logic Xóa bộ lọc[cite: 1] -->
             {% if request.GET.price_range or request.GET.year or request.GET.category %}
-                <a href="{% url 'home' %}" style="display: block; text-align: center; margin-top: 15px; color: #666; font-size: 0.85rem; text-decoration: none;">Xóa bộ lọc</a>
+                <a href="{% url 'home' %}" class="clear-filter">Xóa bộ lọc</a>
             {% endif %}
         </form>
     </div>
 </aside>
 {% endblock sidebar %}
 
-                <div style="flex-grow: 1;">
+                <div class="content-area">
 
                     {% block hero_banner %}{% endblock %}
                     
-                    <div class="main-books-content" style="margin-bottom: 50px;">
+                    <div class="main-books-content">
                         {% block content %}
                         {% endblock %}
                     </div>
 
                     {% if recently_viewed_books and not query %}
-<section class="recent-box" style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #f9f9f9;">
-    <h3 style="font-family: 'Playfair Display', serif; color: #222; font-size: 1.4rem; margin-bottom: 20px; border-left: 4px solid var(--primary); padding-left: 15px;">
-        Sách bạn vừa xem
-    </h3>
-    <div style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 15px;">
-        {% for book in recently_viewed_books %}
-            <div class="viewed-card" onclick="window.location.href='/book/{{ book.id }}/'" 
-                 style="flex: 0 0 160px; /* Cố định chiều rộng card, không cho co giãn */
-                        width: 160px;
-                        cursor: pointer; 
-                        background: #fff; 
-                        padding: 10px; 
-                        border-radius: 8px; 
-                        border: 1px solid #f0f0f0; 
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-                        display: flex;
-                        flex-direction: column;">
-                
-                <div style="width: 100%; height: 210px; overflow: hidden; border-radius: 5px;">
-                    <img src="{{ book.image.url }}" 
-                         style="width: 100%; height: 100%; object-fit: cover;">
-                </div>
-
-                <div style="font-size: 0.8rem; font-weight: 600; margin-top: 10px; height: 2.8em; line-height: 1.4em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: #333;">
-                    {{ book.title }}
-                </div>
-                
-                <div style="color: #e44d26; font-weight: bold; font-size: 0.9rem; margin-top: auto; padding-top: 5px;">
-                    {{ book.price|floatformat:0 }} đ
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
+                    <section class="ddc-rv reveal">
+                        <div class="ddc-rv-head">
+                            <div class="ddc-rv-title">
+                                <i class="fas fa-history"></i> Sách bạn vừa xem
+                            </div>
+                        </div>
+                        <div class="ddc-rv-grid">
+                            {% for book in recently_viewed_books %}
+                                <a href="{% url 'book_detail' book.id %}" class="ddc-rv-card">
+                                    <div class="ddc-rv-thumb">
+                                        <img src="{{ book.image.url }}" alt="{{ book.title }}">
+                                    </div>
+                                    <div class="ddc-rv-info">
+                                        <div class="ddc-rv-t">{{ book.title }}</div>
+                                        <div class="ddc-rv-p">{{ book.price|floatformat:0 }}đ</div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </section>
+                    {% endif %}
                     
                 </div>
             </div> 
@@ -281,51 +268,50 @@
     </div>
 </main>
     
-    
 
-    <footer style="background-color: #2c3e50; color: #ecf0f1; padding: 60px 0 30px; margin-top: 50px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 15px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px;">
+<footer class="reveal">
+    <div class="container">
+        <div class="footer-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px;">
             
             <div>
-                <h3 style="color: #f39c12; margin-bottom: 20px; font-size: 1.5rem;">DDC Books</h3>
-                <p style="line-height: 1.6; color: #bdc3c7;">
+                <h3>DDC Books</h3>
+                <p>
                     Hành trình tri thức bắt đầu từ những trang sách. Chúng tôi cung cấp những tựa sách chất lượng nhất từ các tác giả hàng đầu.
                 </p>
-                <div style="margin-top: 20px;">
-                    <a href="#" style="color: #ecf0f1; margin-right: 15px; font-size: 1.4rem; display:inline-block; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.transform='scale(1.3)';this.style.color='#f39c12'" onmouseout="this.style.transform='';this.style.color='#ecf0f1'"><i class="fab fa-facebook"></i></a>
-                    <a href="#" style="color: #ecf0f1; margin-right: 15px; font-size: 1.4rem; display:inline-block; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.transform='scale(1.3)';this.style.color='#f39c12'" onmouseout="this.style.transform='';this.style.color='#ecf0f1'"><i class="fab fa-instagram"></i></a>
-                    <a href="#" style="color: #ecf0f1; font-size: 1.4rem; display:inline-block; transition: transform 0.2s, color 0.2s;" onmouseover="this.style.transform='scale(1.3)';this.style.color='#f39c12'" onmouseout="this.style.transform='';this.style.color='#ecf0f1'"><i class="fab fa-youtube"></i></a>
+                <div class="footer-social" style="margin-top: 20px; display: flex; gap: 15px;">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
                 </div>
             </div>
 
             <div>
-                <h4 style="margin-bottom: 20px; border-bottom: 2px solid #f39c12; display: inline-block; padding-bottom: 5px;">Khám phá</h4>
-                <ul style="list-style: none; padding: 0; line-height: 2;">
-                    <li><a href="{% url 'home' %}" style="color: #bdc3c7; text-decoration: none;">Trang chủ</a></li>
-                    <li><a href="#" style="color: #bdc3c7; text-decoration: none;">Sách mới nhất</a></li>
-                    <li><a href="#" style="color: #bdc3c7; text-decoration: none;">Khuyến mãi</a></li>
-                    <li><a href="{% url 'order_history' %}" style="color: #bdc3c7; text-decoration: none;">Đơn hàng của tôi</a></li>
+                <h4>Khám phá</h4>
+                <ul class="footer-links" style="list-style: none; padding: 0; line-height: 2;">
+                    <li><a href="{% url 'home' %}">Trang chủ</a></li>
+                    <li><a href="#">Sách mới nhất</a></li>
+                    <li><a href="#">Khuyến mãi</a></li>
+                    <li><a href="{% url 'order_history' %}">Đơn hàng của tôi</a></li>
                 </ul>
             </div>
 
             <div>
-                <h4 style="margin-bottom: 20px; border-bottom: 2px solid #f39c12; display: inline-block; padding-bottom: 5px;">Thông tin liên hệ</h4>
-                <ul style="list-style: none; padding: 0; line-height: 2.2;">
-                    <li style="color: #bdc3c7;">
-                        <i class="fas fa-map-marker-alt" style="color: #f39c12; margin-right: 10px; width: 20px;"></i>
+                <h4>Thông tin liên hệ</h4>
+                <ul class="footer-contact" style="list-style: none; padding: 0; line-height: 2.2;">
+                    <li>
+                        <i class="fas fa-map-marker-alt"></i>
                         Số 9 đường Nguyễn Trãi, Hà Đông, Hà Nội
                     </li>
-                    <li style="color: #bdc3c7;">
-                        <i class="fas fa-phone-alt" style="color: #f39c12; margin-right: 10px; width: 20px;"></i>
+                    <li>
+                        <i class="fas fa-phone-alt"></i>
                         094.152.7660 (Hotline)
                     </li>
-                    <li style="color: #bdc3c7;">
-                        <i class="fas fa-envelope" style="color: #f39c12; margin-right: 10px; width: 20px;"></i>
+                    <li>
+                        <i class="fas fa-envelope"></i>
                         support@ddcbooks.com
                     </li>
-                    <li style="color: #bdc3c7;">
-                        <i class="fas fa-clock" style="color: #f39c12; margin-right: 10px; width: 20px;"></i>
+                    <li>
+                        <i class="fas fa-clock"></i>
                         08:00 - 22:00 (Hàng ngày)
                     </li>
                 </ul>
@@ -333,9 +319,9 @@
 
         </div>
 
-        <hr style="border: 0; border-top: 1px solid #3e4f5f; margin: 40px 0 20px;">
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 40px 0 20px;">
         
-        <div style="text-align: center; color: #7f8c8d; font-size: 0.9rem;">
+        <div class="footer-copy" style="text-align: center; color: #A89B8D; font-size: 0.85rem;">
             <p>&copy; 2026 DDC Books Project. Designed by Cường - Đông - Đăng.</p>
         </div>
     </div>
@@ -366,7 +352,7 @@
     drawer.classList.toggle('active');
     overlay.classList.toggle('active');
     
-    // Ngăn cuộn trang web khi đang mở bộ lọc[cite: 1]
+    // Ngăn cuộn trang web khi đang mở bộ lọc
     document.body.style.overflow = drawer.classList.contains('active') ? 'hidden' : 'auto';
 }</script>
     <script>
@@ -458,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       }, { threshold: 0.08 });
 
-      document.querySelectorAll('.viewed-card, .recent-box, footer > .container > div > div').forEach((el, i)=>{
+      document.querySelectorAll('.reveal, .viewed-card, .recent-box, footer > .container > div > div').forEach((el, i)=>{
         el.classList.add('reveal');
         el.style.transitionDelay = (i * 60) + 'ms';
         observer.observe(el);
@@ -502,12 +488,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     })();
     </script>
-
-  {% if user.is_authenticated %}
-  {# ── CHAT WIDGET (tách ra file include riêng) ── #}
-  {% include 'app/includes/chat_widget.html' %}
-  {% endif %}
-  <!-- ===== END CHAT WIDGET ===== -->
 
   </body>
 </html>

@@ -1,4 +1,5 @@
 import re
+import json
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -6,8 +7,9 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.db import transaction
 from django.db.models import F
+from django.utils import timezone
 
-from ..models import Book, Order, OrderItem
+from ..models import Book, Order, OrderItem, Coupon
 
 
 # ── THÊM VÀO GIỎ HÀNG ────────────────────────────────────────────────────────
@@ -33,7 +35,6 @@ def add_to_cart(request, book_id):
                     'status': 'error',
                     'message': f'Bạn đã có {current_in_cart} quyển trong giỏ. Sách chỉ còn {book.stock} quyển trong kho!'
                 }, status=400)
-            # Chỉ thêm đúng số lượng còn có thể thêm
             new_quantity = book.stock
             cart[str_id] = new_quantity
             request.session['cart'] = cart
@@ -106,9 +107,57 @@ def remove_from_cart(request, book_id):
     return JsonResponse({'status': 'error'}, status=400)
 
 
+# ── VALIDATE COUPON (AJAX) ────────────────────────────────────────────────────
+@login_required
+def validate_coupon(request):
+    """
+    Nhận POST JSON { code, total } → trả về { valid, discount_percent, new_total, message }.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'valid': False, 'message': 'Method not allowed'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'valid': False, 'message': 'Dữ liệu không hợp lệ'}, status=400)
+
+    code = data.get('code', '').strip().upper()
+    total = int(data.get('total', 0))
+
+    try:
+        coupon = Coupon.objects.get(code=code)
+    except Coupon.DoesNotExist:
+        return JsonResponse({'valid': False, 'message': 'Mã coupon không tồn tại.'})
+
+    if not coupon.is_valid:
+        if not coupon.is_active:
+            msg = 'Mã coupon đã bị vô hiệu hóa.'
+        elif coupon.valid_until < timezone.now().date():
+            msg = f'Mã coupon đã hết hạn ngày {coupon.valid_until.strftime("%d/%m/%Y")}.'
+        else:
+            msg = 'Mã coupon đã đạt giới hạn sử dụng.'
+        return JsonResponse({'valid': False, 'message': msg})
+
+    discount_amount = int(total * coupon.discount_percent / 100)
+    new_total = total - discount_amount
+    return JsonResponse({
+        'valid': True,
+        'code': coupon.code,
+        'discount_percent': coupon.discount_percent,
+        'discount_amount': discount_amount,
+        'new_total': new_total,
+        'message': f'Áp dụng thành công! Giảm {coupon.discount_percent}% ({discount_amount:,}đ)',
+    })
+
+
 # ── CHECKOUT ──────────────────────────────────────────────────────────────────
 @login_required
 def checkout(request):
+    """
+    Xử lý thanh toán đơn hàng.
+    - GET : Hiển thị form thông tin giao hàng (hỗ trợ coupon via AJAX).
+    - POST: Validate → giảm kho (atomic) → tạo Order + OrderItem → xóa giỏ hàng.
+    """
     cart_session = request.session.get('cart', {})
     if not cart_session:
         messages.warning(request, "Giỏ hàng của bạn đang trống!")
@@ -119,7 +168,6 @@ def checkout(request):
     stock_errors = []
     for book_id, quantity in cart_session.items():
         book = get_object_or_404(Book, id=book_id)
-        # Kiểm tra tồn kho lần cuối trước khi thanh toán
         if quantity > book.stock:
             stock_errors.append(f'"{book.title}" chỉ còn {book.stock} quyển trong kho.')
             quantity = book.stock
@@ -137,29 +185,48 @@ def checkout(request):
 
     user_profile = getattr(request.user, 'profile', None)
     initial_full_name = f"{request.user.last_name} {request.user.first_name}".strip() or request.user.username
-    initial_phone = user_profile.phone if user_profile else ""
-    initial_address = user_profile.address if user_profile else ""
+    initial_phone   = user_profile.phone    if user_profile else ""
+    initial_address = user_profile.address  if user_profile else ""
 
     if request.method == 'POST':
-        full_name = request.POST.get('full_name')
-        phone = request.POST.get('phone')
-        address = request.POST.get('address')
+        full_name    = request.POST.get('full_name')
+        phone        = request.POST.get('phone')
+        address      = request.POST.get('address')
+        coupon_code  = request.POST.get('coupon_code', '').strip().upper()
+        final_total  = int(request.POST.get('final_total', total_bill))
+
+        def re_render(extra=None):
+            ctx = {
+                'items': cart_items, 'total_bill': total_bill,
+                'full_name': full_name, 'phone': phone, 'address': address,
+                'coupon_code': coupon_code,
+            }
+            if extra:
+                ctx.update(extra)
+            return render(request, 'app/checkout.html', ctx)
 
         if not all([full_name, phone, address]):
             messages.error(request, "Vui lòng điền đầy đủ thông tin giao hàng!")
-            return render(request, 'app/checkout.html', {
-                'items': cart_items, 'total_bill': total_bill,
-                'full_name': full_name, 'phone': phone, 'address': address
-            })
+            return re_render()
 
         if not re.match(r"^(0[35789])[0-9]{8}$", phone):
             messages.error(request, "Số điện thoại không đúng định dạng Việt Nam!")
-            return render(request, 'app/checkout.html', {
-                'items': cart_items, 'total_bill': total_bill,
-                'full_name': full_name, 'phone': phone, 'address': address
-            })
+            return re_render()
 
-        # Kiểm tra tồn kho một lần nữa khi submit
+        # Xử lý coupon
+        applied_coupon  = None
+        discount_amount = 0
+        if coupon_code:
+            try:
+                coupon_obj = Coupon.objects.get(code=coupon_code)
+                if coupon_obj.is_valid:
+                    applied_coupon  = coupon_obj
+                    discount_amount = int(total_bill * coupon_obj.discount_percent / 100)
+                    final_total     = total_bill - discount_amount
+            except Coupon.DoesNotExist:
+                pass
+
+        # Kiểm tra tồn kho khi submit
         for item in cart_items:
             if item['quantity'] > item['book'].stock:
                 messages.error(request, f'"{item["book"].title}" chỉ còn {item["book"].stock} quyển. Vui lòng cập nhật giỏ hàng.')
@@ -167,7 +234,6 @@ def checkout(request):
 
         try:
             with transaction.atomic():
-                # Kiểm tra và giảm kho atomic – tránh race condition đồng thời
                 for item in cart_items:
                     updated = Book.objects.filter(
                         id=item['book'].id, stock__gte=item['quantity']
@@ -179,14 +245,26 @@ def checkout(request):
                         raise ValueError(f'"{item["book"].title}" vừa hết hàng. Vui lòng kiểm tra lại giỏ hàng.')
 
                 order = Order.objects.create(
-                    user=request.user, full_name=full_name,
-                    phone=phone, address=address, total_price=total_bill
+                    user=request.user,
+                    full_name=full_name,
+                    phone=phone,
+                    address=address,
+                    total_price=final_total,
+                    coupon=applied_coupon,
+                    discount_amount=discount_amount,
                 )
                 for item in cart_items:
                     OrderItem.objects.create(
                         order=order, book=item['book'],
                         quantity=item['quantity'], price=item['book'].price
                     )
+
+                # Tăng used_count của coupon
+                if applied_coupon:
+                    Coupon.objects.filter(pk=applied_coupon.pk).update(
+                        used_count=F('used_count') + 1
+                    )
+
         except ValueError as e:
             messages.error(request, str(e))
             return redirect('cart_detail')
@@ -198,5 +276,5 @@ def checkout(request):
 
     return render(request, 'app/checkout.html', {
         'items': cart_items, 'total_bill': total_bill,
-        'full_name': initial_full_name, 'phone': initial_phone, 'address': initial_address
+        'full_name': initial_full_name, 'phone': initial_phone, 'address': initial_address,
     })
