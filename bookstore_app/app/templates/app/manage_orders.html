@@ -69,8 +69,14 @@
                         <td style="padding: 20px 15px; text-align: center;">
                             {% if order.status == 'Pending' %}
                                 <div style="display: flex; gap: 5px; justify-content: center;">
-                                    <a href="{% url 'confirm_order' order.id %}" class="btn-action btn-confirm" style="flex: 1;">Duyệt</a>
-                                    <a href="{% url 'cancel_order' order.id %}" class="btn-action btn-cancel" onclick="return confirm('Hủy đơn hàng này?')" style="width: 35px;"><i class="fas fa-trash-alt"></i></a>
+                                    <form method="POST" action="{% url 'confirm_order' order.id %}" style="flex:1;margin:0;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-action btn-confirm" style="width:100%;">Duyệt</button>
+                                    </form>
+                                    <form method="POST" action="{% url 'cancel_order' order.id %}" style="margin:0;" onsubmit="return confirm('Hủy đơn hàng #{{ order.id }}?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-action btn-cancel" style="width:35px;"><i class="fas fa-trash-alt"></i></button>
+                                    </form>
                                 </div>
 
                             {% elif order.status == 'Confirmed' %}
@@ -135,7 +141,7 @@
     .status-pending { background: #fff4e6; color: #d9480f; border: 1px solid #ffe8cc; }
     .status-confirmed { background: #e7f5ff; color: #1971c2; border: 1px solid #d0ebff; }
     .status-shipped { background: #f3f0ff; color: #6741d9; border: 1px solid #e5dbff; }
-    .status-received, .status-delivered { background: #ebfbee; color: #087f5b; border: 1px solid #d3f9d8; }
+    .status-received { background: #ebfbee; color: #087f5b; border: 1px solid #d3f9d8; }
     
     /* Buttons */
     .btn-action { 

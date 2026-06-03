@@ -206,11 +206,12 @@
                                 <small style="color: #bbb;">{{ comment.created_at|date:"H:i - d/m/Y" }}</small>
                                 
                                 {% if request.user == comment.user or request.user.is_superuser %}
-                                    <a href="{% url 'delete_comment' comment.id %}" 
-                                       onclick="return confirm('Đăng có chắc chắn muốn xóa bình luận này không?')"
-                                       style="color: #e74c3c; text-decoration: none; font-size: 0.8rem; display: flex; align-items: center; gap: 3px;">
-                                        <i class="fas fa-trash-alt"></i> Xóa
-                                    </a>
+                                    <form method="POST" action="{% url 'delete_comment' comment.id %}" style="margin:0;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa bình luận này không?')">
+                                        {% csrf_token %}
+                                        <button type="submit" style="background:none; border:none; cursor:pointer; color:#e74c3c; font-size:0.8rem; display:flex; align-items:center; gap:3px; padding:0;">
+                                            <i class="fas fa-trash-alt"></i> Xóa
+                                        </button>
+                                    </form>
                                 {% endif %}
                             </div>
                         </div>
@@ -234,11 +235,15 @@
         
         <div style="display: flex; gap: 25px; flex-wrap: wrap; justify-content: flex-start;">
             {% for r_book in related_books %}
-                <div class="related-card" onclick="window.location.href='/book/{{ r_book.id }}/'" 
+                <a href="/book/{{ r_book.id }}/" class="related-card" style="display:block; text-decoration:none; color:inherit;" 
                      style="width: calc(20% - 20px); min-width: 180px; cursor: pointer; transition: all 0.3s ease; background: #fff; padding: 15px; border-radius: 15px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
                     
-                    <div style="width: 100%; height: 260px; overflow: hidden; border-radius: 10px; margin-bottom: 15px;">
-                        <img src="{{ r_book.image.url }}" alt="{{ r_book.title }}" style="width: 100%; height: 100%; object-fit: cover; transition: 0.5s;">
+                    <div style="width: 100%; height: 260px; overflow: hidden; border-radius: 10px; margin-bottom: 15px; background: #f0f0f0; display:flex; align-items:center; justify-content:center;">
+                        {% if r_book.image %}
+                            <img src="{{ r_book.image.url }}" alt="{{ r_book.title }}" style="width: 100%; height: 100%; object-fit: cover; transition: 0.5s;">
+                        {% else %}
+                            <i class="fas fa-book-open" style="font-size:3rem; color:#ccc;"></i>
+                        {% endif %}
                     </div>
                     
                     <h5 style="font-size: 1rem; color: #333; margin: 0 0 8px 0; height: 2.4em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.2;">
@@ -255,7 +260,7 @@
                             <i class="fas fa-plus-circle" style="color: #ddd; font-size: 1.2rem;"></i>
                         {% endif %}
                     </div>
-                </div>
+                </a>
             {% endfor %}
         </div>
     </div>

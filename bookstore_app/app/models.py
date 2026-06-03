@@ -67,9 +67,9 @@ class Comment(models.Model):
 class Order(models.Model):
     STATUS_CHOICES = (
         ('Pending', 'Chờ xử lý'),
-        ('Confirmed', 'Đã xác nhận'),
+        ('Processing', 'Đang đóng gói'),
         ('Shipped', 'Đang giao'),
-        ('Received', 'Đã nhận hàng'),
+        ('Delivered', 'Đã nhận hàng'),
         ('Cancelled', 'Đã hủy'),
     )
 
@@ -142,3 +142,38 @@ class ChatMessage(models.Model):
 
     class Meta:
         ordering = ['created_at']
+
+class FlashSaleConfig(models.Model):
+    """Cấu hình Flash Sale – chỉ có 1 bản ghi duy nhất (singleton)."""
+    is_active       = models.BooleanField(default=False)
+    discount_percent = models.IntegerField(default=10)
+    start_hour      = models.IntegerField(default=20)
+    start_minute    = models.IntegerField(default=0)
+    end_hour        = models.IntegerField(default=22)
+    end_minute      = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name = 'Cấu hình Flash Sale'
+
+    def __str__(self):
+        return f'Flash Sale – {self.discount_percent}% ({self.start_hour:02d}:{self.start_minute:02d}–{self.end_hour:02d}:{self.end_minute:02d})'
+
+    @classmethod
+    def get_config(cls):
+        """Trả về config duy nhất, tạo mới nếu chưa có."""
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    @property
+    def is_running_now(self):
+        """Kiểm tra flash sale có đang chạy tại thời điểm này không."""
+        if not self.is_active:
+            return False
+        now = timezone.now().astimezone()
+        now_minutes = now.hour * 60 + now.minute
+        start_minutes = self.start_hour * 60 + self.start_minute
+        end_minutes   = self.end_hour   * 60 + self.end_minute
+        if start_minutes < end_minutes:
+            return start_minutes <= now_minutes < end_minutes
+        # Qua nửa đêm
+        return now_minutes >= start_minutes or now_minutes < end_minutes

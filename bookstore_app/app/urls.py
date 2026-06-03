@@ -48,6 +48,11 @@ urlpatterns = [
     path('staff/books/update/<int:book_id>/',     views.staff_book_update,      name='staff_book_update'),
     path('staff/books/delete/<int:book_id>/',     views.staff_book_delete,      name='staff_book_delete'),
 
+
+    # ── Flash Sale (staff) ───────────────────────────────────────────────────────
+    path('staff/flash-sale/',                         views.staff_flash_sale,        name='staff_flash_sale'),
+    path('staff/flash-sale/toggle/',                  views.staff_flash_sale_toggle, name='staff_flash_sale_toggle'),
+
     # ── Chat ──────────────────────────────────────────────────
     path('chat/customer/send/',                   views.customer_send,   name='customer_send'),
     path('chat/customer/poll/',                   views.customer_poll,   name='customer_poll'),

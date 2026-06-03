@@ -659,3 +659,265 @@ header nav {
     justify-content: space-between; align-items: center; background: #fcfcfc;
 }
 .drawer-content { padding: 25px; overflow-y: auto; flex: 1; }
+
+/* ═══════════════════════════════════════════
+   BASE LAYOUT ENHANCEMENTS
+   (Chuyển từ <style> inline trong base.html)
+   ═══════════════════════════════════════════ */
+
+/* ── Scroll reveal utility ── */
+.reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.55s cubic-bezier(.22,1,.36,1), transform 0.55s cubic-bezier(.22,1,.36,1); }
+.reveal.visible { opacity: 1; transform: none; }
+
+/* ── HEADER ── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(255, 252, 247, 0.82);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 2px 24px rgba(0,0,0,0.06);
+  transition: box-shadow 0.3s, background 0.3s;
+}
+header.scrolled {
+  background: rgba(255, 252, 247, 0.97);
+  box-shadow: 0 4px 32px rgba(0,0,0,0.1);
+}
+
+/* Logo pulse on hover */
+.logo { letter-spacing: -0.5px; transition: transform 0.2s; display: inline-block; }
+.logo:hover { transform: scale(1.04); }
+.logo span { position: relative; }
+.logo span::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0; right: 0;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transition: transform 0.25s ease;
+  transform-origin: left;
+}
+.logo:hover span::after { transform: scaleX(1); }
+
+/* Nav link hover line */
+nav .menu-links > li > a {
+  position: relative;
+  transition: color 0.2s;
+}
+nav .menu-links > li > a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0; right: 0;
+  height: 2px;
+  background: var(--primary, #e67e22);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transition: transform 0.22s ease;
+  transform-origin: left;
+}
+nav .menu-links > li > a:hover::after { transform: scaleX(1); }
+nav .menu-links > li > a:hover { color: var(--primary, #e67e22); }
+
+/* Submenu improved */
+.submenu {
+  animation: submenuIn 0.2s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes submenuIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Cart icon animated */
+.cart-link { transition: transform 0.2s; }
+.cart-link:hover { transform: scale(1.15) rotate(-5deg); }
+.cart-badge {
+  animation: badgePop 0.35s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes badgePop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+/* ── SEARCH BOX ── */
+.header-search-box .search-wrapper {
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.header-search-box .search-wrapper:focus-within {
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.18);
+  transform: translateY(-1px);
+}
+#search-dropbox {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+  border: 1px solid rgba(0,0,0,0.06) !important;
+  overflow: hidden;
+  animation: dropboxIn 0.18s ease both;
+}
+@keyframes dropboxIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.suggestion-item { transition: background 0.15s; }
+.suggestion-item:hover { background: #fff8f2 !important; }
+
+/* ── FILTER DRAWER ── */
+.filter-drawer {
+  transition: transform 0.32s cubic-bezier(.22,1,.36,1) !important;
+}
+.filter-drawer .drawer-header {
+  background: linear-gradient(135deg, #f8f4ee, #fff);
+  border-bottom: 1px solid #f0e8de;
+}
+.filter-drawer select,
+.filter-drawer input[type="text"],
+.filter-drawer input[type="number"] {
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.filter-drawer select:focus,
+.filter-drawer input:focus {
+  border-color: var(--primary, #e67e22) !important;
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.12);
+  outline: none;
+}
+.filter-drawer button[type="submit"] {
+  background: linear-gradient(135deg, #f39c12, #e67e22) !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+  letter-spacing: 0.3px;
+}
+.filter-drawer button[type="submit"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(230, 126, 34, 0.35) !important;
+}
+
+/* ── RECENTLY VIEWED SECTION ── */
+.recent-box {
+  position: relative;
+}
+.viewed-card {
+  transition: transform 0.22s cubic-bezier(.22,1,.36,1), box-shadow 0.22s !important;
+}
+.viewed-card:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+}
+
+/* ── FOOTER ── */
+footer {
+  position: relative;
+  overflow: hidden;
+}
+footer::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #f39c12, #e67e22, #f39c12);
+  background-size: 200% 100%;
+  animation: footerLine 3s linear infinite;
+}
+@keyframes footerLine {
+  from { background-position: 0% 0%; }
+  to   { background-position: 200% 0%; }
+}
+footer a:hover {
+  color: #f39c12 !important;
+  transition: color 0.2s;
+}
+footer .fab {
+  transition: transform 0.2s, color 0.2s;
+}
+footer a:hover .fab {
+  transform: scale(1.25);
+  color: #f39c12 !important;
+}
+
+/* ── FLOATING FILTER BUTTON ── */
+.btn-filter-floating {
+  transition: transform 0.2s, box-shadow 0.2s !important;
+  animation: floatPulse 2.5s ease-in-out infinite;
+}
+.btn-filter-floating:hover {
+  transform: scale(1.12) !important;
+  animation: none !important;
+}
+@keyframes floatPulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(230,126,34,0.35); }
+  50%       { box-shadow: 0 8px 28px rgba(230,126,34,0.5); }
+}
+
+/* ── USER DROPDOWN ── */
+.user-dropdown .dropdown-menu {
+  border-radius: 14px !important;
+  overflow: hidden;
+  animation: submenuIn 0.2s cubic-bezier(.22,1,.36,1) both;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12) !important;
+  border: 1px solid rgba(0,0,0,0.05) !important;
+}
+.user-dropdown .dropdown-menu a {
+  transition: background 0.15s, padding-left 0.15s !important;
+}
+.user-dropdown .dropdown-menu a:hover {
+  background: #fff8f2 !important;
+  padding-left: 22px !important;
+}
+.avatar-small {
+  transition: transform 0.2s;
+}
+.user-dropdown:hover .avatar-small {
+  transform: scale(1.06);
+}
+
+/* ── TOAST / SWEETALERT enhancements ── */
+.swal2-popup { border-radius: 18px !important; }
+.swal2-confirm { border-radius: 10px !important; }
+
+/* ── Page transition overlay ── */
+#page-transition {
+  position: fixed; inset: 0;
+  background: #fff;
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+#page-transition.active { opacity: 1; }
+
+/* ── Scroll to top button ── */
+#scroll-top-btn {
+  position: fixed;
+  bottom: 100px;
+  left: 28px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: white;
+  border: 1.5px solid #eee;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.3s, transform 0.3s, box-shadow 0.2s;
+  color: #666;
+  font-size: 1rem;
+}
+#scroll-top-btn.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+#scroll-top-btn:hover {
+  box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+  color: var(--primary, #e67e22);
+  border-color: var(--primary, #e67e22);
+}
+
+/* Radio selected label highlight */
+label.radio-selected { color: var(--primary, #e67e22) !important; font-weight: 600 !important; }
+label.radio-selected input { accent-color: var(--primary, #e67e22); }

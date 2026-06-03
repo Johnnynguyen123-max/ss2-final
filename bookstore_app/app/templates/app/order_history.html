@@ -21,7 +21,11 @@
             
             <div style="display: flex; gap: 10px;">
                 {% if order.status == 'Pending' %}
-                    <button onclick="openEditModal('{{ order.id }}', '{{ order.full_name }}', '{{ order.phone }}', '{{ order.address }}')" 
+                    <button class="btn-open-edit"
+                            data-id="{{ order.id }}"
+                            data-name="{{ order.full_name|escapejs }}"
+                            data-phone="{{ order.phone|escapejs }}"
+                            data-address="{{ order.address|escapejs }}"
                             style="background: #f39c12; color: white; border: none; padding: 7px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
                         <i class="fas fa-edit"></i> Sửa
                     </button>
@@ -147,7 +151,7 @@
             </div>
             <div style="display: flex; gap: 10px;">
                 <button type="submit" style="flex: 2; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">Lưu thay đổi</button>
-                <button type="button" onclick="closeModal()" style="flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">Hủy</button>
+                <button type="button" onclick="closeModal(); return false;" style="flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">Hủy</button>
             </div>
         </form>
     </div>
@@ -155,59 +159,87 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    function openEditModal(id, name, phone, address) {
+    // Dùng event delegation để tránh lỗi JS khi địa chỉ chứa nháy đơn / xuống dòng
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-open-edit');
+        if (!btn) return;
+        document.getElementById('edit_name').value    = btn.dataset.name;
+        document.getElementById('edit_phone').value   = btn.dataset.phone;
+        document.getElementById('edit_address').value = btn.dataset.address;
+        document.getElementById('editForm').action    = '/order/update/' + btn.dataset.id + '/';
         document.getElementById('editModal').style.display = 'block';
-        document.getElementById('edit_name').value = name;
-        document.getElementById('edit_phone').value = phone;
-        document.getElementById('edit_address').value = address;
-        document.getElementById('editForm').action = "/order/update/" + id + "/";
-    }
+    });
 
     function closeModal() {
         document.getElementById('editModal').style.display = 'none';
+        document.getElementById('editForm').reset();
     }
 
     function confirmDeleteOrder(orderId) {
         Swal.fire({
             title: 'Xóa đơn hàng?',
-            text: "Bạn có chắc muốn xóa đơn hàng này không?",
+            text: 'Bạn có chắc muốn hủy đơn hàng này không?',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#95a5a6',
-            confirmButtonText: 'Đúng, xóa nó!',
+            confirmButtonText: 'Đúng, hủy đơn!',
             cancelButtonText: 'Không, giữ lại',
-            backdrop: `rgba(0,0,0,0.4)`
+            backdrop: 'rgba(0,0,0,0.4)'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = "/order/delete/" + orderId + "/";
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/order/delete/' + orderId + '/';
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = 'csrfmiddlewaretoken';
+                csrf.value = getCsrfToken();
+                form.appendChild(csrf);
+                document.body.appendChild(form);
+                form.submit();
             }
-        })
+        });
     }
 
-    window.onclick = function(event) {
-        let modal = document.getElementById('editModal');
-        if (event.target == modal) {
-            closeModal();
+    function getCsrfToken() {
+        const name = 'csrftoken';
+        const cookies = document.cookie.split(';');
+        for (let c of cookies) {
+            c = c.trim();
+            if (c.startsWith(name + '=')) return decodeURIComponent(c.slice(name.length + 1));
         }
+        return '';
     }
+
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
 </script>
 <script>function confirmReceived(orderId) {
     Swal.fire({
         title: 'Xác nhận nhận hàng?',
-        text: "Bạn đã nhận được sách rồi đúng không?",
+        text: 'Bạn đã nhận được sách rồi đúng không?',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#27ae60',
         cancelButtonColor: '#95a5a6',
         confirmButtonText: 'Đã nhận đủ hàng!',
         cancelButtonText: 'Chưa thấy gì cả',
-        backdrop: `rgba(0,0,0,0.4)`
+        backdrop: 'rgba(0,0,0,0.4)'
     }).then((result) => {
         if (result.isConfirmed) {
-            // Đăng nhớ đổi link này cho khớp với urls.py nhé
-            window.location.href = "/order/received/" + orderId + "/";
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/order/received/' + orderId + '/';
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = 'csrfmiddlewaretoken';
+            csrf.value = getCsrfToken();
+            form.appendChild(csrf);
+            document.body.appendChild(form);
+            form.submit();
         }
-    })
+    });
 }</script>
 {% endblock %}

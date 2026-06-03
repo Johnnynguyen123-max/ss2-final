@@ -10,7 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Đọc biến môi trường từ file .env (nếu có)
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent.parent / '.env')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +25,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!5ii1h2%%8%hxnvj@q@6!0$e230vts6u3e$72*k)e@*d=auti&'
+# Đọc từ biến môi trường — không bao giờ hardcode vào đây
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-fallback-key-only-for-development'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = []
 
@@ -49,7 +58,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
 ]
 
 ROOT_URLCONF = 'bookstore_app.urls'
@@ -122,10 +130,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Thư mục tập hợp static khi chạy collectstatic (dùng cho production)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
-
-import os
 
 # Đường dẫn URL để truy cập ảnh qua trình duyệt
 MEDIA_URL = '/media/'
@@ -134,5 +144,5 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # ── Anthropic API Key (dùng cho AI Bot) ──
-# Khuyến nghị: đặt biến môi trường ANTHROPIC_API_KEY thay vì hardcode
+# Đọc từ biến môi trường — đặt trong file .env
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
