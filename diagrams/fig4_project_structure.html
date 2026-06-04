@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Figure 4 - Project Structure - DDC Books</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1e1e2e;
+    font-family: 'Consolas', 'Courier New', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 32px;
+    min-height: 100vh;
+  }
+  .window {
+    background: #1e1e2e;
+    border: 1px solid #444;
+    border-radius: 10px;
+    width: 780px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    overflow: hidden;
+  }
+  .titlebar {
+    background: #2a2a3e;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #444;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.red    { background: #ff5f57; }
+  .dot.yellow { background: #febc2e; }
+  .dot.green  { background: #28c840; }
+  .title-text {
+    flex: 1;
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+  .explorer-header {
+    background: #252535;
+    padding: 8px 20px;
+    color: #569cd6;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #333;
+  }
+  .content {
+    padding: 16px 20px 24px 20px;
+    line-height: 1.7;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    padding: 1px 0;
+  }
+  .indent-1 { padding-left: 20px; }
+  .indent-2 { padding-left: 40px; }
+  .indent-3 { padding-left: 60px; }
+  .indent-4 { padding-left: 80px; }
+  .icon { margin-right: 6px; font-size: 13px; width: 16px; }
+  .folder  { color: #e5c07b; }
+  .file-py { color: #61afef; }
+  .file-txt{ color: #98c379; }
+  .file-env{ color: #c678dd; }
+  .file-md { color: #e06c75; }
+  .file-sql{ color: #56b6c2; }
+  .file-js { color: #e5c07b; }
+  .file-css{ color: #61afef; }
+  .file-html{ color: #e06c75; }
+  .tree-line { color: #555; }
+  .comment {
+    color: #5c6370;
+    font-size: 11px;
+    margin-left: 10px;
+    font-style: italic;
+  }
+  .section-label {
+    color: #98c379;
+    font-size: 10px;
+    font-weight: bold;
+    margin-left: 8px;
+    background: #2a3a2a;
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .caption {
+    color: #ccc;
+    font-family: 'Times New Roman', serif;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 16px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="window">
+  <div class="titlebar">
+    <div class="dot red"></div>
+    <div class="dot yellow"></div>
+    <div class="dot green"></div>
+    <div class="title-text">EXPLORER – SS2_Final</div>
+  </div>
+  <div class="explorer-header">EXPLORER: SS2_FINAL</div>
+  <div class="content">
+
+    <!-- Root -->
+    <div class="row">
+      <span class="icon folder">📁</span>
+      <span class="folder">SS2_Final/</span>
+      <span class="comment"># Project root</span>
+    </div>
+
+    <!-- .env files -->
+    <div class="row indent-1">
+      <span class="tree-line">├── </span>
+      <span class="icon file-env">⚙</span>
+      <span class="file-env">.env</span>
+      <span class="comment"># SECRET_KEY, ANTHROPIC_API_KEY</span>
+    </div>
+    <div class="row indent-1">
+      <span class="tree-line">├── </span>
+      <span class="icon file-env">⚙</span>
+      <span class="file-env">.env.example</span>
+    </div>
+    <div class="row indent-1">
+      <span class="tree-line">├── </span>
+      <span class="icon file-txt">📄</span>
+      <span class="file-txt">requirements.txt</span>
+      <span class="comment"># Django 6.0, Pillow, python-dotenv</span>
+    </div>
+    <div class="row indent-1">
+      <span class="tree-line">├── </span>
+      <span class="icon file-md">📝</span>
+      <span class="file-md">README.md</span>
+    </div>
+
+    <!-- bookstore_app/ -->
+    <div class="row indent-1" style="margin-top:6px">
+      <span class="tree-line">└── </span>
+      <span class="icon folder">📁</span>
+      <span class="folder">bookstore_app/</span>
+      <span class="section-label">Django Project</span>
+    </div>
+    <div class="row indent-2">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">manage.py</span>
+    </div>
+    <div class="row indent-2">
+      <span class="tree-line">├── </span>
+      <span class="icon file-sql">🗄</span>
+      <span class="file-sql">db.sqlite3</span>
+      <span class="comment"># SQLite database</span>
+    </div>
+
+    <!-- bookstore_app/bookstore_app/ -->
+    <div class="row indent-2" style="margin-top:4px">
+      <span class="tree-line">├── </span>
+      <span class="icon folder">📁</span>
+      <span class="folder">bookstore_app/</span>
+      <span class="comment"># Django project config</span>
+    </div>
+    <div class="row indent-3">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">settings.py</span>
+      <span class="comment"># ANTHROPIC_API_KEY, INSTALLED_APPS</span>
+    </div>
+    <div class="row indent-3">
+      <span class="tree-line">└── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">urls.py</span>
+      <span class="comment"># Root URL configuration</span>
+    </div>
+
+    <!-- app/ -->
+    <div class="row indent-2" style="margin-top:4px">
+      <span class="tree-line">└── </span>
+      <span class="icon folder">📁</span>
+      <span class="folder">app/</span>
+      <span class="section-label">Main Django App</span>
+    </div>
+    <div class="row indent-3">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">models.py</span>
+      <span class="comment"># Book, Order, Chat, Bot, FlashSale (12 models)</span>
+    </div>
+    <div class="row indent-3">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">urls.py</span>
+      <span class="comment"># App URL routing</span>
+    </div>
+    <div class="row indent-3">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">admin.py</span>
+      <span class="comment"># Django admin configuration</span>
+    </div>
+    <div class="row indent-3">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">tests.py</span>
+      <span class="comment"># Unit tests (TDD)</span>
+    </div>
+
+    <!-- views/ -->
+    <div class="row indent-3" style="margin-top:4px">
+      <span class="tree-line">├── </span>
+      <span class="icon folder">📁</span>
+      <span class="folder">views/</span>
+      <span class="section-label">Modular Views</span>
+    </div>
+    <div class="row indent-4">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">home.py</span>
+      <span class="comment"># Catalog, search, filter, AJAX suggestions</span>
+    </div>
+    <div class="row indent-4">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">cart.py</span>
+      <span class="comment"># Cart, checkout (atomic), coupon validate</span>
+    </div>
+    <div class="row indent-4">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">orders.py</span>
+      <span class="comment"># Order history, tracking, success page</span>
+    </div>
+    <div class="row indent-4">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">ai_chat.py</span>
+      <span class="comment"># ★ AI Chatbot + RAG + SSE streaming</span>
+    </div>
+    <div class="row indent-4">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">chat.py</span>
+      <span class="comment"># Real-time customer ↔ staff chat (AJAX)</span>
+    </div>
+    <div class="row indent-4">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">staff.py</span>
+      <span class="comment"># Dashboard, order/book/coupon/flash sale mgmt</span>
+    </div>
+    <div class="row indent-4">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">auth.py</span>
+      <span class="comment"># Register, login, profile management</span>
+    </div>
+    <div class="row indent-4">
+      <span class="tree-line">├── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">books.py</span>
+      <span class="comment"># Book detail, comment, rating</span>
+    </div>
+    <div class="row indent-4">
+      <span class="tree-line">└── </span>
+      <span class="icon file-py">🐍</span>
+      <span class="file-py">wishlist.py</span>
+      <span class="comment"># Add/remove wishlist (AJAX toggle)</span>
+    </div>
+
+    <!-- templates/ -->
+    <div class="row indent-3" style="margin-top:4px">
+      <span class="tree-line">├── </span>
+      <span class="icon folder">📁</span>
+      <span class="folder">templates/app/</span>
+      <span class="comment"># Django HTML templates (20+ pages)</span>
+    </div>
+    <div class="row indent-4">
+      <span class="tree-line">├── </span>
+      <span class="icon file-html">🌐</span>
+      <span class="file-html">home.html</span>
+      <span class="comment"> cart.html  checkout.html  staff_dashboard.html ...</span>
+    </div>
+
+    <!-- static/ -->
+    <div class="row indent-3" style="margin-top:4px">
+      <span class="tree-line">└── </span>
+      <span class="icon folder">📁</span>
+      <span class="folder">static/app/</span>
+      <span class="comment"># CSS, JS, images</span>
+    </div>
+    <div class="row indent-4">
+      <span class="tree-line">├── </span>
+      <span class="icon file-css">🎨</span>
+      <span class="file-css">style.css</span>
+      <span class="comment"># Main stylesheet</span>
+    </div>
+    <div class="row indent-4">
+      <span class="tree-line">└── </span>
+      <span class="icon file-js">⚡</span>
+      <span class="file-js">chat.js  ai_chat.js  flash_sale.js</span>
+      <span class="comment"># Frontend JS</span>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end window -->
+
+<p class="caption">Figure 4: DDC Books Project Directory Structure (Django MVT Architecture)</p>
+
+</body>
+</html>

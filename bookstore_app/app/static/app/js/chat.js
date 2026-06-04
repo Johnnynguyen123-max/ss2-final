@@ -47,6 +47,10 @@
   let botLastTimestamp = null;
   let custLastTimestamp = null;
 
+  // Image Selection State
+  let custSelectedImageFile = null;
+  let staffSelectedImageFile = null;
+
   // ── Elements ──
   const panel      = document.getElementById('chat-panel');
   const badge      = document.getElementById('chat-notif-badge');
@@ -851,7 +855,7 @@
         } else {
           d.messages.forEach(m => {
             if(m.id > lastMsgId) lastMsgId = m.id;
-            appendMsgWithTime(m.content, m.is_mine ? 'me' : 'other', m.created_at);
+            appendMsgWithTime(m.content, m.is_mine ? 'me' : 'other', m.created_at, m.image_url);
           });
           autoReplied = true;
         }
@@ -867,15 +871,35 @@
   window.custSend = function(){
     const inp = document.getElementById('cp-cust-input');
     const txt = inp.value.trim();
-    if(!txt) return;
-    appendMsg(txt, 'me');
+    const imageFile = custSelectedImageFile;
+    if(!txt && !imageFile) return;
+
+    if (imageFile) {
+      const localUrl = URL.createObjectURL(imageFile);
+      appendMsgWithTime(txt, 'me', null, localUrl);
+    } else {
+      appendMsg(txt, 'me');
+    }
+
     inp.value = '';
+    removeCustPreview();
     scrollBottom('cp-messages');
+
+    let bodyData;
+    let headersData = {'X-CSRFToken':csrfToken};
+    if (imageFile) {
+      bodyData = new FormData();
+      bodyData.append('content', txt);
+      bodyData.append('image', imageFile);
+    } else {
+      bodyData = JSON.stringify({content: txt});
+      headersData['Content-Type'] = 'application/json';
+    }
 
     fetch('/chat/customer/send/', {
       method:'POST',
-      headers:{'Content-Type':'application/json','X-CSRFToken':csrfToken},
-      body: JSON.stringify({content: txt})
+      headers: headersData,
+      body: bodyData
     })
     .then(r=>r.json())
     .then(d=>{ if(d.id) lastMsgId = Math.max(lastMsgId, d.id); });
@@ -899,7 +923,7 @@
         .then(d=>{
           d.messages.forEach(m=>{
             if(m.id > lastMsgId) lastMsgId = m.id;
-            if(!m.is_mine) appendMsgWithTime(m.content, 'other', m.created_at);
+            if(!m.is_mine) appendMsgWithTime(m.content, 'other', m.created_at, m.image_url);
           });
           if(d.messages.some(m=>!m.is_mine)) scrollBottom('cp-messages');
         });
@@ -978,7 +1002,7 @@
         let hasNew = false;
         d.messages.forEach(m=>{
           if(m.id > staffLastId){ staffLastId = m.id; hasNew = true; }
-          appendMsg(m.content, m.is_mine ? 'me' : 'other');
+          appendMsg(m.content, m.is_mine ? 'me' : 'other', m.image_url);
         });
         if(hasNew) scrollBottom('cp-messages');
       });
@@ -988,15 +1012,35 @@
     if(!currentSid) return;
     const inp = document.getElementById('cp-staff-input');
     const txt = inp.value.trim();
-    if(!txt) return;
-    appendMsg(txt,'me');
+    const imageFile = staffSelectedImageFile;
+    if(!txt && !imageFile) return;
+
+    if (imageFile) {
+      const localUrl = URL.createObjectURL(imageFile);
+      appendMsgWithTime(txt, 'me', null, localUrl);
+    } else {
+      appendMsg(txt, 'me');
+    }
+
     inp.value = '';
+    removeStaffPreview();
     scrollBottom('cp-messages');
+
+    let bodyData;
+    let headersData = {'X-CSRFToken':csrfToken};
+    if (imageFile) {
+      bodyData = new FormData();
+      bodyData.append('content', txt);
+      bodyData.append('image', imageFile);
+    } else {
+      bodyData = JSON.stringify({content: txt});
+      headersData['Content-Type'] = 'application/json';
+    }
 
     fetch(`/chat/staff/${currentSid}/send/`, {
       method:'POST',
-      headers:{'Content-Type':'application/json','X-CSRFToken':csrfToken},
-      body: JSON.stringify({content: txt})
+      headers: headersData,
+      body: bodyData
     })
     .then(r=>r.json())
     .then(d=>{ if(d.id) staffLastId = Math.max(staffLastId, d.id); });
@@ -1030,9 +1074,9 @@
   }
 
   // ── Helpers ──
-  function appendMsg(text, type){ appendMsgWithTime(text, type, null); }
+  function appendMsg(text, type, imageUrl){ appendMsgWithTime(text, type, null, imageUrl); }
 
-  function appendMsgWithTime(text, type, timeStr){
+  function appendMsgWithTime(text, type, timeStr, imageUrl){
     const el = document.getElementById('cp-messages');
     if(!el) return;
 
@@ -1070,7 +1114,24 @@
     wrap.className = 'msg-bubble-wrap';
     const bub   = document.createElement('div');
     bub.className = 'msg-bubble ' + type;
-    bub.textContent = text;
+    
+    if (imageUrl) {
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.className = 'chat-msg-img';
+      img.style.cursor = 'pointer';
+      img.onclick = function() { zoomChatImage(imageUrl); };
+      bub.appendChild(img);
+      if (text) {
+        const txtDiv = document.createElement('div');
+        txtDiv.className = 'chat-msg-text';
+        txtDiv.textContent = text;
+        txtDiv.style.marginTop = '6px';
+        bub.appendChild(txtDiv);
+      }
+    } else {
+      bub.textContent = text;
+    }
     
     const t = document.createElement('div');
     t.className = 'msg-time'; t.textContent = timeStr;
@@ -1107,5 +1168,134 @@
   function scrollBottom(id){ setTimeout(()=>{ const e=document.getElementById(id); if(e) e.scrollTo({top: e.scrollHeight, behavior: 'smooth'}); },30); }
   function stopAllPolls(){ clearInterval(pollTimer); clearInterval(staffPollT); clearInterval(sessionPollT); }
   function escHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+  // Image zoom lightbox
+  function zoomChatImage(src) {
+    const lightbox = document.getElementById('chat-image-lightbox');
+    const lightboxImg = document.getElementById('chat-lightbox-img');
+    if (lightbox && lightboxImg) {
+      lightboxImg.src = src;
+      lightbox.classList.add('show');
+    }
+  }
+
+  window.closeChatLightbox = function() {
+    const lightbox = document.getElementById('chat-image-lightbox');
+    if (lightbox) {
+      lightbox.classList.remove('show');
+    }
+  };
+
+  // Previews
+  function showPreview(file, imgEl, containerEl, isCust) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      imgEl.src = e.target.result;
+      containerEl.style.display = 'flex';
+      scrollBottom('cp-messages');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  window.removeCustPreview = function() {
+    custSelectedImageFile = null;
+    const f = document.getElementById('cp-cust-file');
+    if (f) f.value = '';
+    const container = document.getElementById('cp-cust-preview-container');
+    if (container) container.style.display = 'none';
+    const img = document.getElementById('cp-cust-preview-img');
+    if (img) img.src = '';
+  };
+
+  window.removeStaffPreview = function() {
+    staffSelectedImageFile = null;
+    const f = document.getElementById('cp-staff-file');
+    if (f) f.value = '';
+    const container = document.getElementById('cp-staff-preview-container');
+    if (container) container.style.display = 'none';
+    const img = document.getElementById('cp-staff-preview-img');
+    if (img) img.src = '';
+  };
+
+  function initImageListeners() {
+    // Cust File Input
+    const custFile = document.getElementById('cp-cust-file');
+    if (custFile) {
+      custFile.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+          custSelectedImageFile = e.target.files[0];
+          showPreview(
+            custSelectedImageFile,
+            document.getElementById('cp-cust-preview-img'),
+            document.getElementById('cp-cust-preview-container'),
+            true
+          );
+        }
+      });
+    }
+
+    // Cust Paste
+    const custInput = document.getElementById('cp-cust-input');
+    if (custInput) {
+      custInput.addEventListener('paste', function(e) {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') !== -1) {
+            const file = items[i].getAsFile();
+            custSelectedImageFile = file;
+            showPreview(
+              custSelectedImageFile,
+              document.getElementById('cp-cust-preview-img'),
+              document.getElementById('cp-cust-preview-container'),
+              true
+            );
+            e.preventDefault();
+            break;
+          }
+        }
+      });
+    }
+
+    // Staff File Input
+    const staffFile = document.getElementById('cp-staff-file');
+    if (staffFile) {
+      staffFile.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+          staffSelectedImageFile = e.target.files[0];
+          showPreview(
+            staffSelectedImageFile,
+            document.getElementById('cp-staff-preview-img'),
+            document.getElementById('cp-staff-preview-container'),
+            false
+          );
+        }
+      });
+    }
+
+    // Staff Paste
+    const staffInput = document.getElementById('cp-staff-input');
+    if (staffInput) {
+      staffInput.addEventListener('paste', function(e) {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') !== -1) {
+            const file = items[i].getAsFile();
+            staffSelectedImageFile = file;
+            showPreview(
+              staffSelectedImageFile,
+              document.getElementById('cp-staff-preview-img'),
+              document.getElementById('cp-staff-preview-container'),
+              false
+            );
+            e.preventDefault();
+            break;
+          }
+        }
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', initImageListeners);
+  setTimeout(initImageListeners, 200);
 
 })();

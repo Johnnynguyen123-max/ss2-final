@@ -55,7 +55,17 @@
   {# ═══ STAFF: View Chat ═══ #}
   <div id="cp-view-chat">
     <div id="cp-messages"></div>
+    <div id="cp-staff-preview-container" class="chat-input-preview-container" style="display:none;">
+      <div class="preview-wrapper">
+        <img id="cp-staff-preview-img" src="" alt="preview" />
+        <button class="preview-remove" onclick="removeStaffPreview()"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
     <div class="cp-input-row">
+      <input type="file" id="cp-staff-file" style="display:none;" accept="image/*" />
+      <button class="cp-upload-btn" onclick="document.getElementById('cp-staff-file').click()" title="Đính kèm ảnh">
+        <i class="fas fa-image"></i>
+      </button>
       <input class="cp-input" id="cp-staff-input" type="text"
              placeholder="Nhắn tin cho khách..." maxlength="500"
              onkeydown="if(event.key==='Enter')staffSend()" autocomplete="off"/>
@@ -150,7 +160,17 @@
     </div>
     {% endif %}
     <div id="cp-messages"></div>
+    <div id="cp-cust-preview-container" class="chat-input-preview-container" style="display:none;">
+      <div class="preview-wrapper">
+        <img id="cp-cust-preview-img" src="" alt="preview" />
+        <button class="preview-remove" onclick="removeCustPreview()"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
     <div class="cp-input-row">
+      <input type="file" id="cp-cust-file" style="display:none;" accept="image/*" {% if not user.is_authenticated %}disabled{% endif %} />
+      <button class="cp-upload-btn" onclick="document.getElementById('cp-cust-file').click()" {% if not user.is_authenticated %}disabled{% endif %} title="Đính kèm ảnh">
+        <i class="fas fa-image"></i>
+      </button>
       <input class="cp-input" id="cp-cust-input" type="text"
              placeholder="Nhắn tin..." maxlength="500"
              onkeydown="if(event.key==='Enter')custSend()" autocomplete="off"
@@ -161,6 +181,12 @@
   {% endif %}
 
 </div>{# /chat-panel #}
+
+{# Lightbox Zoom Modal #}
+<div id="chat-image-lightbox" class="chat-lightbox" onclick="closeChatLightbox()">
+  <span class="chat-lightbox-close">&times;</span>
+  <img class="chat-lightbox-content" id="chat-lightbox-img" alt="Zoomed chat image">
+</div>
 
 {# JS chat widget — load sau cùng #}
 <script src="{% static 'app/js/chat.js' %}?v=2"></script>

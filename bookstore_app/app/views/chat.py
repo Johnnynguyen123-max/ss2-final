@@ -19,17 +19,32 @@ def customer_send(request):
     if request.user.is_staff:
         return JsonResponse({'error': 'Forbidden'}, status=403)
 
-    data = json.loads(request.body)
-    content = data.get('content', '').strip()
-    if not content:
+    content = ""
+    image = None
+
+    if request.content_type == 'application/json':
+        try:
+            data = json.loads(request.body)
+            content = data.get('content', '').strip()
+        except Exception:
+            pass
+    else:
+        content = request.POST.get('content', '').strip()
+        image = request.FILES.get('image')
+
+    if not content and not image:
         return JsonResponse({'error': 'Tin nhắn trống'}, status=400)
 
     session, _ = ChatSession.objects.get_or_create(customer=request.user)
     session.last_message_at = timezone.now()
     session.save(update_fields=['last_message_at'])
 
-    msg = ChatMessage.objects.create(session=session, sender=request.user, content=content)
-    return JsonResponse({'id': msg.id, 'created_at': msg.created_at.strftime('%H:%M')})
+    msg = ChatMessage.objects.create(session=session, sender=request.user, content=content, image=image)
+    return JsonResponse({
+        'id': msg.id,
+        'created_at': msg.created_at.strftime('%H:%M'),
+        'image_url': msg.image.url if msg.image else None
+    })
 
 
 # ── CHAT – KHÁCH HÀNG POLL TIN MỚI ──────────────────────────────────────────
@@ -59,6 +74,7 @@ def customer_poll(request):
             {
                 'id': m.id,
                 'content': m.content,
+                'image_url': m.image.url if m.image else None,
                 'is_mine': m.sender_id == request.user.id,
                 'created_at': m.created_at.strftime('%H:%M'),
             }
@@ -78,12 +94,19 @@ def staff_sessions(request):
     result = []
     for s in sessions:
         last = s.last_message()
+        last_msg_text = ''
+        if last:
+            if last.content:
+                last_msg_text = last.content[:60]
+            elif last.image:
+                last_msg_text = '[Hình ảnh]'
+
         result.append({
             'id': s.id,
             'customer_name': s.customer.get_full_name() or s.customer.username,
             'customer_id': s.customer.id,
             'unread': s.unread_for_staff(),
-            'last_message': last.content[:60] if last else '',
+            'last_message': last_msg_text,
             'last_time': last.created_at.strftime('%H:%M') if last else '',
         })
 
@@ -113,6 +136,7 @@ def staff_poll(request, session_id):
             {
                 'id': m.id,
                 'content': m.content,
+                'image_url': m.image.url if m.image else None,
                 'is_mine': m.sender.is_staff,
                 'sender_name': m.sender.get_full_name() or m.sender.username,
                 'created_at': m.created_at.strftime('%H:%M'),
@@ -134,16 +158,31 @@ def staff_send(request, session_id):
     except ChatSession.DoesNotExist:
         return JsonResponse({'error': 'Session không tồn tại'}, status=404)
 
-    data = json.loads(request.body)
-    content = data.get('content', '').strip()
-    if not content:
+    content = ""
+    image = None
+
+    if request.content_type == 'application/json':
+        try:
+            data = json.loads(request.body)
+            content = data.get('content', '').strip()
+        except Exception:
+            pass
+    else:
+        content = request.POST.get('content', '').strip()
+        image = request.FILES.get('image')
+
+    if not content and not image:
         return JsonResponse({'error': 'Tin nhắn trống'}, status=400)
 
     session.last_message_at = timezone.now()
     session.save(update_fields=['last_message_at'])
 
-    msg = ChatMessage.objects.create(session=session, sender=request.user, content=content)
-    return JsonResponse({'id': msg.id, 'created_at': msg.created_at.strftime('%H:%M')})
+    msg = ChatMessage.objects.create(session=session, sender=request.user, content=content, image=image)
+    return JsonResponse({
+        'id': msg.id,
+        'created_at': msg.created_at.strftime('%H:%M'),
+        'image_url': msg.image.url if msg.image else None
+    })
 
 
 # ── AI CHATBOT (SERVER-SIDE) ──────────────────────────────────────────────────

@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="920" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="User
+/ Browser" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontSize=10;fontStyle=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="15" y="10" width="110" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="Django
+ai_chat.py" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontSize=10;fontStyle=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="175" y="10" width="110" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="SQLite DB
+(Context)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontSize=10;fontStyle=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="365" y="10" width="110" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="5" value="System Prompt
+Builder" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontSize=10;fontStyle=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="555" y="10" width="110" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="6" value="Claude API
+(Anthropic)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontSize=10;fontStyle=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="745" y="10" width="110" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="7" value="BotChat DB
+(History)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fontSize=10;fontStyle=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="935" y="10" width="110" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="8" value="" style="html=1;fillColor=none;strokeColor=#bbb;dashed=1;strokeWidth=1;" vertex="1" parent="1">
+      <mxGeometry x="69" y="56" width="2" height="870" as="geometry"/>
+    </mxCell>
+    <mxCell id="9" value="" style="html=1;fillColor=none;strokeColor=#bbb;dashed=1;strokeWidth=1;" vertex="1" parent="1">
+      <mxGeometry x="229" y="56" width="2" height="870" as="geometry"/>
+    </mxCell>
+    <mxCell id="10" value="" style="html=1;fillColor=none;strokeColor=#bbb;dashed=1;strokeWidth=1;" vertex="1" parent="1">
+      <mxGeometry x="419" y="56" width="2" height="870" as="geometry"/>
+    </mxCell>
+    <mxCell id="11" value="" style="html=1;fillColor=none;strokeColor=#bbb;dashed=1;strokeWidth=1;" vertex="1" parent="1">
+      <mxGeometry x="609" y="56" width="2" height="870" as="geometry"/>
+    </mxCell>
+    <mxCell id="12" value="" style="html=1;fillColor=none;strokeColor=#bbb;dashed=1;strokeWidth=1;" vertex="1" parent="1">
+      <mxGeometry x="799" y="56" width="2" height="870" as="geometry"/>
+    </mxCell>
+    <mxCell id="13" value="" style="html=1;fillColor=none;strokeColor=#bbb;dashed=1;strokeWidth=1;" vertex="1" parent="1">
+      <mxGeometry x="989" y="56" width="2" height="870" as="geometry"/>
+    </mxCell>
+    <mxCell id="14" value="" style="html=1;strokeWidth=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="65" y="70" width="10" height="820" as="geometry"/>
+    </mxCell>
+    <mxCell id="15" value="" style="html=1;strokeWidth=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="225" y="88" width="10" height="790" as="geometry"/>
+    </mxCell>
+    <mxCell id="16" value="" style="html=1;strokeWidth=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="415" y="180" width="10" height="370" as="geometry"/>
+    </mxCell>
+    <mxCell id="17" value="" style="html=1;strokeWidth=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="605" y="560" width="10" height="130" as="geometry"/>
+    </mxCell>
+    <mxCell id="18" value="" style="html=1;strokeWidth=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="795" y="640" width="10" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="19" value="" style="html=1;strokeWidth=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="985" y="88" width="10" height="400" as="geometry"/>
+    </mxCell>
+    <mxCell id="20" value="Step 1 – User submits message" style="text;html=1;strokeColor=none;fillColor=#eff6ff;align=left;verticalAlign=middle;fontSize=9;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="5" y="78" width="1060" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="21" value="POST /chat/bot/stream/ { message }" style="endArrow=block;endFill=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="70" y="96" as="sourcePoint"/>
+        <mxPoint x="230" y="96" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="22" value="Rate limit check (1 req/s)" style="rounded=1;fillColor=#fff7ed;strokeColor=#fb923c;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="170" y="106" width="120" height="22" as="geometry"/>
+    </mxCell>
+    <mxCell id="23" value="Step 2 – Save user message" style="text;html=1;strokeColor=none;fillColor=#f0fdf4;align=left;verticalAlign=middle;fontSize=9;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="5" y="136" width="1060" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="24" value="BotChatMessage.create(role='user', content)" style="endArrow=block;endFill=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="230" y="152" as="sourcePoint"/>
+        <mxPoint x="990" y="152" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="25" value="saved (msg_id)" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="990" y="168" as="sourcePoint"/>
+        <mxPoint x="230" y="168" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="26" value="Step 3 – RAG Context Retrieval (5 queries)" style="text;html=1;strokeColor=none;fillColor=#fffbeb;align=left;verticalAlign=middle;fontSize=9;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="5" y="186" width="1060" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="27" value="Query recent orders + trackings (last 5)" style="endArrow=block;endFill=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="230" y="204" as="sourcePoint"/>
+        <mxPoint x="420" y="204" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="28" value="orders_info string" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="220" as="sourcePoint"/>
+        <mxPoint x="230" y="220" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="29" value="Query wishlist + category frequency" style="endArrow=block;endFill=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="230" y="238" as="sourcePoint"/>
+        <mxPoint x="420" y="238" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="30" value="wishlist_info + fav_categories" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="254" as="sourcePoint"/>
+        <mxPoint x="230" y="254" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="31" value="Query session recently_viewed books" style="endArrow=block;endFill=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="230" y="272" as="sourcePoint"/>
+        <mxPoint x="420" y="272" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="32" value="viewed_info string" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="288" as="sourcePoint"/>
+        <mxPoint x="230" y="288" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="33" value="RAG: keywords → Q(title|author|category icontains)" style="endArrow=block;endFill=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="230" y="306" as="sourcePoint"/>
+        <mxPoint x="420" y="306" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="34" value="rag_books queryset (max 8 results)" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="322" as="sourcePoint"/>
+        <mxPoint x="230" y="322" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="35" value="Query new arrivals (90d) + bestsellers (top 5)" style="endArrow=block;endFill=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="230" y="340" as="sourcePoint"/>
+        <mxPoint x="420" y="340" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="36" value="new_books_info + bestseller_info" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="356" as="sourcePoint"/>
+        <mxPoint x="230" y="356" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="37" value="Load conversation history (last 10 msgs)" style="endArrow=block;endFill=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="230" y="374" as="sourcePoint"/>
+        <mxPoint x="990" y="374" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="38" value="messages_payload list" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="990" y="392" as="sourcePoint"/>
+        <mxPoint x="230" y="392" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="39" value="Step 4 – Build System Prompt with all context" style="text;html=1;strokeColor=none;fillColor=#fdf4ff;align=left;verticalAlign=middle;fontSize=9;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="5" y="412" width="1060" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="40" value="build_system_prompt(store_info + all_context)" style="endArrow=block;endFill=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="230" y="430" as="sourcePoint"/>
+        <mxPoint x="610" y="430" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="41" value="Includes: store info · orders · wishlist
+RAG results · new arrivals · bestsellers" style="rounded=1;fillColor=#faf5ff;strokeColor=#c084fc;fontSize=8;" vertex="1" parent="1">
+      <mxGeometry x="535" y="445" width="150" height="38" as="geometry"/>
+    </mxCell>
+    <mxCell id="42" value="system_prompt string" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="610" y="496" as="sourcePoint"/>
+        <mxPoint x="230" y="496" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="43" value="Step 5 – Call Claude API (SSE Streaming)" style="text;html=1;strokeColor=none;fillColor=#fff1f2;align=left;verticalAlign=middle;fontSize=9;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="5" y="516" width="1060" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="44" value="POST api.anthropic.com/v1/messages (stream=True, model=claude-sonnet-4)" style="endArrow=block;endFill=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="230" y="534" as="sourcePoint"/>
+        <mxPoint x="800" y="534" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="45" value="SSE: {"chunk": "Chao..."} token 1" style="endArrow=block;endFill=1;dashed=1;strokeColor=#dc2626;fontColor=#dc2626;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="800" y="560" as="sourcePoint"/>
+        <mxPoint x="70" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="46" value="SSE: {"chunk": " ban ..."} token 2" style="endArrow=block;endFill=1;dashed=1;strokeColor=#dc2626;fontColor=#dc2626;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="800" y="578" as="sourcePoint"/>
+        <mxPoint x="70" y="578" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="47" value="... streaming token by token ..." style="text;html=1;fillColor=none;strokeColor=none;fontSize=9;fontStyle=2;fontColor=#dc2626;" vertex="1" parent="1">
+      <mxGeometry x="90" y="593" width="200" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="48" value="SSE: {"chunk": "[SUGGESTIONS:...]"} final" style="endArrow=block;endFill=1;dashed=1;strokeColor=#dc2626;fontColor=#dc2626;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="800" y="614" as="sourcePoint"/>
+        <mxPoint x="70" y="614" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="49" value="Step 6 – Post-processing: Parse special tags" style="text;html=1;strokeColor=none;fillColor=#f0fdf4;align=left;verticalAlign=middle;fontSize=9;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="5" y="638" width="1060" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="50" value="[SUGGESTIONS] → extract chip list
+[SET_PRICE_ALERT: book_id=X, target=Y] → PriceAlert.create()
+[TRACK_GUEST_ORDER: order_id=Z] → session update" style="rounded=1;fillColor=#f0fdf4;strokeColor=#4ade80;fontSize=9;align=left;" vertex="1" parent="1">
+      <mxGeometry x="170" y="656" width="350" height="52" as="geometry"/>
+    </mxCell>
+    <mxCell id="51" value="Step 7 – Save AI response + send metadata" style="text;html=1;strokeColor=none;fillColor=#ecfdf5;align=left;verticalAlign=middle;fontSize=9;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="5" y="722" width="1060" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="52" value="BotChatMessage.create(role='assistant', content)" style="endArrow=block;endFill=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="230" y="740" as="sourcePoint"/>
+        <mxPoint x="990" y="740" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="53" value="SSE: {"metadata": {books, orders, suggestions, alert}}" style="endArrow=open;endFill=0;dashed=1;html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="230" y="760" as="sourcePoint"/>
+        <mxPoint x="70" y="760" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="54" value="Step 8 – Browser renders response + book cards + chips" style="text;html=1;strokeColor=none;fillColor=#eff6ff;align=left;verticalAlign=middle;fontSize=9;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="5" y="780" width="1060" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="55" value="Typing animation complete
+Book cards + suggestion chips rendered" style="rounded=1;fillColor=#dbeafe;strokeColor=#2563eb;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="10" y="796" width="120" height="38" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
