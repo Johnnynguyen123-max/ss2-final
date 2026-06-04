@@ -4,6 +4,25 @@
 
 {% block content %}
 <div class="container cart-page-container">
+    
+    <!-- Checkout Progress Bar -->
+    <div class="checkout-progress-container">
+        <div class="progress-step active">
+            <div class="step-icon"><i class="fas fa-shopping-cart"></i></div>
+            <div class="step-label">Giỏ hàng</div>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step">
+            <div class="step-icon"><i class="fas fa-shipping-fast"></i></div>
+            <div class="step-label">Thông tin giao hàng</div>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step">
+            <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="step-label">Hoàn tất đặt hàng</div>
+        </div>
+    </div>
+
     <h1 class="cart-page-title">Giỏ hàng của bạn</h1>
 
     {% if cart_items %}
@@ -11,74 +30,81 @@
         
         <!-- Cart Items List -->
         <div class="cart-items-wrapper">
-            <table class="cart-table">
-                <thead>
-                    <tr>
-                        <th class="cart-header-product">Sản phẩm</th>
-                        <th>Đơn giá</th>
-                        <th class="cart-header-qty">Số lượng</th>
-                        <th class="cart-header-total">Thành tiền</th>
-                        <th class="cart-header-remove">Xóa</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in cart_items %}
-                    <tr class="cart-item-row">
-                        <td>
-                            <div class="cart-book-item">
-                                {% if item.book.image %}
-                                    <img src="{{ item.book.image.url }}" class="cart-book-img">
-                                {% else %}
-                                    <div class="cart-book-placeholder">
-                                        <i class="fas fa-book"></i>
-                                    </div>
-                                {% endif %}
-                                <div>
-                                    <strong class="cart-book-title">{{ item.book.title }}</strong>
-                                    <small class="cart-book-author">{{ item.book.author }}</small>
+            <div class="cart-items-list">
+                {% for item in cart_items %}
+                <div class="cart-item-card" data-book-id="{{ item.book.id }}">
+                    <div class="cart-item-info">
+                        <div class="cart-book-item">
+                            {% if item.book.image %}
+                                <img src="{{ item.book.image.url }}" class="cart-book-img" alt="{{ item.book.title }}">
+                            {% else %}
+                                <div class="cart-book-placeholder">
+                                    <i class="fas fa-book"></i>
                                 </div>
+                            {% endif %}
+                            <div class="cart-book-details">
+                                <strong class="cart-book-title">{{ item.book.title }}</strong>
+                                <span class="cart-book-author">Tác giả: {{ item.book.author }}</span>
+                                <span class="cart-book-price-mobile">{{ item.book.price|floatformat:0 }}đ</span>
                             </div>
-                        </td>
-                        <td class="cart-book-price">{{ item.book.price|floatformat:0 }}đ</td>
-                        
-                        <td class="cart-qty-col">
-                            <div class="qty-selector">
-                                <button onclick="updateQuantity({{ item.book.id }}, 'decrease')">-</button>
-                                <span>{{ item.quantity }}</span>
-                                <button onclick="updateQuantity({{ item.book.id }}, 'increase')">+</button>
-                            </div>
-                        </td>
-
-                        <td class="cart-subtotal">{{ item.subtotal|floatformat:0 }}đ</td>
-                        
-                        <td class="cart-remove-col">
-                            <button onclick="removeItem({{ item.book.id }})" class="cart-remove-btn">
-                                <i class="far fa-trash-alt"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="cart-item-price-col">
+                        <span class="cart-item-label">Đơn giá</span>
+                        <span class="cart-book-price">{{ item.book.price|floatformat:0 }}đ</span>
+                    </div>
+                    
+                    <div class="cart-item-qty-col">
+                        <span class="cart-item-label">Số lượng</span>
+                        <div class="qty-selector">
+                            <button onclick="updateQuantity({{ item.book.id }}, 'decrease')" title="Giảm số lượng">
+                                <i class="fas fa-minus"></i>
                             </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            <span>{{ item.quantity }}</span>
+                            <button onclick="updateQuantity({{ item.book.id }}, 'increase')" title="Tăng số lượng">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="cart-item-subtotal-col">
+                        <span class="cart-item-label">Thành tiền</span>
+                        <span class="cart-subtotal">{{ item.subtotal|floatformat:0 }}đ</span>
+                    </div>
+                    
+                    <div class="cart-item-remove-col">
+                        <button onclick="removeItem({{ item.book.id }})" class="cart-remove-btn" title="Xóa khỏi giỏ hàng">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
 
         <!-- Checkout Card Summary -->
         <div class="cart-summary-wrapper">
             <div class="summary-box">
-                <h3 class="cart-summary-title">Đơn hàng</h3>
+                <h3 class="cart-summary-title"><i class="fas fa-receipt"></i> Tóm tắt đơn hàng</h3>
                 
                 <div class="cart-summary-row">
-                    <span>Tạm tính ({{ cart_items|length }} sản phẩm):</span>
-                    <span>{{ total_price|floatformat:0 }}đ</span>
+                    <span>Tạm tính ({{ cart_items|length }} mặt hàng):</span>
+                    <span class="summary-value">{{ total_price|floatformat:0 }}đ</span>
                 </div>
                 
+                <div class="cart-summary-row shipping-row">
+                    <span>Phí vận chuyển:</span>
+                    <span class="free-shipping">Miễn phí</span>
+                </div>
+
                 <div class="cart-summary-total">
                     <span>Tổng thanh toán:</span>
-                    <span>{{ total_price|floatformat:0 }}đ</span>
+                    <span class="total-price">{{ total_price|floatformat:0 }}đ</span>
                 </div>
                 
-                <a href="{% url 'checkout' %}" class="btn-submit">
-                    TIẾN HÀNH ĐẶT HÀNG
+                <a href="{% url 'checkout' %}" class="btn-submit btn-checkout-action">
+                    TIẾN HÀNH ĐẶT HÀNG <i class="fas fa-arrow-right"></i>
                 </a>
                 
                 <a href="{% url 'home' %}" class="cart-summary-back-link">
@@ -132,13 +158,35 @@ function updateQuantity(bookId, action) {
             'X-CSRFToken': getCookie('csrftoken')
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(err.message || 'Lỗi hệ thống'); });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.status === 'success') {
-            location.reload();
+            const card = document.querySelector(`.cart-item-card[data-book-id="${bookId}"]`);
+            if (card) {
+                card.querySelector('.qty-selector span').textContent = data.quantity;
+                card.querySelector('.cart-subtotal').textContent = data.subtotal.toLocaleString('vi-VN') + 'đ';
+            }
+            document.querySelector('.summary-value').textContent = data.total_price.toLocaleString('vi-VN') + 'đ';
+            document.querySelector('.total-price').textContent = data.total_price.toLocaleString('vi-VN') + 'đ';
+            const badge = document.getElementById('cart-count');
+            if (badge) {
+                badge.textContent = data.total_items;
+            }
         }
     })
-    .catch(error => console.error('Lỗi:', error));
+    .catch(error => {
+        Swal.fire({
+            title: 'Thông báo',
+            text: error.message || 'Có lỗi xảy ra',
+            icon: 'warning',
+            confirmButtonColor: 'var(--primary)'
+        });
+    });
 }
 
 // Remove item

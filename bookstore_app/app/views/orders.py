@@ -74,3 +74,59 @@ def confirm_received(request, order_id):
             message='Giao hàng thành công. Người mua đã xác nhận nhận hàng.'
         )
     return redirect('order_history')
+
+
+# ── XÁC NHẬN ĐƠN HÀNG THÀNH CÔNG ──────────────────────────────────────────────
+def order_success(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    return render(request, 'app/order_success.html', {
+        'order': order,
+        'order_items': order.items.all(),
+    })
+
+
+# ── TRA CỨU ĐƠN HÀNG GUEST ──────────────────────────────────────────────────
+def track_order_guest(request):
+    order = None
+    searched = False
+    error_msg = None
+    
+    order_id = (request.POST.get('order_id') or request.GET.get('order_id') or '').strip()
+    phone = (request.POST.get('phone') or request.GET.get('phone') or '').strip()
+    
+    if order_id or phone:
+        if order_id and phone:
+            try:
+                order = Order.objects.prefetch_related('items__book').get(id=order_id, phone=phone)
+            except (Order.DoesNotExist, ValueError):
+                error_msg = "Không tìm thấy đơn hàng phù hợp với mã đơn và số điện thoại đã cung cấp."
+            searched = True
+        else:
+            error_msg = "Vui lòng cung cấp cả mã đơn hàng và số điện thoại để tra cứu."
+            searched = True
+
+    return render(request, 'app/track_order.html', {
+        'order': order,
+        'searched': searched,
+        'error_msg': error_msg,
+        'order_id': order_id,
+        'phone': phone,
+    })
+
+
+# ── XÁC NHẬN ĐÃ NHẬN HÀNG GUEST ─────────────────────────────────────────────
+@require_POST
+def confirm_received_guest(request, order_id):
+    phone = request.POST.get('phone', '').strip()
+    order = get_object_or_404(Order, id=order_id, phone=phone)
+    if order.status == 'Shipped':
+        order.status = 'Received'
+        order.save(update_fields=['status'])
+        OrderTracking.objects.create(
+            order=order, status='Received',
+            message='Giao hàng thành công. Khách vãng lai đã xác nhận nhận hàng.'
+        )
+        messages.success(request, "Cảm ơn bạn đã xác nhận đã nhận hàng thành công!")
+    return redirect(f'/track-order/?order_id={order.id}&phone={order.phone}')
+
+

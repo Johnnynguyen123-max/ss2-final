@@ -134,6 +134,22 @@ def staff_order_detail(request, order_id):
     return render(request, 'app/staff_order_detail.html', {'order': order, 'items': items})
 
 
+@user_passes_test(is_staff)
+@require_POST
+def staff_confirm_delivery(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    if order.status == 'Shipped':
+        order.status = 'Received'
+        order.save(update_fields=['status'])
+        OrderTracking.objects.create(
+            order=order, status='Received',
+            message='Giao hàng thành công. Nhân viên cửa hàng đã xác nhận hoàn tất giao hàng.'
+        )
+        messages.success(request, f"Đơn hàng #{order.id} đã hoàn tất thành công.")
+    return redirect('manage_orders')
+
+
+
 # ── QUẢN LÝ SÁCH (STAFF) ─────────────────────────────────────────────────────
 @user_passes_test(is_staff)
 def staff_book_list(request):
@@ -217,3 +233,93 @@ def staff_flash_sale_toggle(request):
     status = 'bật' if config.is_active else 'tắt'
     messages.success(request, f'Flash Sale đã {status}.')
     return redirect('staff_flash_sale')
+
+
+@user_passes_test(is_staff)
+def staff_coupon_list(request):
+    coupons = Coupon.objects.all().order_by('-valid_until')
+    return render(request, 'app/staff_coupon_list.html', {'coupons': coupons})
+
+
+@user_passes_test(is_staff)
+def staff_coupon_create(request):
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip().upper()
+        discount_percent = int(request.POST.get('discount_percent', 10))
+        valid_until = request.POST.get('valid_until')
+        max_uses = int(request.POST.get('max_uses', 100))
+        is_active = True
+
+        if not code or not valid_until:
+            messages.error(request, "Vui lòng nhập đầy đủ mã coupon và ngày hết hạn.")
+            return render(request, 'app/staff_coupon_form.html')
+
+        if Coupon.objects.filter(code=code).exists():
+            messages.error(request, f"Mã coupon '{code}' đã tồn tại.")
+            return render(request, 'app/staff_coupon_form.html')
+
+        try:
+            Coupon.objects.create(
+                code=code,
+                discount_percent=discount_percent,
+                valid_until=valid_until,
+                max_uses=max_uses,
+                is_active=is_active
+            )
+            messages.success(request, f"Đã thêm mới coupon '{code}' thành công.")
+            return redirect('staff_coupon_list')
+        except Exception as e:
+            messages.error(request, f"Lỗi tạo coupon: {str(e)}")
+            return render(request, 'app/staff_coupon_form.html')
+
+    return render(request, 'app/staff_coupon_form.html')
+
+
+@user_passes_test(is_staff)
+def staff_coupon_update(request, coupon_id):
+    coupon = get_object_or_404(Coupon, id=coupon_id)
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip().upper()
+        discount_percent = int(request.POST.get('discount_percent', 10))
+        valid_until = request.POST.get('valid_until')
+        max_uses = int(request.POST.get('max_uses', 100))
+        is_active = True
+
+        if not code or not valid_until:
+            messages.error(request, "Vui lòng điền đầy đủ mã coupon và ngày hết hạn.")
+            return render(request, 'app/staff_coupon_form.html', {'coupon': coupon})
+
+        # Kiểm tra trùng mã (trừ chính nó)
+        if Coupon.objects.filter(code=code).exclude(id=coupon.id).exists():
+            messages.error(request, f"Mã coupon '{code}' đã được sử dụng bởi coupon khác.")
+            return render(request, 'app/staff_coupon_form.html', {'coupon': coupon})
+
+        try:
+            coupon.code = code
+            coupon.discount_percent = discount_percent
+            coupon.valid_until = valid_until
+            coupon.max_uses = max_uses
+            coupon.is_active = is_active
+            coupon.save()
+            messages.success(request, f"Đã cập nhật coupon '{code}' thành công.")
+            return redirect('staff_coupon_list')
+        except Exception as e:
+            messages.error(request, f"Lỗi cập nhật coupon: {str(e)}")
+            return render(request, 'app/staff_coupon_form.html', {'coupon': coupon})
+
+    # Đưa định dạng ngày về YYYY-MM-DD để đưa vào input date
+    formatted_date = coupon.valid_until.strftime('%Y-%m-%d') if coupon.valid_until else ''
+    return render(request, 'app/staff_coupon_form.html', {
+        'coupon': coupon,
+        'formatted_date': formatted_date
+    })
+
+
+@user_passes_test(is_staff)
+@require_POST
+def staff_coupon_delete(request, coupon_id):
+    coupon = get_object_or_404(Coupon, id=coupon_id)
+    code = coupon.code
+    coupon.delete()
+    messages.success(request, f"Đã xóa coupon '{code}' thành công.")
+    return redirect('staff_coupon_list')

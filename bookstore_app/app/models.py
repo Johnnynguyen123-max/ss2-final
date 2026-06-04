@@ -100,7 +100,7 @@ class Order(models.Model):
         ('Cancelled',  'Đã hủy'),
     )
 
-    user            = models.ForeignKey(User, on_delete=models.CASCADE)
+    user            = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     full_name       = models.CharField(max_length=255)
     phone           = models.CharField(max_length=20)
     address         = models.TextField()
@@ -208,5 +208,45 @@ class FlashSaleConfig(models.Model):
         end_minutes   = self.end_hour   * 60 + self.end_minute
         if start_minutes < end_minutes:
             return start_minutes <= now_minutes < end_minutes
-        # Qua nửa đêm
         return now_minutes >= start_minutes or now_minutes < end_minutes
+
+
+class BotChatSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='bot_sessions')
+    session_key = models.CharField(max_length=255, null=True, blank=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_message_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-last_message_at']
+
+    def __str__(self):
+        if self.user:
+            return f"BotSession – {self.user.username}"
+        return f"BotSession Guest – {self.session_key[:8] if self.session_key else 'Unknown'}"
+
+
+class BotChatMessage(models.Model):
+    session = models.ForeignKey(BotChatSession, on_delete=models.CASCADE, related_name='messages')
+    role = models.CharField(max_length=10, choices=[('user', 'User'), ('assistant', 'AI Bot')])
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    rating = models.IntegerField(default=0)  # 0: neutral, 1: thumbs up, -1: thumbs down
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.role}: {self.content[:30]}"
+
+
+class PriceAlert(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='price_alerts')
+    session_key = models.CharField(max_length=255, null=True, blank=True, db_index=True)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='price_alerts')
+    target_price = models.DecimalField(max_digits=10, decimal_places=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Alert for {self.book.title} @ {self.target_price}"

@@ -1,0 +1,164 @@
+{% extends 'app/base.html' %}
+
+{% block title %}Tra cứu đơn hàng - DDC Books{% endblock %}
+{% block sidebar %}
+{% endblock sidebar %}
+
+{% block content %}
+<div class="container track-order-page-container">
+    
+    <div class="track-search-card">
+        <h1 class="track-title"><i class="fas fa-shipping-fast"></i> Tra cứu đơn hàng</h1>
+        <p class="track-subtitle">Nhập mã đơn hàng và số điện thoại mua hàng để kiểm tra trạng thái vận chuyển tức thì.</p>
+        
+        <form method="GET" action="{% url 'track_order_guest' %}" class="track-form">
+            <div class="track-form-grid">
+                <div class="track-input-group">
+                    <label for="order-id-input"><i class="fas fa-hashtag"></i> Mã đơn hàng</label>
+                    <input type="text" id="order-id-input" name="order_id" required value="{{ order_id|default:'' }}" placeholder="Ví dụ: 12">
+                </div>
+                <div class="track-input-group">
+                    <label for="phone-input"><i class="fas fa-phone"></i> Số điện thoại</label>
+                    <input type="tel" id="phone-input" name="phone" required value="{{ phone|default:'' }}" placeholder="Ví dụ: 0912345678">
+                </div>
+            </div>
+            <button type="submit" class="btn-track-submit">
+                <i class="fas fa-search"></i> TÌM KIẾM ĐƠN HÀNG
+            </button>
+        </form>
+
+        {% if error_msg %}
+        <div class="track-error-box">
+            <i class="fas fa-exclamation-circle"></i> {{ error_msg }}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if searched and order %}
+    <!-- Tracking Results Section -->
+    <div class="track-results-wrapper">
+        
+        <!-- Order Progress Steps visualizer -->
+        <div class="track-status-progress-card">
+            <h3 class="results-card-title">Trạng thái đơn hàng #{{ order.id }}</h3>
+            <div class="tracking-progress-steps">
+                {% with s=order.status %}
+                <div class="track-step {% if s != 'Cancelled' %}active-step{% endif %}">
+                    <div class="step-circle"><i class="fas fa-receipt"></i></div>
+                    <span class="step-text">Đã tiếp nhận</span>
+                </div>
+                <div class="track-line {% if s == 'Confirmed' or s == 'Shipped' or s == 'Received' %}active-line{% endif %}"></div>
+                
+                <div class="track-step {% if s == 'Confirmed' or s == 'Shipped' or s == 'Received' %}active-step{% endif %}">
+                    <div class="step-circle"><i class="fas fa-box-open"></i></div>
+                    <span class="step-text">Đã xác nhận</span>
+                </div>
+                <div class="track-line {% if s == 'Shipped' or s == 'Received' %}active-line{% endif %}"></div>
+                
+                <div class="track-step {% if s == 'Shipped' or s == 'Received' %}active-step{% endif %}">
+                    <div class="step-circle"><i class="fas fa-truck"></i></div>
+                    <span class="step-text">Đang giao</span>
+                </div>
+                <div class="track-line {% if s == 'Received' %}active-line{% endif %}"></div>
+                
+                <div class="track-step {% if s == 'Received' %}success-step{% endif %}">
+                    <div class="step-circle"><i class="fas fa-clipboard-check"></i></div>
+                    <span class="step-text">Thành công</span>
+                </div>
+                {% endwith %}
+            </div>
+
+            {% if order.status == 'Cancelled' %}
+            <div class="order-cancelled-banner">
+                <i class="fas fa-times-circle"></i> ĐƠN HÀNG NÀY ĐÃ BỊ HỦY
+            </div>
+            {% endif %}
+
+            {% if order.status == 'Shipped' %}
+            <div style="margin-top: 25px; text-align: center; background: var(--white-warm); border: 1px dashed var(--primary); padding: 15px; border-radius: var(--radius-sm);">
+                <p style="font-size: 0.9rem; color: var(--text); font-weight: 500; margin: 0 0 10px 0;">Đơn hàng đang được giao đến bạn. Hãy xác nhận khi bạn đã nhận đủ hàng và hài lòng.</p>
+                <form method="POST" action="{% url 'confirm_received_guest' order.id %}" style="margin: 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="phone" value="{{ order.phone }}">
+                    <button type="submit" class="btn-primary-custom" style="background: #10b981; border: none; padding: 10px 20px; font-size: 0.9rem;" onclick="return confirm('Bạn xác nhận đã nhận được đầy đủ hàng?')">
+                        <i class="fas fa-check-double"></i> XÁC NHẬN ĐÃ NHẬN HÀNG
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="track-details-grid">
+            <!-- Delivery Info Details -->
+            <div class="track-card">
+                <h3 class="card-header-title"><i class="fas fa-map-marker-alt"></i> Địa chỉ giao hàng</h3>
+                <div class="track-info-list">
+                    <p><strong>Người nhận:</strong> {{ order.full_name }}</p>
+                    <p><strong>Số điện thoại:</strong> {{ order.phone }}</p>
+                    <p><strong>Địa chỉ:</strong> {{ order.address }}</p>
+                    {% if order.shipping_unit %}
+                    <p><strong>Đơn vị vận chuyển:</strong> {{ order.shipping_unit }}</p>
+                    {% endif %}
+                    <p><strong>Ngày đặt hàng:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
+
+            <!-- Items in Order -->
+            <div class="track-card">
+                <h3 class="card-header-title"><i class="fas fa-shopping-basket"></i> Danh sách sản phẩm</h3>
+                <div class="track-items-list">
+                    {% for item in order.items.all %}
+                    <div class="track-item-row">
+                        <div class="item-left">
+                            {% if item.book.image %}
+                                <img src="{{ item.book.image.url }}" class="item-img" alt="{{ item.book.title }}">
+                            {% else %}
+                                <div class="item-placeholder"><i class="fas fa-book"></i></div>
+                            {% endif %}
+                            <div>
+                                <span class="item-title">{{ item.book.title }}</span>
+                                <span class="item-qty">Số lượng: x{{ item.quantity }}</span>
+                            </div>
+                        </div>
+                        <span class="item-price">{{ item.price|floatformat:0 }}đ</span>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="track-total-box">
+                        <div class="total-row">
+                            <span>Phí vận chuyển:</span>
+                            <span class="free-shipping">Miễn phí</span>
+                        </div>
+                        {% if order.coupon %}
+                        <div class="total-row">
+                            <span>Giảm giá (Coupon):</span>
+                            <span class="discount">-{{ order.discount_amount|floatformat:0 }}đ</span>
+                        </div>
+                        {% endif %}
+                        <div class="total-row grand-total">
+                            <span>Tổng số tiền:</span>
+                            <span class="price">{{ order.total_price|floatformat:0 }}đ</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% elif searched %}
+        <div class="track-empty-results">
+            <div class="empty-results-icon"><i class="fas fa-search-minus"></i></div>
+            <h4>Không tìm thấy đơn hàng</h4>
+            <p>Vui lòng kiểm tra lại <strong>Mã đơn hàng</strong> (ví dụ: 12) và <strong>Số điện thoại</strong> chính xác khi đăng ký mua hàng.</p>
+        </div>
+    {% else %}
+        <!-- Guide block when page loaded first time -->
+        <div class="track-guide-card">
+            <div class="guide-icon"><i class="fas fa-info-circle"></i></div>
+            <h4>Cách lấy Mã đơn hàng?</h4>
+            <p>Mã đơn hàng được hiển thị ngay sau khi bạn đặt hàng thành công. Đối với thành viên, bạn có thể xem lại trong phần <strong>Lịch sử đơn hàng</strong> ở menu cá nhân.</p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

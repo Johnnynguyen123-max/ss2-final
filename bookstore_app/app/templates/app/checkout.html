@@ -11,6 +11,25 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <div class="container checkout-page-container">
+    
+    <!-- Checkout Progress Bar -->
+    <div class="checkout-progress-container">
+        <div class="progress-step done">
+            <div class="step-icon"><i class="fas fa-shopping-cart"></i></div>
+            <div class="step-label">Giỏ hàng</div>
+        </div>
+        <div class="progress-line done"></div>
+        <div class="progress-step active">
+            <div class="step-icon"><i class="fas fa-shipping-fast"></i></div>
+            <div class="step-label">Thông tin giao hàng</div>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step">
+            <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="step-label">Hoàn tất đặt hàng</div>
+        </div>
+    </div>
+
     <h1 class="checkout-page-title">Xác nhận đơn hàng</h1>
 
     <div class="checkout-layout">
@@ -55,6 +74,7 @@
                 </div>
 
                 <!-- Coupon entry row -->
+                {% if user.is_authenticated %}
                 <div class="coupon-row">
                   <label class="field-label">Mã giảm giá (nếu có)</label>
                   <div class="coupon-flex-row">
@@ -67,10 +87,35 @@
                     </button>
                   </div>
                   <div id="coupon-msg" class="coupon-msg-box"></div>
+
+                  {% if available_coupons %}
+                  <div class="available-coupons-section">
+                    <span class="available-coupons-title"><i class="fas fa-ticket-alt"></i> Mã giảm giá dành cho bạn:</span>
+                    <div class="coupons-grid">
+                      {% for cp in available_coupons %}
+                      <div class="coupon-badge-card" onclick="selectCoupon('{{ cp.code }}')" data-code="{{ cp.code }}" title="Nhấp để áp dụng mã {{ cp.code }}">
+                        <div class="coupon-badge-header">
+                          <span class="coupon-badge-code">{{ cp.code }}</span>
+                          <span class="coupon-badge-discount">Giảm {{ cp.discount_percent }}%</span>
+                        </div>
+                        <div class="coupon-badge-desc">Hạn dùng: {{ cp.valid_until|date:"d/m/Y" }}</div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  {% endif %}
                   
                   <input type="hidden" name="coupon_code" id="coupon-code-hidden" value="{{ coupon_code|default:'' }}">
                   <input type="hidden" name="final_total" id="final-total-hidden" value="{{ total_bill }}">
                 </div>
+                {% else %}
+                <div class="guest-checkout-note-box">
+                  <i class="fas fa-info-circle"></i>
+                  <span>Bạn đang đặt hàng dưới chế độ <strong>Khách vãng lai</strong>. Đăng ký hoặc đăng nhập tài khoản thành viên để áp dụng thêm coupon ưu đãi. <a href="{% url 'login' %}?next={% url 'checkout' %}" class="guest-login-link">Đăng nhập tại đây →</a></span>
+                  <input type="hidden" name="coupon_code" id="coupon-code-hidden" value="">
+                  <input type="hidden" name="final_total" id="final-total-hidden" value="{{ total_bill }}">
+                </div>
+                {% endif %}
 
                 <button type="submit" id="btn-submit" class="btn-submit">
                     XÁC NHẬN ĐẶT HÀNG
@@ -195,7 +240,11 @@
         const code = document.getElementById('coupon-input').value.trim().toUpperCase();
         const msgEl = document.getElementById('coupon-msg');
         const totalBill = parseInt('{{ total_bill }}') || 0;
-        if (!code) { msgEl.textContent = 'Vui lòng nhập mã coupon.'; msgEl.style.color = 'var(--error)'; return; }
+        if (!code) {
+            msgEl.textContent = 'Vui lòng nhập mã coupon.';
+            msgEl.style.color = 'var(--error)';
+            return;
+        }
 
         fetch('{% url "validate_coupon" %}', {
             method: 'POST',
@@ -214,6 +263,15 @@
                 document.getElementById('discount-amount').textContent = '-' + d.discount_amount.toLocaleString('vi-VN') + 'đ';
                 document.getElementById('discount-label').textContent  = 'Giảm ' + d.discount_percent + '%:';
                 document.getElementById('coupon-summary').style.display = 'block';
+
+                // Thêm active class cho badge coupon được áp dụng
+                document.querySelectorAll('.coupon-badge-card').forEach(card => {
+                    if (card.getAttribute('data-code') === d.code) {
+                        card.classList.add('active');
+                    } else {
+                        card.classList.remove('active');
+                    }
+                });
             } else {
                 msgEl.innerHTML = '❌ ' + d.message;
                 msgEl.style.color = 'var(--error)';
@@ -222,13 +280,38 @@
                 document.getElementById('final-total-hidden').value  = totalBill;
                 document.getElementById('final-total-display').textContent = totalBill.toLocaleString('vi-VN') + 'đ';
                 document.getElementById('coupon-summary').style.display = 'none';
+
+                // Bỏ active class cho tất cả
+                document.querySelectorAll('.coupon-badge-card').forEach(card => {
+                    card.classList.remove('active');
+                });
             }
         });
     }
+
+    function selectCoupon(code) {
+        document.getElementById('coupon-input').value = code;
+        applyCoupon();
+    }
+
     document.getElementById('coupon-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } });
 
+    // Tự động kiểm tra coupon nếu đã được nhập sẵn
+    window.addEventListener('DOMContentLoaded', () => {
+        const inputVal = document.getElementById('coupon-input')?.value;
+        if (inputVal && inputVal.trim()) {
+            applyCoupon();
+        }
+    });
+
     // --- FORM ACTIONS BLOCK ON SUBMIT ---
+    let isSubmitting = false;
     document.getElementById('checkout-form').onsubmit = function(e) {
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+        isSubmitting = true;
         const btn = document.getElementById('btn-submit');
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ĐANG XỬ LÝ...';

@@ -35,10 +35,14 @@ urlpatterns = [
     path('order/update/<int:order_id>/',    views.update_order_info,   name='update_order_info'),
     path('order-tracking/<int:order_id>/',  views.order_tracking,      name='order_tracking'),
     path('order/received/<int:order_id>/',  views.confirm_received,    name='confirm_received'),
+    path('order/received-guest/<int:order_id>/', views.confirm_received_guest, name='confirm_received_guest'),
+    path('order-success/<int:order_id>/',   views.order_success,       name='order_success'),
+    path('track-order/',                    views.track_order_guest,   name='track_order_guest'),
 
     # ── Quản lý đơn hàng (staff) ──────────────────────────────
     path('manage-orders/',                       views.manage_orders,      name='manage_orders'),
     path('confirm-order/<int:order_id>/',         views.confirm_order,      name='confirm_order'),
+    path('order/confirm-delivery/<int:order_id>/', views.staff_confirm_delivery, name='staff_confirm_delivery'),
     path('cancel-order/<int:order_id>/',          views.cancel_order,       name='cancel_order'),
     path('order/pack-and-ship/<int:order_id>/',   views.pack_and_ship,      name='pack_and_ship'),
     path('staff/order/<int:order_id>/',           views.staff_order_detail, name='staff_order_detail'),
@@ -55,6 +59,12 @@ urlpatterns = [
     path('staff/flash-sale/',                         views.staff_flash_sale,        name='staff_flash_sale'),
     path('staff/flash-sale/toggle/',                  views.staff_flash_sale_toggle, name='staff_flash_sale_toggle'),
 
+    # ── Quản lý Coupon (staff) ──────────────────────────────────────────────────
+    path('staff/coupons/',                        views.staff_coupon_list,       name='staff_coupon_list'),
+    path('staff/coupons/insert/',                 views.staff_coupon_create,     name='staff_coupon_create'),
+    path('staff/coupons/update/<int:coupon_id>/', views.staff_coupon_update,     name='staff_coupon_update'),
+    path('staff/coupons/delete/<int:coupon_id>/', views.staff_coupon_delete,     name='staff_coupon_delete'),
+
     # ── Chat ──────────────────────────────────────────────────
     path('chat/customer/send/',                   views.customer_send,   name='customer_send'),
     path('chat/customer/poll/',                   views.customer_poll,   name='customer_poll'),
@@ -63,7 +73,10 @@ urlpatterns = [
     path('chat/staff/<int:session_id>/send/',     views.staff_send,      name='staff_send'),
 
     # ── AI Bot (server-side) ───────────────────────────────────
-    path('chat/bot/',                             views.chat_bot,        name='chat_bot'),
+    path('chat/bot/',                             views.chat_bot,          name='chat_bot'),
+    path('chat/bot/stream/',                      views.chat_bot_stream,   name='chat_bot_stream'),
+    path('chat/bot/history/',                     views.chat_bot_history,  name='chat_bot_history'),
+    path('chat/bot/feedback/',                    views.chat_bot_feedback, name='chat_bot_feedback'),
 ]
 
 if settings.DEBUG:

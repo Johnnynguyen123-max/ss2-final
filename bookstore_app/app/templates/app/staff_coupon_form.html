@@ -1,0 +1,266 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}{% if coupon %}Chỉnh sửa Coupon {{ coupon.code }}{% else %}Tạo Coupon mới{% endif %} - DDC Books{% endblock %}
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+<style>
+.coupon-form-wrap {
+    max-width: 600px;
+    margin: 48px auto;
+    padding: 0 20px 60px;
+}
+.coupon-form-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+.coupon-form-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--beige);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+.coupon-form-header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--dark-brown);
+    margin: 0;
+}
+.coupon-form-header p {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin: 2px 0 0;
+}
+
+/* Card layout */
+.coupon-card {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 30px;
+    box-shadow: var(--shadow-sm);
+}
+
+.coupon-section-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.coupon-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--white-warm);
+}
+
+.coupon-field {
+    margin-bottom: 22px;
+}
+.coupon-field label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+.coupon-field label span {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 4px;
+}
+
+.coupon-input {
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-color);
+    background: var(--white-warm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    color: var(--text);
+    outline: none;
+    transition: var(--transition);
+    box-sizing: border-box;
+}
+.coupon-input:focus {
+    border-color: var(--primary);
+    background-color: white;
+}
+
+/* Checkbox Switch */
+.coupon-switch-label {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--white-warm);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 13px 16px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.coupon-switch-label input[type=checkbox] {
+    display: none;
+}
+.coupon-switch {
+    width: 44px;
+    height: 24px;
+    border-radius: 12px;
+    background: #ccc;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.25s;
+}
+.coupon-switch::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    transition: transform 0.25s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.coupon-switch-label.checked .coupon-switch {
+    background: var(--success);
+}
+.coupon-switch-label.checked .coupon-switch::after {
+    transform: translateX(20px);
+}
+.coupon-switch-text {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+/* Actions Row */
+.coupon-actions-row {
+    display: flex;
+    gap: 14px;
+    margin-top: 28px;
+}
+.coupon-btn-submit {
+    flex: 2;
+    padding: 13px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.coupon-btn-submit:hover {
+    background: var(--primary-hover);
+}
+.coupon-btn-cancel {
+    flex: 1;
+    padding: 13px;
+    background: white;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    text-decoration: none;
+}
+.coupon-btn-cancel:hover {
+    background: var(--white-warm);
+    color: var(--text);
+}
+</style>
+
+<div class="coupon-form-wrap">
+    <div class="coupon-form-header">
+        <div class="coupon-form-icon">
+            <i class="fas fa-ticket-alt"></i>
+        </div>
+        <div>
+            <h1>{% if coupon %}Chỉnh sửa Coupon{% else %}Tạo Coupon mới{% endif %}</h1>
+            <p>{% if coupon %}Cập nhật thông tin mã coupon {{ coupon.code }}{% else %}Thiết lập mã giảm giá ưu đãi mới{% endif %}</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for msg in messages %}
+        <div style="padding:12px 18px; border-radius:var(--radius-sm); margin-bottom:18px; font-size:0.88rem; font-weight:500;
+          {% if msg.tags == 'success' %}background:var(--success-bg);color:var(--success);border:1px solid #c3e6cb;
+          {% else %}background:var(--error-bg);color:var(--error);border:1px solid #f5c6cb;{% endif %}">
+          {{ msg }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="">
+        {% csrf_token %}
+        <div class="coupon-card">
+            <div class="coupon-section-title">Thông tin mã giảm giá</div>
+
+            <div class="coupon-field">
+                <label for="code">Mã Coupon <span>(Sẽ được chuyển sang chữ in hoa tự động)</span></label>
+                <input type="text" name="code" id="code" required class="coupon-input"
+                       placeholder="Ví dụ: COZYREAD10"
+                       value="{{ coupon.code|default:'' }}"
+                       oninput="this.value=this.value.toUpperCase()">
+            </div>
+
+            <div class="coupon-field">
+                <label for="discount_percent">Mức giảm giá (%) <span>(Chỉ nhập phần số phần trăm giảm)</span></label>
+                <input type="number" name="discount_percent" id="discount_percent" min="1" max="99" required class="coupon-input"
+                       placeholder="Ví dụ: 15"
+                       value="{{ coupon.discount_percent|default:10 }}">
+            </div>
+
+            <div class="coupon-field">
+                <label for="valid_until">Ngày hết hạn <span>(Coupon sẽ có hiệu lực đến hết ngày trước đó)</span></label>
+                <input type="date" name="valid_until" id="valid_until" required class="coupon-input"
+                       value="{{ formatted_date|default:'' }}">
+            </div>
+
+            <div class="coupon-field">
+                <label for="max_uses">Giới hạn số lần sử dụng <span>(Tổng số lượt dùng tối đa của toàn hệ thống)</span></label>
+                <input type="number" name="max_uses" id="max_uses" min="1" required class="coupon-input"
+                       placeholder="Ví dụ: 100"
+                       value="{{ coupon.max_uses|default:100 }}">
+            </div>
+
+
+
+            <div class="coupon-actions-row">
+                <a href="{% url 'staff_coupon_list' %}" class="coupon-btn-cancel">Hủy bỏ</a>
+                <button type="submit" class="coupon-btn-submit">
+                    <i class="fas fa-save"></i> {% if coupon %}Lưu thay đổi{% else %}Tạo Coupon{% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

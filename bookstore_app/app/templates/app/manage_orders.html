@@ -85,8 +85,16 @@
                                 </button>
 
                             {% elif order.status == 'Shipped' %}
-                                <div style="color: #087f5b; font-size: 0.7rem; font-weight: 800; padding: 6px 10px; background: #ebfbee; border-radius: 8px; border: 1px solid #d3f9d8; display: inline-flex; align-items: center; gap: 5px;">
-                                    <i class="fas fa-truck"></i> SHIPPING
+                                <div style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
+                                    <div style="color: #6741d9; font-size: 0.7rem; font-weight: 800; padding: 6px 10px; background: #f3f0ff; border-radius: 8px; border: 1px solid #e5dbff; display: inline-flex; align-items: center; gap: 5px;">
+                                        <i class="fas fa-truck"></i> GIAO HÀNG
+                                    </div>
+                                    <form method="POST" action="{% url 'staff_confirm_delivery' order.id %}" style="margin: 0; width: 100%;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-action" style="background: #087f5b; color: white; border: none; width: 100%; font-size: 0.7rem; padding: 5px 8px; margin-top: 4px;">
+                                            <i class="fas fa-check-circle"></i> Đã giao
+                                        </button>
+                                    </form>
                                 </div>
                             {% else %}
                                 <div style="color: #adb5bd; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">

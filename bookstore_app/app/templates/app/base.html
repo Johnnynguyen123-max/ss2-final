@@ -82,6 +82,9 @@
                 <li>
                     <a href="{% url 'home' %}?filter=new" {% if request.GET.filter == 'new' %}class="active"{% endif %}>Sách mới</a>
                 </li>
+                <li>
+                    <a href="{% url 'track_order_guest' %}">Tra cứu đơn hàng</a>
+                </li>
 
                 {% if user.is_staff %}
                 <li class="dropdown">
@@ -102,6 +105,11 @@
                         <li>
                             <a href="{% url 'staff_book_list' %}">
                                 <i class="fas fa-edit"></i> Quản lý kho sách
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'staff_coupon_list' %}">
+                                <i class="fas fa-ticket-alt"></i> Quản lý Coupon
                             </a>
                         </li>
                     </ul>
@@ -488,6 +496,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     })();
     </script>
+
+  {% include 'app/includes/chat_widget.html' %}
 
   </body>
 </html>

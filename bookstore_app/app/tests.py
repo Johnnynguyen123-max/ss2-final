@@ -427,3 +427,276 @@ class StaffDashboardTest(TestCase):
         response = self.client.get(reverse('staff_dashboard'))
         self.assertContains(response, 'revenueChart')
         self.assertContains(response, 'statusChart')
+
+
+# ══════════════════════════════════════════════════════
+#  7. Guest Checkout and Coupon CRUD Tests
+# ══════════════════════════════════════════════════════
+class GuestAndCouponStaffTest(TestCase):
+
+    def setUp(self):
+        self.normal_user = make_user(username='customer1')
+        self.staff_user = make_user(username='staffmember', is_staff=True)
+        staff_group, _ = Group.objects.get_or_create(name='Staff')
+        self.staff_user.groups.add(staff_group)
+        
+        self.book = make_book(price=100000, stock=5)
+        self.coupon = make_coupon(code='GUESTPROMO', discount=20)
+
+    def test_guest_checkout_success(self):
+        """Khách vãng lai có thể đặt hàng thành công và đơn hàng có user = None."""
+        session = self.client.session
+        session['cart'] = {str(self.book.id): 2}
+        session.save()
+
+        # Không đăng nhập
+        response = self.client.post(reverse('checkout'), {
+            'full_name': 'Khách Vãng Lai',
+            'phone': '0987654321',
+            'address': 'Địa chỉ test khách vãng lai',
+            'coupon_code': 'GUESTPROMO', # Sẽ bị bỏ qua vì là khách vãng lai
+            'final_total': '200000', # 2 cuốn x 100k
+        })
+        # Kiểm tra xem đơn hàng đã được tạo trong database chưa
+        order = Order.objects.filter(full_name='Khách Vãng Lai').first()
+        self.assertIsNotNone(order)
+        self.assertRedirects(response, reverse('order_success', kwargs={'order_id': order.id}))
+        self.assertIsNone(order.user)
+        self.assertEqual(order.total_price, 200000) # Đơn giá gốc (không áp coupon)
+        self.assertIsNone(order.coupon)
+        self.assertEqual(order.discount_amount, 0)
+
+    def test_coupon_crud_requires_staff(self):
+        """Người dùng thường không thể truy cập các đường dẫn CRUD của coupon."""
+        self.client.force_login(self.normal_user)
+        
+        # Test List
+        response = self.client.get(reverse('staff_coupon_list'))
+        self.assertEqual(response.status_code, 302) # Redirect to login/denied
+
+        # Test Insert
+        response = self.client.get(reverse('staff_coupon_create'))
+        self.assertEqual(response.status_code, 302)
+
+    def test_coupon_crud_staff_success(self):
+        """Staff có thể truy cập danh sách, tạo mới, cập nhật và xóa coupon."""
+        self.client.force_login(self.staff_user)
+
+        # 1. Truy cập trang danh sách coupon
+        response = self.client.get(reverse('staff_coupon_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'GUESTPROMO')
+
+        # 2. Tạo Coupon mới
+        response = self.client.post(reverse('staff_coupon_create'), {
+            'code': 'NEWNEW50',
+            'discount_percent': 50,
+            'valid_until': (date.today() + timedelta(days=10)).strftime('%Y-%m-%d'),
+            'max_uses': 150,
+            'is_active': 'on',
+        })
+        self.assertEqual(response.status_code, 302) # redirect về trang list
+        
+        new_coupon = Coupon.objects.filter(code='NEWNEW50').first()
+        self.assertIsNotNone(new_coupon)
+        self.assertEqual(new_coupon.discount_percent, 50)
+        self.assertEqual(new_coupon.max_uses, 150)
+        self.assertTrue(new_coupon.is_active)
+
+        # 3. Chỉnh sửa Coupon
+        response = self.client.post(reverse('staff_coupon_update', args=[new_coupon.id]), {
+            'code': 'NEWNEW50',
+            'discount_percent': 40, # Giảm xuống 40%
+            'valid_until': (date.today() + timedelta(days=5)).strftime('%Y-%m-%d'),
+            'max_uses': 200,
+            # 'is_active' bỏ chọn để test false
+        })
+        self.assertEqual(response.status_code, 302)
+        new_coupon.refresh_from_db()
+        self.assertEqual(new_coupon.discount_percent, 40)
+        self.assertEqual(new_coupon.max_uses, 200)
+        self.assertTrue(new_coupon.is_active)
+
+        # 4. Xóa Coupon
+        response = self.client.post(reverse('staff_coupon_delete', args=[new_coupon.id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Coupon.objects.filter(code='NEWNEW50').exists())
+
+    def test_order_success_view(self):
+        """Kiểm tra trang hiển thị đặt hàng thành công."""
+        order = Order.objects.create(
+            full_name='Khách Thành Công',
+            phone='0987654321',
+            address='Hồ Chí Minh',
+            total_price=150000,
+        )
+        response = self.client.get(reverse('order_success', args=[order.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Khách Thành Công')
+        self.assertContains(response, '0987654321')
+        self.assertContains(response, '#{}'.format(order.id))
+
+    def test_track_order_guest_success(self):
+        """Khách vãng lai có thể tra cứu đơn hàng bằng Order ID + Phone."""
+        order = Order.objects.create(
+            full_name='Khách Tra Cứu',
+            phone='0987654321',
+            address='Đà Nẵng',
+            total_price=250000,
+        )
+        response = self.client.get(reverse('track_order_guest'), {
+            'order_id': order.id,
+            'phone': '0987654321',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Khách Tra Cứu')
+        self.assertContains(response, 'Đà Nẵng')
+
+    def test_track_order_guest_not_found(self):
+        """Hiển thị thông báo lỗi khi không tìm thấy đơn hàng hoặc sai số điện thoại."""
+        response = self.client.get(reverse('track_order_guest'), {
+            'order_id': 9999,
+            'phone': '0000000000',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Không tìm thấy đơn hàng phù hợp')
+
+    def test_staff_confirm_delivery(self):
+        """Staff có thể xác nhận đơn hàng đã giao thành công."""
+        self.client.force_login(self.staff_user)
+        order = Order.objects.create(
+            full_name='Đơn Của Staff',
+            phone='0987654321',
+            address='Hà Nội',
+            total_price=200000,
+            status='Shipped'
+        )
+        response = self.client.post(reverse('staff_confirm_delivery', args=[order.id]))
+        self.assertEqual(response.status_code, 302)
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'Received')
+
+    def test_confirm_received_guest(self):
+        """Khách vãng lai có thể tự xác nhận đã nhận hàng trên trang tra cứu."""
+        order = Order.objects.create(
+            full_name='Khách Guest Tự Nhận',
+            phone='0987654321',
+            address='Cần Thơ',
+            total_price=300000,
+            status='Shipped'
+        )
+        response = self.client.post(reverse('confirm_received_guest', args=[order.id]), {
+            'phone': '0987654321'
+        })
+        self.assertEqual(response.status_code, 302)
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'Received')
+
+
+# ══════════════════════════════════════════════════════
+#  8. Chatbot AI & Price Alert Tests
+# ══════════════════════════════════════════════════════
+from .models import BotChatSession, BotChatMessage, PriceAlert
+
+class ChatbotAITest(TestCase):
+
+    def setUp(self):
+        self.user = make_user(username='botuser', password='pass1234@')
+        self.book = make_book(title='Book for alert', price=100000)
+
+    def test_chatbot_history_empty(self):
+        """Lịch sử chat bot mới tạo rỗng."""
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('chat_bot_history'))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data['messages']), 0)
+
+    def test_chatbot_feedback(self):
+        """Gửi đánh giá feedback 👍👎 lưu đúng vào DB."""
+        self.client.force_login(self.user)
+        session = BotChatSession.objects.create(user=self.user)
+        msg = BotChatMessage.objects.create(session=session, role='assistant', content='AI reply text')
+        
+        response = self.client.post(reverse('chat_bot_feedback'), {
+            'message_id': msg.id,
+            'rating': 1
+        }, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        
+        msg.refresh_from_db()
+        self.assertEqual(msg.rating, 1)
+
+    def test_guest_chatbot_access(self):
+        """Khách vãng lai có thể lấy lịch sử chat bot (không crash/redirect)."""
+        response = self.client.get(reverse('chat_bot_history'))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data['messages']), 0)
+
+    def test_chatbot_stream_category_in_books(self):
+        """Streaming response includes category name in books_data."""
+        import json
+        cat = Category.objects.create(name="Học thuật")
+        book = make_book(title="Sách Giáo Khoa", price=50000, category=cat)
+        
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse('chat_bot_stream'),
+            data={'message': 'Tìm sách Giáo Khoa'},
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        
+        content = b"".join(response.streaming_content).decode('utf-8')
+        metadata_chunk = None
+        for line in content.split('\n'):
+            if line.startswith('data:'):
+                try:
+                    data = json.loads(line[5:].strip())
+                    if 'metadata' in data:
+                        metadata_chunk = data['metadata']
+                        break
+                except Exception:
+                    pass
+        
+        self.assertIsNotNone(metadata_chunk)
+        self.assertIn('books', metadata_chunk)
+        books = metadata_chunk['books']
+        self.assertTrue(len(books) > 0)
+        self.assertEqual(books[0]['category'], "Học thuật")
+
+    def test_chatbot_stream_category_query_match(self):
+        """Query with 'chủ đề Học thuật' returns books matching that category."""
+        import json
+        cat1 = Category.objects.create(name="Học thuật")
+        cat2 = Category.objects.create(name="Văn học")
+        make_book(title="Sách Giáo Khoa 1", category=cat1)
+        make_book(title="Sách Tiểu Thuyết 2", category=cat2)
+        
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse('chat_bot_stream'),
+            data={'message': 'Tìm sách cùng chủ đề Học thuật'},
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        content = b"".join(response.streaming_content).decode('utf-8')
+        
+        metadata_chunk = None
+        for line in content.split('\n'):
+            if line.startswith('data:'):
+                try:
+                    data = json.loads(line[5:].strip())
+                    if 'metadata' in data:
+                        metadata_chunk = data['metadata']
+                        break
+                except Exception:
+                    pass
+                    
+        self.assertIsNotNone(metadata_chunk)
+        self.assertIn('books', metadata_chunk)
+        books = metadata_chunk['books']
+        self.assertEqual(len(books), 1)
+        self.assertEqual(books[0]['title'], "Sách Giáo Khoa 1")
+

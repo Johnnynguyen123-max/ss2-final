@@ -91,7 +91,30 @@ def update_cart(request, book_id):
             elif action == 'decrease':
                 cart[str_id] = max(1, cart[str_id] - 1)
             request.session['cart'] = cart
-            return JsonResponse({'status': 'success'})
+            request.session.modified = True
+            
+            # Calculate updated numbers dynamically
+            item_qty = cart[str_id]
+            item_subtotal = int(book.price * item_qty)
+            
+            # Total price of the entire cart
+            total_price = 0
+            for b_id, q in cart.items():
+                try:
+                    b_obj = Book.objects.get(id=b_id)
+                    total_price += b_obj.price * q
+                except Book.DoesNotExist:
+                    pass
+                    
+            total_items = sum(cart.values())
+            
+            return JsonResponse({
+                'status': 'success',
+                'quantity': item_qty,
+                'subtotal': int(item_subtotal),
+                'total_price': int(total_price),
+                'total_items': total_items,
+            })
     return JsonResponse({'status': 'error'}, status=400)
 
 
@@ -151,7 +174,6 @@ def validate_coupon(request):
 
 
 # ── CHECKOUT ──────────────────────────────────────────────────────────────────
-@login_required
 def checkout(request):
     """
     Xử lý thanh toán đơn hàng.
@@ -183,16 +205,28 @@ def checkout(request):
         for err in stock_errors:
             messages.warning(request, err)
 
-    user_profile = getattr(request.user, 'profile', None)
-    initial_full_name = f"{request.user.last_name} {request.user.first_name}".strip() or request.user.username
-    initial_phone   = user_profile.phone    if user_profile else ""
-    initial_address = user_profile.address  if user_profile else ""
+    if request.user.is_authenticated:
+        user_profile = getattr(request.user, 'profile', None)
+        initial_full_name = f"{request.user.last_name} {request.user.first_name}".strip() or request.user.username
+        initial_phone   = user_profile.phone    if user_profile else ""
+        initial_address = user_profile.address  if user_profile else ""
+    else:
+        user_profile = None
+        initial_full_name = ""
+        initial_phone   = ""
+        initial_address = ""
+
+    # Lấy các mã giảm giá còn hạn và chưa dùng hết lượt (chỉ khả dụng với thành viên)
+    available_coupons = Coupon.objects.filter(
+        is_active=True,
+        valid_until__gt=timezone.now().date()
+    ).filter(used_count__lt=F('max_uses')) if request.user.is_authenticated else Coupon.objects.none()
 
     if request.method == 'POST':
         full_name    = request.POST.get('full_name')
         phone        = request.POST.get('phone')
         address      = request.POST.get('address')
-        coupon_code  = request.POST.get('coupon_code', '').strip().upper()
+        coupon_code  = request.POST.get('coupon_code', '').strip().upper() if request.user.is_authenticated else ""
         final_total  = int(request.POST.get('final_total', total_bill))
 
         def re_render(extra=None):
@@ -200,6 +234,7 @@ def checkout(request):
                 'items': cart_items, 'total_bill': total_bill,
                 'full_name': full_name, 'phone': phone, 'address': address,
                 'coupon_code': coupon_code,
+                'available_coupons': available_coupons,
             }
             if extra:
                 ctx.update(extra)
@@ -213,10 +248,10 @@ def checkout(request):
             messages.error(request, "Số điện thoại không đúng định dạng Việt Nam!")
             return re_render()
 
-        # Xử lý coupon
+        # Xử lý coupon (chỉ cho thành viên)
         applied_coupon  = None
         discount_amount = 0
-        if coupon_code:
+        if request.user.is_authenticated and coupon_code:
             try:
                 coupon_obj = Coupon.objects.get(code=coupon_code)
                 if coupon_obj.is_valid:
@@ -245,7 +280,7 @@ def checkout(request):
                         raise ValueError(f'"{item["book"].title}" vừa hết hàng. Vui lòng kiểm tra lại giỏ hàng.')
 
                 order = Order.objects.create(
-                    user=request.user,
+                    user=request.user if request.user.is_authenticated else None,
                     full_name=full_name,
                     phone=phone,
                     address=address,
@@ -272,9 +307,10 @@ def checkout(request):
         request.session['cart'] = {}
         request.session.modified = True
         messages.success(request, f"Chúc mừng {full_name}, đơn hàng đã được hệ thống tiếp nhận!")
-        return render(request, 'app/checkout.html', {'items': [], 'total_bill': 0})
+        return redirect('order_success', order_id=order.id)
 
     return render(request, 'app/checkout.html', {
         'items': cart_items, 'total_bill': total_bill,
         'full_name': initial_full_name, 'phone': initial_phone, 'address': initial_address,
+        'available_coupons': available_coupons,
     })

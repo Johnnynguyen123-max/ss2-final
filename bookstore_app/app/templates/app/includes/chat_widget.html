@@ -2,15 +2,20 @@
 {# =====================================================
    CHAT WIDGET – Customer & Staff
    Được tách từ base.html thành file include riêng
+   Giao diện Overhaul Midnight Slate & Amber Theme
    ===================================================== #}
 
 {# CSS chat widget #}
-<link rel="stylesheet" href="{% static 'app/css/chat.css' %}">
+<link rel="stylesheet" href="{% static 'app/css/chat.css' %}?v=2">
 
-{# Truyền biến is_staff xuống JS qua window object #}
+{# Truyền biến trạng thái xuống JS qua window object #}
 <script>
   window.CHAT_IS_STAFF = {{ user.is_staff|yesno:"true,false" }};
+  window.CHAT_IS_AUTHENTICATED = {{ user.is_authenticated|yesno:"true,false" }};
 </script>
+
+{# Tooltip gợi ý phía trên nút bubble #}
+<div id="chat-tooltip">Hỏi AI Bot ngay! ⚡</div>
 
 {# Nút bubble #}
 <button id="chat-bubble-btn" onclick="chatToggle()" title="Chat hỗ trợ">
@@ -22,12 +27,15 @@
 <div id="chat-panel">
 
   {# HEADER #}
-  <div class="cp-header">
+  <div class="cp-header" id="cp-header-container">
     <button class="cp-back" id="cp-back-btn" onclick="staffBackToList()">
       <i class="fas fa-arrow-left"></i>
     </button>
-    <div class="cp-header-icon" id="cp-header-icon">
-      <i class="fas {% if user.is_staff %}fa-headset{% else %}fa-comments{% endif %}"></i>
+    <div class="cp-header-avatar-container">
+      <div class="cp-header-icon" id="cp-header-icon">
+        <i class="fas {% if user.is_staff %}fa-headset{% else %}fa-comments{% endif %}"></i>
+      </div>
+      <span class="cp-status-dot"></span>
     </div>
     <div class="cp-header-title">
       <strong id="cp-header-title">{% if user.is_staff %}Hỗ trợ khách hàng{% else %}DDC Books – Hỗ trợ{% endif %}</strong>
@@ -57,72 +65,97 @@
 
   {% else %}
   {# ═══ CUSTOMER: Mode Selection ═══ #}
-  <div id="cp-view-mode" class="active" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-    <div style="padding:24px 18px 20px;display:flex;flex-direction:column;gap:14px;background:#f8f5f0;flex:1;">
-      <div style="text-align:center;margin-bottom:6px;">
-        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#f39c12,#e67e22);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 4px 14px rgba(243,156,18,0.35);">
-          <i class="fas fa-book-open" style="font-size:1.3rem;color:#fff;"></i>
+  <div id="cp-view-mode" class="active">
+    <div class="mode-container">
+      <div class="mode-greeting">
+        <div class="greeting-avatar" id="greeting-avatar-svg">
+          <!-- Sẽ được điền SVG Robot Avatar từ JS hoặc fallback -->
+          <i class="fas fa-book-open"></i>
         </div>
-        <p style="margin:0;font-size:0.92rem;font-weight:600;color:#333;">Xin chào! Bạn cần hỗ trợ gì?</p>
-        <p style="margin:4px 0 0;font-size:0.78rem;color:#888;">Chọn một trong hai kênh hỗ trợ bên dưới</p>
+        <h3>Xin chào! 👋</h3>
+        <p>Chúng tôi có thể giúp gì cho bạn hôm nay?</p>
       </div>
 
-      {# Option 1: Chatbot #}
-      <button onclick="custChooseMode('bot')" style="display:flex;align-items:center;gap:14px;background:#fff;border:2px solid #f0ede8;border-radius:14px;padding:15px 16px;cursor:pointer;text-align:left;transition:border-color 0.2s,box-shadow 0.2s;width:100%;" onmouseover="this.style.borderColor='#f39c12';this.style.boxShadow='0 4px 16px rgba(243,156,18,0.18)';" onmouseout="this.style.borderColor='#f0ede8';this.style.boxShadow='none';">
-        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <i class="fas fa-robot" style="font-size:1.1rem;color:#fff;"></i>
-        </div>
-        <div style="flex:1;">
-          <div style="font-weight:700;font-size:0.9rem;color:#222;margin-bottom:3px;">🤖 Chat với AI Bot</div>
-          <div style="font-size:0.76rem;color:#888;line-height:1.4;">Tư vấn sách, tra đơn hàng, gợi ý cá nhân hóa – phản hồi ngay lập tức!</div>
-        </div>
-        <i class="fas fa-chevron-right" style="color:#ccc;font-size:0.8rem;flex-shrink:0;"></i>
-      </button>
+      <div class="mode-options">
+        {# Option 1: Chatbot #}
+        <button class="mode-card card-bot" onclick="custChooseMode('bot')">
+          <div class="card-icon">
+            <i class="fas fa-robot"></i>
+          </div>
+          <div class="card-content">
+            <h4>Trò chuyện với AI Bot</h4>
+            <p>Tư vấn sách, tra đơn hàng, gợi ý theo sở thích – Trả lời ngay lập tức!</p>
+          </div>
+          <i class="fas fa-chevron-right arrow-icon"></i>
+        </button>
 
-      {# Option 2: Staff #}
-      <button onclick="custChooseMode('staff')" style="display:flex;align-items:center;gap:14px;background:#fff;border:2px solid #f0ede8;border-radius:14px;padding:15px 16px;cursor:pointer;text-align:left;transition:border-color 0.2s,box-shadow 0.2s;width:100%;" onmouseover="this.style.borderColor='#f39c12';this.style.boxShadow='0 4px 16px rgba(243,156,18,0.18)';" onmouseout="this.style.borderColor='#f0ede8';this.style.boxShadow='none';">
-        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#f39c12,#e67e22);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <i class="fas fa-headset" style="font-size:1.1rem;color:#fff;"></i>
-        </div>
-        <div style="flex:1;">
-          <div style="font-weight:700;font-size:0.9rem;color:#222;margin-bottom:3px;">👩‍💼 Liên hệ nhân viên</div>
-          <div style="font-size:0.76rem;color:#888;line-height:1.4;">Kết nối trực tiếp với đội ngũ hỗ trợ DDC Books – T2 → CN, 8:00–22:00.</div>
-        </div>
-        <i class="fas fa-chevron-right" style="color:#ccc;font-size:0.8rem;flex-shrink:0;"></i>
-      </button>
+        {# Option 2: Staff #}
+        <button class="mode-card card-staff" onclick="custChooseMode('staff')">
+          <div class="card-icon">
+            <i class="fas fa-headset"></i>
+          </div>
+          <div class="card-content">
+            <h4>Liên hệ nhân viên</h4>
+            <p>Kết nối trực tiếp với đội ngũ hỗ trợ DDC Books – Phục vụ 8:00–22:00.</p>
+          </div>
+          <i class="fas fa-chevron-right arrow-icon"></i>
+        </button>
+      </div>
+
+      <div class="mode-footer">
+        <span>Powered by Claude AI &bull; DDC Books</span>
+      </div>
     </div>
   </div>
 
   {# ═══ CUSTOMER: Bot Chat ═══ #}
-  <div id="cp-view-bot" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+  <div id="cp-view-bot">
     {# Quick-action chips #}
-    <div id="cp-bot-chips" style="padding:10px 12px 6px;background:#fff;border-bottom:1px solid #f0ede8;display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0;">
-      <button class="bot-chip" onclick="botChip('Kiểm tra đơn hàng của tôi')">📦 Đơn hàng</button>
-      <button class="bot-chip" onclick="botChip('Gợi ý sách hay cho tôi')">✨ Gợi ý sách</button>
-      <button class="bot-chip" onclick="botChip('Sách mới về gần đây')">🆕 Sách mới</button>
-      <button class="bot-chip" onclick="botChip('Sách bán chạy nhất')">🔥 Bán chạy</button>
-      <button class="bot-chip" onclick="botChip('Chính sách đổi trả')">↩️ Đổi trả</button>
-      <button class="bot-chip" onclick="botChip('Địa chỉ và giờ mở cửa')">📍 Địa chỉ</button>
+    <div id="cp-bot-chips">
+      <button class="bot-chip" onclick="botChip('Địa chỉ')">
+        <i class="fas fa-map-marker-alt"></i> Địa chỉ
+      </button>
+      <button class="bot-chip" onclick="botChip('Gợi ý sách')">
+        <i class="fas fa-magic"></i> Gợi ý sách
+      </button>
+      <button class="bot-chip" onclick="botChip('Coupon')">
+        <i class="fas fa-ticket-alt"></i> Coupon
+      </button>
+      <button class="bot-chip" onclick="custChooseMode('staff')">
+        <i class="fas fa-headset"></i> Liên hệ
+      </button>
     </div>
-    <div id="cp-bot-messages" style="flex:1;overflow-y:auto;padding:14px 13px;display:flex;flex-direction:column;gap:9px;background:#f8f5f0;min-height:200px;max-height:320px;">
+    <div id="cp-bot-messages">
       {# welcome msg injected by JS #}
     </div>
     <div class="cp-input-row">
       <input class="cp-input" id="cp-bot-input" type="text"
              placeholder="Hỏi gì cũng được..." maxlength="500"
              onkeydown="if(event.key==='Enter')botSend()" autocomplete="off"/>
+      <button class="cp-mic" id="cp-bot-mic" onclick="toggleVoiceInput()" title="Nói với AI"><i class="fas fa-microphone"></i></button>
       <button class="cp-send" onclick="botSend()"><i class="fas fa-paper-plane"></i></button>
     </div>
   </div>
 
   {# ═══ CUSTOMER: Staff Chat ═══ #}
-  <div id="cp-view-chat" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
-    <div id="cp-messages" style="flex:1;overflow-y:auto;padding:14px 13px;display:flex;flex-direction:column;gap:9px;background:#f8f5f0;min-height:200px;max-height:340px;"></div>
+  <div id="cp-view-chat">
+    {% if not user.is_authenticated %}
+    <div class="login-prompt-overlay">
+      <div class="lock-icon-container">
+        <i class="fas fa-lock"></i>
+      </div>
+      <h4>Yêu cầu đăng nhập</h4>
+      <p>Vui lòng đăng nhập tài khoản DDC Books để trò chuyện trực tiếp với nhân viên hỗ trợ.</p>
+      <a href="{% url 'login' %}?next={{ request.path }}" class="login-btn-link">Đăng nhập ngay</a>
+    </div>
+    {% endif %}
+    <div id="cp-messages"></div>
     <div class="cp-input-row">
       <input class="cp-input" id="cp-cust-input" type="text"
              placeholder="Nhắn tin..." maxlength="500"
-             onkeydown="if(event.key==='Enter')custSend()" autocomplete="off"/>
-      <button class="cp-send" onclick="custSend()"><i class="fas fa-paper-plane"></i></button>
+             onkeydown="if(event.key==='Enter')custSend()" autocomplete="off"
+             {% if not user.is_authenticated %}disabled{% endif %}/>
+      <button class="cp-send" onclick="custSend()" {% if not user.is_authenticated %}disabled{% endif %}><i class="fas fa-paper-plane"></i></button>
     </div>
   </div>
   {% endif %}
@@ -130,4 +163,4 @@
 </div>{# /chat-panel #}
 
 {# JS chat widget — load sau cùng #}
-<script src="{% static 'app/js/chat.js' %}"></script>
+<script src="{% static 'app/js/chat.js' %}?v=2"></script>

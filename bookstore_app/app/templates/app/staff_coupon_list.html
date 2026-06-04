@@ -1,0 +1,238 @@
+{% extends 'app/base.html' %}
+{% load static %}
+
+{% block title %}Quản lý Coupon - DDC Books{% endblock %}
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+<style>
+.coupon-manage-wrap {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 20px 60px;
+}
+.coupon-manage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+.coupon-manage-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--dark-brown);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.coupon-manage-title i {
+    color: var(--primary);
+}
+
+/* Add Button */
+.btn-coupon-add {
+    padding: 10px 20px;
+    background: var(--primary);
+    color: white;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.88rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+.btn-coupon-add:hover {
+    background: var(--primary-hover);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Coupon Table styling */
+.coupon-table-box {
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-top: 15px;
+}
+.coupon-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+.coupon-table th {
+    background: var(--beige);
+    padding: 14px 20px;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+.coupon-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--white-warm);
+    vertical-align: middle;
+    color: var(--text);
+}
+.coupon-table tr:last-child td {
+    border-bottom: none;
+}
+.coupon-table tr:hover td {
+    background-color: var(--white-warm);
+}
+
+/* Badge styling */
+.coupon-status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.coupon-status-active {
+    background-color: var(--success-bg);
+    color: var(--success);
+}
+.coupon-status-expired {
+    background-color: var(--error-bg);
+    color: var(--error);
+}
+.coupon-status-disabled {
+    background-color: var(--warning-bg);
+    color: var(--warning);
+}
+
+/* Actions */
+.coupon-actions-flex {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+.coupon-action-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    background: var(--white-warm);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+.coupon-action-btn:hover {
+    background: var(--beige);
+    color: var(--primary);
+}
+.coupon-btn-delete:hover {
+    background: var(--error-bg);
+    color: var(--error);
+    border-color: #ffd8d8;
+}
+
+.empty-state {
+    padding: 48px;
+    text-align: center;
+    color: var(--text-muted);
+}
+.empty-state i {
+    font-size: 2.5rem;
+    color: var(--border-color);
+    margin-bottom: 14px;
+}
+</style>
+
+<div class="coupon-manage-wrap">
+    <div class="coupon-manage-header">
+        <h1 class="coupon-manage-title">
+            <i class="fas fa-ticket-alt"></i> Quản lý Coupon & Ưu đãi
+        </h1>
+        <a href="{% url 'staff_coupon_create' %}" class="btn-coupon-add">
+            <i class="fas fa-plus"></i> Tạo Coupon mới
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for msg in messages %}
+        <div style="padding:12px 18px; border-radius:var(--radius-sm); margin-bottom:18px; font-size:0.88rem; font-weight:500;
+          {% if msg.tags == 'success' %}background:var(--success-bg);color:var(--success);border:1px solid #c3e6cb;
+          {% else %}background:var(--error-bg);color:var(--error);border:1px solid #f5c6cb;{% endif %}">
+          {{ msg }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="coupon-table-box">
+        <table class="coupon-table">
+            <thead>
+                <tr>
+                    <th>Mã Coupon</th>
+                    <th>Giảm (%)</th>
+                    <th>Ngày Hết Hạn</th>
+                    <th style="text-align: center;">Giới Hạn Lượt Dùng</th>
+                    <th style="text-align: center;">Đã Sử Dụng</th>
+                    <th>Trạng Thái</th>
+                    <th style="text-align: right;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cp in coupons %}
+                <tr>
+                    <td>
+                        <strong style="color: var(--dark-brown); font-size: 1rem; letter-spacing: 0.5px;">{{ cp.code }}</strong>
+                    </td>
+                    <td>
+                        <strong style="color: var(--primary);">{{ cp.discount_percent }}%</strong>
+                    </td>
+                    <td>
+                        {{ cp.valid_until|date:"d/m/Y" }}
+                    </td>
+                    <td style="text-align: center;">
+                        {{ cp.max_uses }}
+                    </td>
+                    <td style="text-align: center;">
+                        {{ cp.used_count }}
+                    </td>
+                    <td>
+                        {% if cp.is_valid %}
+                            <span class="coupon-status-badge coupon-status-active">Đang hoạt động</span>
+                        {% else %}
+                            <span class="coupon-status-badge coupon-status-expired">Hết hạn/Hết lượt</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="coupon-actions-flex">
+                            <a href="{% url 'staff_coupon_update' cp.id %}" class="coupon-action-btn" title="Chỉnh sửa">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{% url 'staff_coupon_delete' cp.id %}" method="post" style="margin: 0;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa mã Coupon {{ cp.code }}?')">
+                                {% csrf_token %}
+                                <button type="submit" class="coupon-action-btn coupon-btn-delete" title="Xóa">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="fas fa-box-open"></i>
+                            <p>Không có mã giảm giá nào trong hệ thống.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

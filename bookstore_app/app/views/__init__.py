@@ -42,6 +42,9 @@ from .orders import (
     update_order_info,
     order_tracking,
     confirm_received,
+    order_success,
+    track_order_guest,
+    confirm_received_guest,
 )
 
 from .staff import (
@@ -58,6 +61,11 @@ from .staff import (
     staff_book_delete,
     staff_flash_sale,
     staff_flash_sale_toggle,
+    staff_coupon_list,
+    staff_coupon_create,
+    staff_coupon_update,
+    staff_coupon_delete,
+    staff_confirm_delivery,
 )
 
 from .chat import (
@@ -68,3 +76,10 @@ from .chat import (
     staff_send,
     chat_bot,
 )
+
+from .ai_chat import (
+    chat_bot_stream,
+    chat_bot_history,
+    chat_bot_feedback,
+)
+

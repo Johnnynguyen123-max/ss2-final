@@ -151,7 +151,7 @@
             </div>
             <div style="display: flex; gap: 10px;">
                 <button type="submit" style="flex: 2; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">Lưu thay đổi</button>
-                <button type="button" onclick="closeModal(); return false;" style="flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">Hủy</button>
+                <button type="button" onclick="closeEditModal(); return false;" style="flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">Hủy</button>
             </div>
         </form>
     </div>
@@ -170,7 +170,7 @@
         document.getElementById('editModal').style.display = 'block';
     });
 
-    function closeModal() {
+    function closeEditModal() {
         document.getElementById('editModal').style.display = 'none';
         document.getElementById('editForm').reset();
     }
@@ -213,7 +213,7 @@
     }
 
     document.getElementById('editModal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
+        if (e.target === this) closeEditModal();
     });
 </script>
 <script>function confirmReceived(orderId) {
